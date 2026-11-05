@@ -1,13 +1,12 @@
 // Bot que joga partidas inteiras usando só a API pública do World (igual na v0.2 e na v0.3),
 // para calibrar a dificuldade. Não importa nada de shared/: quem chama passa World e data.
 const TILE = 32;
-const RARITY = { comum: 0, incomum: 1, rara: 2, epica: 3, lendaria: 4 };
 const NAV_EVERY = 0.25;
 
 export const PROFILES = {
   // reaction: s até reagir a bala vindo; aimError: graus; dodge: chance por bala; keepRange: px
-  dupla: { reaction: 0.35, aimError: 9, dodge: 0.35, keepRange: 180, useSkill: false },
-  experiente: { reaction: 0.15, aimError: 3, dodge: 0.75, keepRange: 220, useSkill: true }
+  dupla: { reaction: 0.5, aimError: 14, dodge: 0.6, keepRange: 180, useSkill: false },
+  experiente: { reaction: 0.25, aimError: 7, dodge: 0.85, keepRange: 220, useSkill: true }
 };
 
 export function mulberry32(seed) {
@@ -44,14 +43,15 @@ function distField(map, tx, ty) {
   return dist;
 }
 
-const rarityOf = (world, id) => RARITY[world.data.weapon(id)?.rarity] ?? 0;
+// Arma corpo a corpo exige chegar perto; o bot só recolhe armas de longe e, se já estiver com uma, chega junto.
+const isMelee = (world, id) => world.data.weapon(id)?.type === 'melee';
 
 export function createBot(world, playerId, profile, rng = Math.random) {
   const st = {
     fields: new Map(), fieldSig: null, fieldAt: -1,
     goal: null, goalAt: -1, blocked: new Map(),
     strafe: rng() < 0.5 ? 1 : -1, strafeUntil: 0,
-    dodging: new Map(), dmg: 0, dmgAt: 0, interactCd: 0, skillCd: 0
+    dodging: new Map(), seen: new Map(), dmg: 0, dmgAt: 0, interactCd: 0, swapAt: -9, skillCd: 0
   };
   const me = () => world.getPlayer(playerId);
   const gauss = () => (rng() + rng() + rng() - 1.5) / 0.75; // ~[-2, 2]
@@ -118,17 +118,25 @@ export function createBot(world, playerId, profile, rng = Math.random) {
     if (enemies.length) return null; // lutar
     const portal = world.pickups.find((k) => !k.dead && k.kind === 'portal');
     if (portal) cands.push({ kind: 'pk', pk: portal, key: 'portal' });
-    const held = Math.max(...p.weapons.map((id) => rarityOf(world, id)));
+    // só recolhe arma sem custo de energia (energia acaba nas lutas longas) e de dano por segundo maior que a atual
+    const dps = (id) => { const w = world.data.weapon(id); return (w?.damage || 0) * (w?.fireRate || 1); };
+    const free = (id) => !(world.data.weapon(id)?.energyCost > 0);
+    const held = Math.max(...p.weapons.filter((id) => free(id)).map(dps), 0);
     for (const k of world.pickups) {
-      if (k.dead || k.kind !== 'weapon' || rarityOf(world, k.weaponId) <= held) continue;
+      if (k.dead || k.kind !== 'weapon' || !free(k.weaponId) || isMelee(world, k.weaponId) || dps(k.weaponId) <= held * 1.2) continue;
       cands.push({ kind: 'pk', pk: k, key: 'w' + k.id });
     }
     for (const k of world.pickups) if (!k.dead && k.kind === 'chest' && !k.opened) cands.push({ kind: 'pk', pk: k, key: 'c' + k.id });
     if (p.hp < p.maxHp) {
       for (const k of world.pickups) if (!k.dead && k.kind === 'heal_station' && !k.used) cands.push({ kind: 'pk', pk: k, key: 'h' + k.id });
     }
+    if (p.energy < p.maxEnergy * 0.7) {
+      for (const k of world.pickups) if (!k.dead && k.kind === 'energy') cands.push({ kind: 'en', pk: k, key: 'e' + k.id });
+    }
     const tier = [];
     for (const g of cands) if (ok(g)) { g.x = g.pk.x; g.y = g.pk.y; tier.push(g); }
+    const lowEnergy = tier.filter((g) => g.kind === 'en');
+    if (lowEnergy.length) return closest(p, lowEnergy);
     // portal > arma > baú > enfermaria: devolve o primeiro da prioridade; entre iguais, o mais perto
     for (const test of [(g) => g.key === 'portal', (g) => g.key[0] === 'w', (g) => g.key[0] === 'c', (g) => g.key[0] === 'h']) {
       const list = tier.filter(test);
@@ -156,26 +164,50 @@ export function createBot(world, playerId, profile, rng = Math.random) {
     return best;
   }
 
-  function dodgeVector(p) {
-    let vx = 0, vy = 0;
-    const reach = profile.reaction * 260;
+  /**
+   * Desvio de balas: só reage a bala vista há pelo menos `reaction` s e sorteada com chance `dodge`.
+   * Entre parar e as 8 direções, simula 0,7 s à frente e escolhe a que não encosta em nenhuma bala
+   * (prefere a direção que o bot já queria seguir). Devolve null se o movimento atual já é seguro.
+   */
+  function dodgeVector(p, wantX, wantY) {
+    const hot = [];
     for (const b of world.projectiles) {
       if (b.dead || b.team !== 'enemy') continue;
-      const rx = p.x - b.x, ry = p.y - b.y, dist = Math.hypot(rx, ry);
-      const sp = Math.hypot(b.vx, b.vy) || 1;
-      if (dist > Math.max(40, reach * sp / 260 + 30)) continue;
-      const along = (b.vx * rx + b.vy * ry) / sp; // distância ao longo da trajetória
-      if (along <= 0) continue;
-      const side = (b.vx * ry - b.vy * rx) / sp; // desvio lateral da trajetória
-      if (Math.abs(side) > (b.r || 5) + (p.r || 10) + 10) continue;
+      let seen = st.seen.get(b.id);
+      if (seen === undefined) { seen = world.time; st.seen.set(b.id, seen); }
+      if (world.time - seen < profile.reaction) continue;
       let dec = st.dodging.get(b.id);
       if (dec === undefined) { dec = rng() < profile.dodge; st.dodging.set(b.id, dec); }
-      if (!dec) continue;
-      const s = side >= 0 ? 1 : -1; // foge para o lado em que já está
-      vx += (b.vy / sp) * s; vy -= (b.vx / sp) * s;
+      if (dec) hot.push(b);
     }
-    if (st.dodging.size > 400) st.dodging.clear();
-    return (vx || vy) ? [vx, vy] : null;
+    if (st.seen.size > 600) st.seen.clear();
+    if (st.dodging.size > 600) st.dodging.clear();
+    if (!hot.length) return null;
+    const speed = p.speed * (p.mods?.speedMul || 1) * (p.buffs?.hasteTimer > 0 ? 1.6 : 1) * (p.slowTimer > 0 ? 0.55 : 1);
+    const T = 0.7, N = 14, pr = p.r || 10;
+    const cost = (dx, dy) => {
+      let x = p.x, y = p.y, c = 0;
+      for (let k = 1; k <= N; k++) {
+        const t = (k * T) / N;
+        const nx = p.x + dx * speed * t, ny = p.y + dy * speed * t;
+        if (!world.map.solidAt(nx, ny)) { x = nx; y = ny; }
+        for (const b of hot) {
+          const hr = (b.r || 5) + pr + 2;
+          if (Math.hypot(b.x + b.vx * t - x, b.y + b.vy * t - y) < hr) c += 100 - t * 60;
+        }
+      }
+      return c;
+    };
+    const wl = Math.hypot(wantX, wantY);
+    const wx = wl ? wantX / wl : 0, wy = wl ? wantY / wl : 0;
+    if (cost(wx, wy) === 0) return null;
+    let best = null, bc = Infinity;
+    for (let i = -1; i < 8; i++) {
+      const dx = i < 0 ? 0 : Math.cos((i * Math.PI) / 4), dy = i < 0 ? 0 : Math.sin((i * Math.PI) / 4);
+      const c = cost(dx, dy) + (1 - (dx * wx + dy * wy)) * 3;
+      if (c < bc) { bc = c; best = [dx, dy]; }
+    }
+    return best;
   }
 
   function think(dt) {
@@ -208,7 +240,8 @@ export function createBot(world, playerId, profile, rng = Math.random) {
 
     if (enemies.length) {
       const sighted = enemies.filter((e) => world.map.lineOfSight(p.x, p.y, e.x, e.y));
-      const [tgt, td] = near(sighted.length ? sighted : enemies);
+      const healers = sighted.filter((e) => e.type === 'diva'); // cura a chefe: acaba com ela primeiro // cura a chefe: acaba com ela primeiro
+      const [tgt, td] = near(healers.length ? healers : sighted.length ? sighted : enemies);
       const dx = tgt.x - p.x, dy = tgt.y - p.y, a = Math.atan2(dy, dx);
       const seen = sighted.length > 0;
       if (seen) {
@@ -218,16 +251,38 @@ export function createBot(world, playerId, profile, rng = Math.random) {
         if (p.wstate?.chargeFull) inp.fire = false; // solta a carga
         // mantém distância e anda de lado
         if (world.time > st.strafeUntil) { st.strafe = rng() < 0.5 ? 1 : -1; st.strafeUntil = world.time + 1 + rng() * 1.5; }
-        const rad = td < profile.keepRange * 0.8 ? -1 : td > profile.keepRange * 1.2 ? 1 : 0;
+        const keep = isMelee(world, p.weapons[p.cur ?? 0]) ? 45 : profile.keepRange;
+        const rad = td < keep * 0.8 ? -1 : td > keep * 1.2 ? 1 : 0;
         let mx = (dx / td) * rad + (-dy / td) * st.strafe * 0.7, my = (dy / td) * rad + (dx / td) * st.strafe * 0.7;
         // se a direção está bloqueada por parede, vira o lado
         const ahead = Math.atan2(my, mx);
         if (world.map.solidAt(p.x + Math.cos(ahead) * 28, p.y + Math.sin(ahead) * 28)) { st.strafe *= -1; st.strafeUntil = world.time + 1; mx = -mx; my = -my; }
         inp.moveX = mx; inp.moveY = my;
+        // sem energia: vai buscar a bolinha de energia mais próxima (inimigos largam ao morrer)
+        if (p.energy < p.maxEnergy * 0.15) {
+          let eb = null, ed = 300;
+          for (const k of world.pickups) {
+            if (k.dead || k.kind !== 'energy') continue;
+            const d = Math.hypot(k.x - p.x, k.y - p.y);
+            if (d < ed) { ed = d; eb = k; }
+          }
+          if (eb) move(eb.x, eb.y);
+        }
         // Troca de arma automática: 4 s lutando sem causar dano indica arma inútil contra este alvo
         // (ex.: armadilha de chão contra inimigo voador), então o bot passa para a outra arma.
         if (world.stats.damage > st.dmg) { st.dmg = world.stats.damage; st.dmgAt = world.time; }
         else if (world.time - st.dmgAt > 4 && p.weapons.length > 1) { inp.swap = true; st.dmgAt = world.time; }
+        // escolhe a arma de maior dano por segundo que a energia atual aguenta (armas de custo 0 nunca acabam)
+        if (p.weapons.length > 1 && world.time - st.swapAt > 1) {
+          let bi = p.cur, bs = -1;
+          p.weapons.forEach((id, i) => {
+            const w = world.data.weapon(id), cost = (w?.energyCost || 0) * (p.mods?.energyCostMul || 1);
+            if (cost > 0 && p.energy < cost * (i === p.cur ? 1 : 20)) return;
+            const sc = (w?.damage || 0) * (w?.fireRate || 1) * (cost > 0 ? 1 : 0.999);
+            if (sc > bs) { bs = sc; bi = i; }
+          });
+          if (bi !== p.cur) { inp.swap = true; st.swapAt = world.time; }
+        }
         if (profile.useSkill && st.skillCd <= 0 && td < 320) { inp.skill = true; st.skillCd = 0.6; }
       } else {
         move(tgt.x, tgt.y);
@@ -240,7 +295,7 @@ export function createBot(world, playerId, profile, rng = Math.random) {
       }
       const g = st.goal;
       if (g) {
-        const reach = g.kind === 'pk' ? 28 : 0;
+        const reach = g.kind === 'pk' ? (g.key[0] === 'w' ? 5 : 28) : 0; // arma: fica em cima (há várias caídas juntas)
         const d = Math.hypot(g.x - p.x, g.y - p.y);
         if (d > reach) {
           if (!move(g.x, g.y)) { st.blocked.set(g.key, world.time + 3); st.goal = null; }
@@ -248,12 +303,17 @@ export function createBot(world, playerId, profile, rng = Math.random) {
         if (g.kind === 'pk' && p.interactTarget === g.pk && st.interactCd <= 0) { inp.interact = true; st.interactCd = 0.4; }
         // não conseguiu pegar depois de chegar: ignora por um tempo
         if (g.kind === 'pk' && d < 30 && g.pk.dead) st.goal = null;
+        // perto há mais de 3 s e não pegou (interação sempre vai para outro item): desiste por um tempo
+        if (g.kind === 'pk' && d < 30) {
+          if (st.nearSince === undefined || st.nearKey !== g.key) { st.nearSince = world.time; st.nearKey = g.key; }
+          else if (world.time - st.nearSince > 3) { st.blocked.set(g.key, world.time + 30); st.goal = null; st.nearSince = undefined; }
+        } else st.nearSince = undefined;
       }
     }
 
     // desvio de balas sobrepõe o movimento
-    const dv = dodgeVector(p);
-    if (dv) { const l = Math.hypot(dv[0], dv[1]) || 1; inp.moveX = dv[0] / l; inp.moveY = dv[1] / l; }
+    const dv = dodgeVector(p, inp.moveX, inp.moveY);
+    if (dv) { inp.moveX = dv[0]; inp.moveY = dv[1]; }
     return inp;
   }
 

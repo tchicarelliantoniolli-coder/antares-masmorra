@@ -8,8 +8,10 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, all) => (
 const root = path.resolve(args.root || '.');
 const profileName = args.profile || 'experiente';
 const players = Number(args.players || 1), runs = Number(args.runs || 30), seed0 = Number(args.seed0 || 1);
-const profile = PROFILES[profileName];
+const profile = PROFILES[profileName] && { ...PROFILES[profileName] };
 if (!profile) { console.error('perfil desconhecido:', profileName); process.exit(1); }
+// Sobrescreve números do perfil sem editar o bot: --set reaction=0.5,aimError=12
+for (const kv of (args.set || '').split(',').filter(Boolean)) { const [k, v] = kv.split('='); profile[k] = Number(v); }
 
 const imp = (f) => import(pathToFileURL(path.join(root, 'shared/sim', f)).href);
 const { World } = await imp('World.js');
