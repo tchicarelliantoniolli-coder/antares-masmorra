@@ -7,7 +7,7 @@ import {
 import { buildTileset } from './tileArt.js';
 import {
   drawCrate, drawBarrel, drawSpikes, drawDecor, drawLousaEnemy, drawSinal, drawMochila, drawDiva, drawCadernoPreto,
-  drawAlunos, drawCantineira, drawStatue, drawPlant, drawCage, drawExtraBullet, drawLetters
+  drawAlunos, drawCantineira, drawStatue, drawPlant, drawCage, drawExtraBullet, drawLetters, drawTurret, drawMine
 } from './propArt.js';
 
 export const DECOR_KINDS = ['lousa', 'placar', 'estante_parede', 'cartaz', 'relogio', 'tabela_periodica', 'cartaz_dna', 'cesta', 'quadro', 'janela', 'mural', 'cardapio'];
@@ -71,6 +71,8 @@ export function generateTextures(scene, data, overrideKeys = new Set()) {
   add('statue', drawStatue());
   add('cage', drawCage());
   add('ally_planta', drawPlant(), 32, 32);
+  add('ally_turret', drawTurret());
+  add('ally_mine', drawMine(), 16, 16);
   add('letters', drawLetters());
 
   // Itens e cenário

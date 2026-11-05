@@ -42,3 +42,17 @@ export function emitShoot(world, p, w, extra = {}) {
   world.stats.shots++;
   world.emit('shoot', { playerId: p.id, weaponId: w.id, category: w.category, wtype: w.type, mode: w.type === 'melee' ? w.melee.style : w.mode, x: p.x, y: p.y, angle: p.aim, ...extra });
 }
+
+/** Texto de energia para o HUD e o card: por disparo, ou por segundo no laser. */
+export function energyText(p, w) {
+  if (w.mode === 'beam') {
+    const eps = w.beam.energyPerSec * p.mods.energyCostMul;
+    return eps > 0 ? `${Number.isInteger(eps) ? eps : eps.toFixed(1)}/s` : 'grátis';
+  }
+  if (w.type === 'melee' && w.melee.style === 'shield') {
+    const c = w.melee.shield.blockCost * p.mods.energyCostMul;
+    return `${Number.isInteger(c) ? c : c.toFixed(1)} por bloqueio`;
+  }
+  const c = energyCost(p, w);
+  return c === 0 ? 'grátis' : Number.isInteger(c) ? String(c) : c.toFixed(2);
+}

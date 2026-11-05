@@ -102,6 +102,31 @@ SCENARIOS['galeria'] = async (browser) => {
   return errors;
 };
 
+/** Uma arma de cada modo: segura atirar, solta, troca. Falha se der erro no console. */
+const WEAPON_SAMPLES = ['canhao_protons', 'arco_alfabeto', 'metralhadora_borrachas', 'folhas_redacao', 'bico_bunsen', 'catapulta_mini',
+  'livro_magico', 'raios_eletricos', 'tachinhas_chao', 'ventilador_teto', 'mini_buraco_negro', 'baloes_ingles', 'bolas_esportes',
+  'dna_celulas', 'pincel_tinta', 'lanca_romana', 'regua_espada', 'guarda_chuva', 'taco_beisebol'];
+
+SCENARIOS['armas'] = async (browser) => {
+  const { page, errors } = await openGame(browser);
+  await startSolo(page, 'jean_paulo');
+  for (const id of WEAPON_SAMPLES) {
+    await page.evaluate((wid) => {
+      const p = window.__game.scene.getScene('Game').world.players[0];
+      p.weapons = [wid]; p.cur = 0; p.energy = p.maxEnergy; p.fireCd = 0;
+    }, id);
+    await clickGame(page, GAME_W / 2 + 160, GAME_H / 2 - 20);
+    await page.mouse.down();
+    await page.waitForTimeout(id === 'arco_alfabeto' ? 900 : 450);
+    if (SHOTS) await page.screenshot({ path: join(SHOTS, 'arma-' + id + '.png') });
+    await page.mouse.up();
+    await page.waitForTimeout(350);
+    if (SHOTS && ['catapulta_mini', 'livro_magico', 'mini_buraco_negro', 'pincel_tinta'].includes(id)) await page.screenshot({ path: join(SHOTS, 'arma-' + id + '-depois.png') });
+  }
+  await page.close();
+  return errors;
+};
+
 const browser = await launch();
 let failed = 0;
 for (const [name, fn] of Object.entries(SCENARIOS)) {

@@ -92,6 +92,12 @@ export class Effects {
     for (const ev of events) {
       switch (ev.type) {
         case 'shoot': {
+          if (ev.mode === 'beam' || ev.mode === 'flame') {
+            // contínuos disparam muitas vezes por segundo: som baixinho e espaçado
+            const now = this.scene.time.now;
+            if (now - (this.contSound || 0) > 160) { this.contSound = now; sound.play(ev.mode === 'beam' ? 'shoot_magic' : 'fuse', 0.06); }
+            break;
+          }
           this.renderer.onShoot(ev);
           if (ev.wtype === 'melee') break;
           const cat = ev.category;
@@ -128,6 +134,14 @@ export class Effects {
           break;
         case 'chain': this.lightning(ev.points); sound.play('shock', 0.06); break;
         case 'bounce': sound.play('bounce', 0.05); break;
+        case 'charge_full': this.ring(ev.x, ev.y - 6, 30, 0xffd23f, 300); sound.play('equation'); break;
+        case 'charge_release': if (ev.level >= 1) this.shake(80, 0.004); break;
+        case 'block': this.burst(ev.x, ev.y, 0x9fd8ff, 8); sound.play('shield_hit', 0.03); break;
+        case 'thrust': sound.play('boss_dash', 0.05); break;
+        case 'deploy': this.ring(ev.x, ev.y, 24, 0xffffff, 250); sound.play('crate', 0.05); break;
+        case 'split': this.burst(ev.x, ev.y, 0xffffff, 5); break;
+        case 'orbit_launch': sound.play('shoot_throw', 0.05); break;
+        case 'turret_shoot': sound.play('shoot', 0.1); break;
         case 'deflect': this.burst(ev.x, ev.y, 0xbfe9ff, 6); sound.play('deflect', 0.03); break;
         case 'reflect': this.burst(ev.x, ev.y, 0x9fffd0, 8); sound.play('deflect', 0.03); break;
         case 'player_hit':

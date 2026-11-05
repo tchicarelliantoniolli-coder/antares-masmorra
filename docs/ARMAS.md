@@ -13,8 +13,9 @@ Se algum campo estiver errado, o jogo mostra o erro na tela de carregamento (e `
 | `category` | sim | `fogo`, `corpo`, `magica`, `arremesso`, `especial` (ou `inicial`). |
 | `rarity` | sim | `comum` (branco), `incomum` (verde), `rara` (azul), `epica` (roxa), `lendaria` (laranja). |
 | `type` | sim | `ranged` (atira projéteis) ou `melee` (corpo a corpo). |
+| `mode` | não | Mecânica de disparo das armas `ranged` (padrão `shot`). Veja **Modos** abaixo. |
 | `damage` | sim | Dano de cada projétil / golpe. |
-| `fireRate` | sim | Disparos por segundo. |
+| `fireRate` | sim | Disparos por segundo (no `beam`, ignorado; no `burst`, rajadas por segundo). |
 | `energyCost` | sim | Energia gasta por disparo (0 = grátis). |
 | `critChance` | sim | Chance de crítico, de 0 a 1 (crítico = dano x2). |
 | `inaccuracy` | sim | Imprecisão em graus (0 = perfeita). |
@@ -79,6 +80,47 @@ Formatos de projétil (`shape`): `paper`, `staple`, `eraser`, `clip`, `pencil`, 
 `backpack`, `sharpener`, `bell`, `projector`, `magnet`. Qualquer outro nome desenha um retângulo com as cores.
 Para usar um desenho próprio, veja `client/assets/sprites/LEIA-ME.md` (chave `wpn_<id>`).
 
+## Modos (`mode`)
+
+Cada arma `ranged` escolhe uma mecânica em `mode`. Os parâmetros ficam num bloco com o mesmo nome
+(ex.: `"mode": "beam", "beam": { "dps": 18 }`). Campos que faltam usam o padrão. Um campo com nome errado
+dentro do bloco é acusado na tela de carregamento.
+
+| `mode` | Como funciona | Campos do bloco (padrão) |
+|---|---|---|
+| `shot` | Tiro normal (o de sempre). | — |
+| `burst` | Cada disparo solta vários tiros seguidos; paga energia uma vez. | `count` (3), `interval` (0.07 s) |
+| `charge` | Segure para carregar; solte para atirar. Mais carga = mais dano. | `time` (1 s), `minMul` (0.4), `maxMul` (2.5), `fullPierce` (0), `fullCount` (1) |
+| `spinup` | A cadência começa baixa e sobe enquanto segura. | `startMul` (0.35), `maxMul` (1.6), `rampTime` (1.4 s) |
+| `beam` | Laser contínuo até a parede ou o primeiro inimigo. Gasta energia por segundo. | `dps` (20), `tick` (0.1), `range` (420), `width` (6), `pierce` (false), `ghost` (false, atravessa paredes), `energyPerSec` (6) |
+| `flame` | Cone curto e contínuo de partículas que atravessam inimigos. | `range` (130), `arc` (40°), `particles` (2) |
+| `lob` | Arremesso em arco: cai no ponto mirado, por cima de tudo. | `maxRange` (360), `flightTime` (0.6), `peak` (50), `fuse` (0), `bounces` (0), `pool` |
+| `split` | O tiro se divide ao bater. | `into` (3), `childDamageMul` (0.5), `spread` (60°) |
+| `chain` | Raio instantâneo que pula entre inimigos. | `range` (300), `chains` (3), `radius` (130), `falloff` (0.8), `aimCone` (35°) |
+| `deploy` | Coloca no chão uma `mine` (mina) ou `turret` (torreta). | `kind`, `max` (3), `life` (12), `radius` (60), `damage` (12), `fireRate` (2), `range` (220), `triggerRadius` (28) |
+| `singularity` | Tiro lento que vira um buraco negro que puxa e machuca. | `pullRadius` (110), `life` (2.5), `dps` (8), `pull` (170) |
+| `rain` | Projéteis caem do alto em volta do ponto mirado (com aviso no chão). | `count` (5), `radius` (70), `delay` (0.5), `hitRadius` (26), `maxRange` (380) |
+| `orbit` | Os disparos giram em volta do jogador; com o máximo, o próximo disparo lança todos. | `max` (4), `radius` (34), `spin` (4), `launchSpeed` (480) |
+| `variants` | Cada disparo sorteia uma variante de projétil. | `list`: lista de projéteis (aceita `damageMul`) |
+
+**Poça (`pool`)**, em `lob.pool` ou `projectile.pool`: `{ "r": 40, "life": 3, "dps": 2, "effect": null, "slowMul": 1, "style": "paint" }`.
+`style` muda a cor: `paint`, `acid`, `fire`, `ice`.
+
+Outros campos novos do `projectile`: `glyphSplit` (o caractere que se divide, ex.: `"÷"`) e `growOnReturn`
+(bumerangue volta maior, ex.: `1.5`).
+
+## Corpo a corpo (`melee.style`)
+
+| `style` | Como funciona | Bloco dentro de `melee` |
+|---|---|---|
+| `swing` | Golpe em arco (o de sempre). | — |
+| `thrust` | Estocada: avança acertando tudo no caminho, invulnerável durante o avanço. | `thrust`: `distance` (110), `time` (0.16) |
+| `combo` | Sequência de golpes; o último é mais forte e mais largo. | `combo`: `steps` (3), `finisherMul` (2), `finisherArcBonus` (40), `resetTime` (0.7) |
+| `shield` | Segure para bloquear balas de frente (gasta energia); solte para empurrar. | `shield`: `arc` (110), `blockCost` (1), `speedMul` (0.6), `bashKnockback` (320) |
+
+Para conferir o equilíbrio, rode `node scripts/weapon-dps.mjs`: ele mostra o dano por segundo de cada arma contra
+um alvo parado e marca as que saem da faixa da raridade.
+
 ## Exemplo completo
 
 ```json
@@ -88,15 +130,17 @@ Para usar um desenho próprio, veja `client/assets/sprites/LEIA-ME.md` (chave `w
   "category": "especial",
   "rarity": "rara",
   "type": "ranged",
-  "damage": 4,
-  "fireRate": 3,
+  "mode": "charge",
+  "damage": 5,
+  "fireRate": 2,
   "energyCost": 2,
   "critChance": 0.1,
-  "inaccuracy": 5,
-  "projectile": { "speed": 400, "radius": 8, "range": 380, "count": 3, "spread": 20, "bounce": 1,
+  "inaccuracy": 3,
+  "charge": { "time": 0.8, "minMul": 0.4, "maxMul": 2.5, "fullCount": 3 },
+  "projectile": { "speed": 400, "radius": 8, "range": 380, "bounce": 1,
                   "sprite": { "shape": "eraser", "color": "#2b2b2b", "accent": "#ffffff" } },
   "effect": { "type": "gelo", "chance": 0.3, "duration": 2, "power": 0.6 },
   "sprite": { "shape": "smg", "color": "#2b2b2b", "accent": "#ffffff" },
-  "description": "Três nuvens de pó de giz que deixam os inimigos lentos."
+  "description": "Segure para carregar: com carga cheia solta 3 nuvens de pó de giz que deixam os inimigos lentos."
 }
 ```

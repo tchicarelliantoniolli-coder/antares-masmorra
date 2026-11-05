@@ -1,6 +1,7 @@
 import { COLORS, GAME_W, GAME_H, textStyle } from '../config.js';
 import { hexToInt } from '../render/pixel.js';
-import { energyCost } from '/shared/sim/armas/Weapons.js';
+import { energyText } from '/shared/sim/armas/Weapons.js';
+import { MODE_LABELS } from '/shared/sim/data.js';
 
 const W = 228;
 
@@ -50,13 +51,21 @@ export class WeaponCard {
     y += 20;
     const pr = w.projectile;
     const count = pr && pr.count > 1 ? ` x${pr.count}` : '';
-    const cost = energyCost(player, w);
+    const mode = w.type === 'melee' ? w.melee.style : w.mode;
+    const fmt = (v) => (Number.isInteger(v) ? v : v.toFixed(1));
+    let dmg = `${w.damage}${count}`;
+    if (mode === 'beam') dmg = `${w.beam.dps}/s`;
+    else if (mode === 'charge') dmg = `${fmt(w.damage * w.charge.minMul)}–${fmt(w.damage * w.charge.maxMul)}`;
+    else if (mode === 'burst') dmg = `${w.damage}${count} x${w.burst.count}`;
+    else if (pr?.explode) dmg = `${pr.explode.damage} (explosão)`;
+    else if (mode === 'deploy') dmg = w.deploy.kind === 'mine' ? `${w.deploy.damage} (mina)` : `${w.deploy.damage}/tiro (torreta)`;
+    else if (mode === 'singularity') dmg = `${w.damage} + ${w.singularity.dps}/s`;
     const lines = [
-      `Dano: ${w.damage}${count}`,
-      `Cadência: ${w.fireRate}/s`,
-      `Energia: ${cost === 0 ? 'grátis' : Number.isInteger(cost) ? cost : cost.toFixed(2)}`,
-      `Crítico: ${Math.round(w.critChance * 100)}%`,
-      `Imprecisão: ${w.inaccuracy}°`
+      `Modo: ${MODE_LABELS[mode] || mode}`,
+      `Dano: ${dmg}`,
+      mode === 'beam' ? 'Cadência: contínuo' : `Cadência: ${w.fireRate}/s`,
+      `Energia: ${energyText(player, w)}`,
+      `Crítico: ${Math.round(w.critChance * 100)}%`
     ];
     this.body.setText(lines.join('\n')).setY(y);
     y += this.body.height + 2;

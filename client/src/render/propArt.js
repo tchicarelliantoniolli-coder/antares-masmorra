@@ -227,6 +227,22 @@ export function drawPlant() {
   });
 }
 
+/** Torreta das armas "deploy" (base + cano), desenhada de frente. */
+export function drawTurret() {
+  return c(24, 24, (ctx) => {
+    px(ctx, 4, 16, 16, 6, '#5a6a85'); px(ctx, 4, 16, 16, 1, '#8a9ab5'); px(ctx, 6, 22, 3, 2, '#2b2b33'); px(ctx, 15, 22, 3, 2, '#2b2b33');
+    circle(ctx, 12, 11, 6, '#9aa0a6'); px(ctx, 10, 9, 4, 4, '#3a3f4a'); px(ctx, 11, 10, 2, 2, '#5ef2ff');
+  });
+}
+
+/** Mina de tachinha (2 quadros: apagada / acesa). */
+export function drawMine() {
+  return strip(16, 16, 2, (ctx, f) => {
+    circle(ctx, 8, 9, 5, '#3a3f4a'); px(ctx, 4, 8, 9, 1, '#5a6a85');
+    circle(ctx, 8, 7, 2, f ? '#ff3d3d' : '#7a2a2a'); dots(ctx, [[3, 12], [13, 12], [8, 14]], '#c9d1d9');
+  });
+}
+
 export function drawCage() {
   return c(48, 56, (ctx) => {
     px(ctx, 2, 2, 44, 4, '#5c6673'); px(ctx, 2, 50, 44, 4, '#5c6673');

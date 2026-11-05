@@ -11,6 +11,7 @@ const DEPTH_PROJ = 9000;
 const DEPTH_FX = 9500;
 
 const ITEM_ICON = { apple: 'apple', suco: 'energy', broche: 'icon_shield' };
+const POOL_COLORS = { paint: 0xe04ad0, acid: 0x7be04a, fire: 0xff7a2a, ice: 0x8fe3ff };
 
 /**
  * Desenha o estado da simulação com Phaser. Não decide nada de jogo: só lê o "world"
@@ -135,6 +136,7 @@ export class WorldRenderer {
     for (const pr of w.projectiles) { seen.add(pr.id); this.syncProjectile(pr, dt); }
     for (const pk of w.pickups) { seen.add(pk.id); this.syncPickup(pk, time); }
     for (const al of w.allies || []) { seen.add(al.id); this.syncAlly(al, time); }
+    for (const b of w.beams || []) this.drawBeam(b, time);
 
     for (const [id, v] of this.views) {
       if (!seen.has(id)) {
@@ -262,11 +264,14 @@ export class WorldRenderer {
         const k = 1 - v.swingT / 0.16;
         ang = p.aim + (v.swingArc / 2) * (k * 2 - 1) * face;
       }
-      const hx = p.x + Math.cos(ang) * (7 - v.recoil);
-      const hy = by + 6 + Math.sin(ang) * (5 - v.recoil);
+      const shake = (p.wstate?.spin || 0) > 0.5 ? (Math.random() - 0.5) * 2 * p.wstate.spin : 0;
+      const hx = p.x + Math.cos(ang) * (7 - v.recoil) + shake;
+      const hy = by + 6 + Math.sin(ang) * (5 - v.recoil) + shake;
       v.weapon.setVisible(p.jailTimer <= 0).setPosition(hx, hy).setRotation(ang).setFlipY(Math.cos(ang) < 0);
       v.weapon.setDepth(Math.sin(ang) < -0.35 ? depth - 0.5 : depth + 0.5);
     }
+
+    this.drawWeaponState(p, by, time);
 
     if (p.buffs.nextHitMul > 1) {
       v.buff.setVisible(true).setText('×' + p.buffs.nextHitMul).setPosition(p.x, by - 26 - (v.label ? 14 : 0) + Math.sin(time / 120) * 2).setDepth(depth + 2);
@@ -380,12 +385,65 @@ export class WorldRenderer {
   syncAlly(a, time) {
     const s = this.scene;
     const v = this.view(a.id, () => {
-      const o = { shadow: s.add.image(a.x, a.y, 'shadow'), body: s.add.sprite(a.x, a.y, 'ally_planta').play('ally_planta_bite') };
+      const tex = s.textures.exists('ally_' + a.kind) ? 'ally_' + a.kind : 'ally_planta';
+      const body = s.add.sprite(a.x, a.y, tex);
+      if (a.kind === 'planta') body.play('ally_planta_bite');
+      const o = { shadow: s.add.image(a.x, a.y, 'shadow').setScale(a.kind === 'mine' ? 0.6 : 1), body };
       o.destroy = () => { o.shadow.destroy(); o.body.destroy(); };
       return o;
     });
+    const fading = a.life < 1.5 && Math.floor(time / 100) % 2;
+    if (a.kind === 'mine') {
+      v.shadow.setPosition(a.x, a.y + 4).setDepth(DEPTH_TRAPS + 1);
+      v.body.setPosition(a.x, a.y).setDepth(DEPTH_TRAPS + 2).setFrame(a.armed && Math.floor(time / 250) % 2 ? 1 : 0).setAlpha(a.armed ? 1 : 0.6);
+      return;
+    }
     v.shadow.setPosition(a.x, a.y + 10).setDepth(a.y - 1);
-    v.body.setPosition(a.x, a.y - 8).setDepth(a.y).setFlipX(Math.cos(a.aim || 0) < 0).setAlpha(a.life < 1.5 && Math.floor(time / 100) % 2 ? 0.5 : 1);
+    v.body.setPosition(a.x, a.y - 8).setDepth(a.y).setFlipX(Math.cos(a.aim || 0) < 0).setAlpha(fading ? 0.5 : 1);
+    if (a.kind === 'turret') v.body.setRotation(0);
+  }
+
+  // ---------------------------------------------------------------- armas: raios e estados
+  drawBeam(b, time) {
+    const g = this.fx;
+    const col = hexToInt(b.color || '#ffffff');
+    const jit = Math.sin(time / 30) * 0.8;
+    g.lineStyle(b.width + 8, col, 0.18).lineBetween(b.x1, b.y1, b.x2, b.y2 + jit);
+    g.lineStyle(b.width, col, 0.85).lineBetween(b.x1, b.y1, b.x2, b.y2 + jit);
+    g.lineStyle(Math.max(1, b.width / 3), 0xffffff, 0.95).lineBetween(b.x1, b.y1, b.x2, b.y2 + jit);
+    g.fillStyle(0xffffff, 0.9).fillCircle(b.x2, b.y2, b.width * 0.6 + Math.random() * 2);
+    g.fillStyle(col, 0.5).fillCircle(b.x1, b.y1, b.width * 0.7);
+  }
+
+  /** Carga, escudo levantado e rastro da estocada em volta do jogador. */
+  drawWeaponState(p, by, time) {
+    const ws = p.wstate;
+    const g = this.fx;
+    if (ws?.charge > 0) {
+      const full = ws.charge >= 1;
+      g.lineStyle(3, 0x000000, 0.45).strokeCircle(p.x, by + 2, 17);
+      g.lineStyle(3, full ? (Math.floor(time / 80) % 2 ? 0xffffff : 0xffd23f) : 0xffd23f, 1);
+      g.beginPath();
+      g.arc(p.x, by + 2, 17, -Math.PI / 2, -Math.PI / 2 + Math.min(1, ws.charge) * Math.PI * 2);
+      g.strokePath();
+    }
+    if (ws?.shielding) {
+      const w = this.data.weapon(p.weapons[p.cur]);
+      const half = ((w.melee?.shield?.arc || 110) * Math.PI) / 360;
+      g.lineStyle(5, 0x9fd8ff, 0.75);
+      g.beginPath();
+      g.arc(p.x, by + 4, 22, p.aim - half, p.aim + half);
+      g.strokePath();
+      g.lineStyle(2, 0xffffff, 0.9);
+      g.beginPath();
+      g.arc(p.x, by + 4, 24, p.aim - half, p.aim + half);
+      g.strokePath();
+    }
+    if (p.dash) {
+      for (let i = 1; i <= 3; i++) {
+        g.fillStyle(0xffffff, 0.25 / i).fillCircle(p.x - Math.cos(p.aim) * i * 9, by + 4 - Math.sin(p.aim) * i * 9, 9 - i);
+      }
+    }
   }
 
   // ---------------------------------------------------------------- projéteis
@@ -402,7 +460,15 @@ export class WorldRenderer {
       return objs;
     });
     v.age += dt;
-    v.img.setPosition(pr.x, pr.y);
+    const z = pr.z || 0;
+    v.img.setPosition(pr.x, pr.y - z);
+    const target = pr.lobTarget || (pr.lob ? [pr.lob.tx, pr.lob.ty] : null);
+    if (target) {
+      // arremesso em arco: sombra no chão e marcador de onde vai cair
+      this.groundFx.fillStyle(0x000000, 0.3).fillEllipse(pr.x, pr.y + 4, 12, 5);
+      this.groundFx.lineStyle(2, 0xffd23f, 0.6 + Math.sin(v.age * 20) * 0.3).strokeCircle(target[0], target[1], 14);
+      v.img.setDepth(DEPTH_PROJ + 5);
+    }
     if (pr.spin) {
       v.rot += pr.spin * dt;
       v.img.setRotation(v.rot);
@@ -523,6 +589,19 @@ export class WorldRenderer {
         g.fillStyle(0x6a3a9a, 0.5 * fade).fillEllipse(a.x - 6, a.y - 4, a.r * 0.8, a.r * 0.5);
         break;
       }
+      case 'rain_mark': {
+        g.fillStyle(0xff3d6e, 0.1 + 0.25 * k).fillCircle(a.x, a.y, a.r * k);
+        g.lineStyle(2, 0xffd23f, 0.85).strokeCircle(a.x, a.y, a.r);
+        break;
+      }
+      case 'pool': {
+        const fade = a.life - a.t < 0.6 ? (a.life - a.t) / 0.6 : 1;
+        const col = POOL_COLORS[a.style] ?? 0xe04ad0;
+        g.fillStyle(col, 0.45 * fade).fillEllipse(a.x, a.y, a.r * 2, a.r * 1.4);
+        g.fillStyle(0xffffff, 0.15 * fade).fillEllipse(a.x - a.r * 0.3, a.y - a.r * 0.2, a.r * 0.6, a.r * 0.3);
+        break;
+      }
+      case 'singularity':
       case 'gravity': {
         const fade = a.life - a.t < 0.5 ? (a.life - a.t) / 0.5 : 1;
         g.fillStyle(0x3a1a6a, 0.35 * fade).fillCircle(a.x, a.y, a.r);

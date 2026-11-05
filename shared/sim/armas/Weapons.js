@@ -3,7 +3,7 @@ import { MELEE_STYLES } from './melee.js';
 import { newWeaponState } from './common.js';
 import { launchOrbiters } from './modes/summon.js';
 
-export { energyCost, tryPay, startCooldown } from './common.js';
+export { energyCost, tryPay, startCooldown, energyText } from './common.js';
 
 /** Zera o estado da arma na mão (troca de arma, cair, ser preso...). Projéteis em órbita são lançados. */
 export function resetWeaponState(p, world = null) {

@@ -1,6 +1,6 @@
 import { GAME_W, GAME_H, COLORS, textStyle, titleStyle } from '../config.js';
 import { THEME_LABELS, REVIVE_RADIUS } from '/shared/sim/constants.js';
-import { energyCost } from '/shared/sim/armas/Weapons.js';
+import { energyText } from '/shared/sim/armas/Weapons.js';
 import { BLESSINGS } from '/shared/sim/salas/Pickups.js';
 import { hexToInt } from '../render/pixel.js';
 import { WeaponCard } from '../ui/WeaponCard.js';
@@ -315,8 +315,7 @@ export class HudScene extends Phaser.Scene {
     g.lineStyle(2, hexToInt(rcol), 1).strokeRect(GAME_W - 233, GAME_H - 71, 226, 64);
     this.wpIcon.setTexture('wpn_' + w1.id);
     this.wpName.setText(w1.name).setColor(rcol);
-    const cost = energyCost(p, w1);
-    this.wpCost.setText(cost > 0 ? `Energia: ${Number.isInteger(cost) ? cost : cost.toFixed(2)}` : 'Energia: grátis');
+    this.wpCost.setText(`Energia: ${energyText(p, w1)}`);
     if (p.weapons.length > 1) {
       const w2 = data.weapon(p.weapons[(p.cur + 1) % p.weapons.length]);
       g.fillStyle(COLORS.panel, 0.85).fillRect(GAME_W - 294, GAME_H - 62, 56, 50);

@@ -48,6 +48,7 @@ export class GameScene extends Phaser.Scene {
     cam.fadeIn(400);
 
     this.crosshair = this.add.image(0, 0, 'crosshair').setDepth(20000).setVisible(false);
+    this.aimMarker = this.add.graphics().setDepth(19999); // ponto de impacto de arremesso/chuva/minas
     this.input.setDefaultCursor('none');
 
     this.scene.launch('Hud', { game: this });
@@ -110,9 +111,25 @@ export class GameScene extends Phaser.Scene {
       const ptr = this.input.activePointer;
       const wp = this.cameras.main.getWorldPoint(ptr.x, ptr.y);
       this.crosshair.setVisible(true).setPosition(wp.x, wp.y);
-    } else this.crosshair.setVisible(false);
+      this.drawAimMarker(w.getPlayer(mouseCtrl.id), wp);
+    } else { this.crosshair.setVisible(false); this.aimMarker.clear(); }
 
     this.checkEnd();
+  }
+
+  /** Com arma de arremesso, chuva ou mina, mostra onde vai cair (limitado ao alcance). */
+  drawAimMarker(p, wp) {
+    const g = this.aimMarker;
+    g.clear();
+    if (!p || p.downed || p.dead) return;
+    const w = this.data_.weapon(p.weapons[p.cur]);
+    const max = w.mode === 'lob' ? w.lob.maxRange : w.mode === 'rain' ? w.rain.maxRange : w.mode === 'deploy' ? 60 : 0;
+    if (!max) return;
+    const a = Math.atan2(wp.y - (p.y - 4), wp.x - p.x);
+    const r = this.world.map.raycast(p.x, p.y, a, Math.min(max, Math.hypot(wp.x - p.x, wp.y - (p.y - 4))));
+    const rad = w.mode === 'rain' ? w.rain.radius + w.rain.hitRadius : w.mode === 'lob' ? (w.projectile.explode?.radius || w.lob.pool?.r || 16) : 14;
+    g.lineStyle(2, 0xffd23f, 0.55).strokeCircle(r.x, r.y, rad);
+    g.fillStyle(0xffd23f, 0.12).fillCircle(r.x, r.y, rad);
   }
 
   updateCamera(delta) {

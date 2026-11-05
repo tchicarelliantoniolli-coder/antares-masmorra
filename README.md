@@ -5,7 +5,8 @@ Os heróis são os professores do Ensino Médio do Colégio Antares Americana, e
 Os sprites são caricaturas carinhosas inspiradas nas fotos públicas de <https://antaresamericana.com.br/ensino-medio/>
 (cabelo, óculos, barba e jaleco com a cor da gola).
 
-**Versão 0.2:** 3 andares, 6 professores liberados, modos solo, co-op local (2 a 4) e online com salas por código.
+**Versão 0.3 (em andamento):** armas com mecânicas diferentes e revive novo no co-op. 3 andares, 6 professores liberados, modos solo,
+co-op local (2 a 4) e online com salas por código.
 
 ## Como rodar
 
@@ -25,7 +26,9 @@ Abra <http://localhost:3000>. Para trocar a porta: `PORT=8080 npm start`.
 npm test
 ```
 
-Roda os testes automáticos: geração de mapas, combate, 3 andares, chefes, loja, salas online.
+Roda os testes automáticos: geração de mapas, combate, armas, 3 andares, chefes, loja, salas online.
+
+Com o servidor rodando, `node scripts/smoke.mjs` abre o jogo num navegador sem tela (Playwright) e confere menu, partida e armas.
 
 - <http://localhost:3000/galeria.html> mostra todos os sprites e as chaves para trocar por arte própria.
 
@@ -109,11 +112,18 @@ sem acesso: a primeira visita demora cerca de 1 minuto e as salas abertas se per
   | Vivian | Biologia | Planta Carnívora (torreta) | Regenera vida |
 
   Os outros 8 aparecem na seleção como "Em breve".
-- **28 armas** em `shared/data/weapons.json`, com 5 raridades, efeitos (fogo, gelo, veneno, choque, atordoar),
-  ricochete, perfuração, explosão, teleguiado e bumerangue, além de armas corpo a corpo que cortam ou rebatem balas.
-  Cada jogador carrega 2 armas: **Q** troca, **E** pega. Ao chegar perto de uma arma aparece um card com os atributos.
+- **53 armas** em `shared/data/weapons.json`, com 5 raridades. Cada arma tem uma mecânica (`mode`):
+  - tiro normal, rajada, carregar (segure e solte), aquecimento (acelera enquanto segura);
+  - laser contínuo, lança-chamas, raio em cadeia;
+  - arremesso em arco (cai onde você mira), chuva sobre o alvo, tiro que se divide, buraco negro;
+  - minas e torretas no chão, projéteis em órbita, sorteio de projétil;
+  - corpo a corpo: golpe, estocada (avança), combo de 3 golpes e escudo (bloqueia de frente).
+  - Efeitos: fogo, gelo, veneno, choque, atordoar; poças no chão; ricochete, perfuração, explosão, teleguiado e bumerangue.
+  - Cada jogador carrega 2 armas: **Q** troca, **E** pega. Ao chegar perto de uma arma aparece um card com o modo e os atributos.
+  - `node scripts/weapon-dps.mjs` mostra o dano por segundo de cada arma.
 - **Recursos:** vida, escudo que regenera, energia e moedas.
-  - Revive: no co-op, um jogador caído levanta se um colega ficar 3 segundos perto dele.
+  - Revive: no co-op, um jogador caído levanta se um colega ficar parado e sem atirar ao lado dele por 5 segundos.
+    Quem estiver caído também levanta ao passar pelo portal para o próximo andar.
   - A partida acaba quando todos caem.
 
 ## Como o código está organizado
@@ -165,7 +175,6 @@ docs/ARMAS.md           como criar armas novas pelo JSON
   - Vinícius: Circuito.
   - William: Terremoto.
 - Mesa de laboratório (forja: combinar 2 armas) e itens passivos.
-- Chegar a 40+ armas; hoje são 28.
 - Reconectar no meio de uma partida online; hoje quem cai da conexão sai da partida.
 - Testar com controle de verdade e com pessoas jogando, para afinar o balanceamento (hoje foi calibrado com bots).
 - Opções de volume e tela cheia.
