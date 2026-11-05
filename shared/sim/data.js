@@ -5,13 +5,60 @@ const PROJECTILE_DEFAULTS = {
   speed: 450, radius: 5, range: 500, count: 1, spread: 0, pierce: 0, bounce: 0,
   homing: 0, boomerang: false, spin: 0, explode: null, explodeOnExpire: false,
   glyphs: null, glyphBonus: null, ghost: false,
+  pool: null, glyphSplit: null, growOnReturn: 1,
   sprite: { shape: 'orb', color: '#ffffff', accent: '#cccccc' }
 };
 const MELEE_DEFAULTS = { range: 50, arc: 110, knockback: 150, deflect: false, reflect: false };
 
+export const WEAPON_MODES = ['shot', 'burst', 'charge', 'spinup', 'beam', 'flame', 'lob', 'split', 'chain', 'deploy', 'singularity', 'rain', 'orbit', 'variants'];
+export const MELEE_STYLES = ['swing', 'thrust', 'combo', 'shield'];
+export const DEPLOY_KINDS = ['mine', 'turret'];
+
+/** Nomes dos modos e estilos em português (card da arma). */
+export const MODE_LABELS = {
+  shot: 'Tiro', burst: 'Rajada', charge: 'Carregar', spinup: 'Aquecimento', beam: 'Laser contínuo', flame: 'Lança-chamas',
+  lob: 'Arremesso em arco', split: 'Tiro que se divide', chain: 'Raio em cadeia', deploy: 'Coloca no chão',
+  singularity: 'Buraco negro', rain: 'Chuva', orbit: 'Órbita', variants: 'Sorteio',
+  swing: 'Golpe', thrust: 'Estocada', combo: 'Combo', shield: 'Escudo'
+};
+
+/** Padrões de cada modo (o bloco com o mesmo nome no JSON é mesclado por cima). */
+export const MODE_DEFAULTS = {
+  shot: {},
+  burst: { count: 3, interval: 0.07 },
+  charge: { time: 1.0, minMul: 0.4, maxMul: 2.5, fullPierce: 0, fullCount: 1 },
+  spinup: { startMul: 0.35, maxMul: 1.6, rampTime: 1.4 },
+  beam: { dps: 20, tick: 0.1, range: 420, width: 6, pierce: false, ghost: false, energyPerSec: 6 },
+  flame: { range: 130, arc: 40, particles: 2 },
+  lob: { maxRange: 360, flightTime: 0.6, peak: 50, fuse: 0, bounces: 0, pool: null },
+  split: { into: 3, childDamageMul: 0.5, spread: 60 },
+  chain: { range: 300, chains: 3, radius: 130, falloff: 0.8, aimCone: 35 },
+  deploy: { kind: 'mine', max: 3, life: 12, radius: 60, damage: 12, fireRate: 2, range: 220, triggerRadius: 28 },
+  singularity: { pullRadius: 110, life: 2.5, dps: 8, pull: 170 },
+  rain: { count: 5, radius: 70, delay: 0.5, hitRadius: 26 },
+  orbit: { max: 4, radius: 34, spin: 4, launchSpeed: 480 },
+  variants: { list: [] }
+};
+/** Padrões dos estilos de corpo a corpo (ficam dentro do bloco "melee", ex.: melee.combo). */
+export const STYLE_DEFAULTS = {
+  swing: {},
+  thrust: { distance: 110, time: 0.16 },
+  combo: { steps: 3, finisherMul: 2, finisherArcBonus: 40, resetTime: 0.7 },
+  shield: { arc: 110, blockCost: 1, speedMul: 0.6, bashKnockback: 320 }
+};
+/** Poça no chão (lob.pool, projectile.pool). */
+export const POOL_DEFAULTS = { r: 40, life: 3, dps: 2, effect: null, slowMul: 1, style: 'paint' };
+
 const REQUIRED_WEAPON_FIELDS = ['id', 'name', 'category', 'rarity', 'type', 'damage', 'fireRate', 'energyCost', 'critChance', 'inaccuracy'];
 const WEAPON_TYPES = ['ranged', 'melee'];
 const EFFECT_TYPES = ['fogo', 'gelo', 'veneno', 'choque', 'atordoar'];
+
+function unknownKeys(tag, block, defaults, where, errors) {
+  if (!block || typeof block !== 'object') return;
+  for (const k of Object.keys(block)) {
+    if (!(k in defaults)) errors.push(`${tag}: campo desconhecido "${k}" em ${where}`);
+  }
+}
 
 /** Valida o JSON de armas e devolve uma lista de erros (vazia = tudo certo). */
 export function validateWeapons(json) {
@@ -33,19 +80,53 @@ export function validateWeapons(json) {
       if (w[f] !== undefined && (typeof w[f] !== 'number' || w[f] < 0)) errors.push(`${tag}: "${f}" deve ser um número >= 0`);
     }
     if (w.fireRate === 0) errors.push(`${tag}: fireRate não pode ser 0`);
+    if (w.type === 'ranged') {
+      const mode = w.mode ?? 'shot';
+      if (!WEAPON_MODES.includes(mode)) errors.push(`${tag}: modo desconhecido "${mode}"`);
+      else {
+        unknownKeys(tag, w[mode], MODE_DEFAULTS[mode], mode, errors);
+        if (mode === 'variants' && !(Array.isArray(w.variants?.list) && w.variants.list.length)) errors.push(`${tag}: variants precisa de "list" com pelo menos 1 variante`);
+        if (mode === 'deploy' && w.deploy?.kind !== undefined && !DEPLOY_KINDS.includes(w.deploy.kind)) errors.push(`${tag}: deploy.kind deve ser ${DEPLOY_KINDS.join(' ou ')}`);
+        if (mode === 'lob') unknownKeys(tag, w.lob?.pool, POOL_DEFAULTS, 'lob.pool', errors);
+      }
+      unknownKeys(tag, w.projectile?.pool, POOL_DEFAULTS, 'projectile.pool', errors);
+    }
+    if (w.type === 'melee') {
+      const style = w.melee?.style ?? 'swing';
+      if (!MELEE_STYLES.includes(style)) errors.push(`${tag}: estilo de corpo a corpo desconhecido "${style}"`);
+      else unknownKeys(tag, w.melee?.[style], STYLE_DEFAULTS[style], 'melee.' + style, errors);
+    }
   }
   return errors;
+}
+
+function normalizeProjectile(pr) {
+  const p = { ...PROJECTILE_DEFAULTS, ...(pr || {}) };
+  p.sprite = { ...PROJECTILE_DEFAULTS.sprite, ...(pr?.sprite || {}) };
+  if (p.pool) p.pool = { ...POOL_DEFAULTS, ...p.pool };
+  return p;
 }
 
 export function normalizeWeapon(w) {
   const out = { ...w };
   out.effect = w.effect ? { chance: 1, duration: 3, power: 1, ...w.effect } : null;
   if (w.type === 'melee') {
-    out.melee = { ...MELEE_DEFAULTS, ...(w.melee || {}) };
+    const style = w.melee?.style ?? 'swing';
+    out.melee = { ...MELEE_DEFAULTS, ...(w.melee || {}), style };
+    out.melee[style] = { ...(STYLE_DEFAULTS[style] || {}), ...(w.melee?.[style] || {}) };
   } else {
-    const p = { ...PROJECTILE_DEFAULTS, ...(w.projectile || {}) };
-    p.sprite = { ...PROJECTILE_DEFAULTS.sprite, ...(w.projectile?.sprite || {}) };
-    out.projectile = p;
+    out.projectile = normalizeProjectile(w.projectile);
+    const mode = w.mode ?? 'shot';
+    out.mode = mode;
+    out[mode] = { ...(MODE_DEFAULTS[mode] || {}), ...(w[mode] || {}) };
+    if (mode === 'variants') {
+      // cada variante é um projétil completo, herdando o projétil base da arma
+      out.variants.list = (w.variants?.list || []).map((v) => {
+        const { damageMul = 1, ...rest } = v;
+        return { ...normalizeProjectile({ ...(w.projectile || {}), ...rest, sprite: { ...(w.projectile?.sprite || {}), ...(rest.sprite || {}) } }), damageMul };
+      });
+    }
+    if (mode === 'lob' && out.lob.pool) out.lob.pool = { ...POOL_DEFAULTS, ...out.lob.pool };
   }
   out.sprite = { shape: 'pistol', color: '#cccccc', accent: '#444444', ...(w.sprite || {}) };
   out.starterOnly = !!w.starterOnly;

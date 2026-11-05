@@ -46,3 +46,42 @@ test('o exemplo de arma do docs/ARMAS.md é válido', async () => {
   const json = readJson('weapons.json');
   assert.deepEqual(validateWeapons({ ...json, weapons: [...json.weapons, example] }), []);
 });
+
+// ---------------------------------------------------------------- modos de arma (v0.3)
+import { normalizeWeapon, WEAPON_MODES, MELEE_STYLES, MODE_LABELS } from '../shared/sim/data.js';
+
+const base = { id: 't', name: 'T', category: 'fogo', rarity: 'comum', damage: 1, fireRate: 1, energyCost: 0, critChance: 0, inaccuracy: 0 };
+
+test('arma sem mode vira "shot"; melee sem estilo vira "swing"', () => {
+  assert.equal(normalizeWeapon({ ...base, type: 'ranged' }).mode, 'shot');
+  assert.equal(normalizeWeapon({ ...base, type: 'melee' }).melee.style, 'swing');
+});
+
+test('bloco do modo é mesclado com os padrões', () => {
+  const w = normalizeWeapon({ ...base, type: 'ranged', mode: 'beam', beam: { dps: 30 } });
+  assert.equal(w.beam.dps, 30);
+  assert.equal(w.beam.tick, 0.1);
+  const m = normalizeWeapon({ ...base, type: 'melee', melee: { style: 'combo', combo: { finisherMul: 3 } } });
+  assert.equal(m.melee.combo.finisherMul, 3);
+  assert.equal(m.melee.combo.steps, 3);
+  const v = normalizeWeapon({ ...base, type: 'ranged', mode: 'variants', variants: { list: [{ speed: 300 }] } });
+  assert.equal(v.variants.list[0].speed, 300);
+  assert.equal(v.variants.list[0].radius, 5, 'variante vira projétil completo');
+});
+
+test('validador acusa modo, estilo, sorteio vazio, tipo de deploy e campo com erro de digitação', () => {
+  const json = readJson('weapons.json');
+  const check = (w) => validateWeapons({ ...json, weapons: [{ ...base, ...w }] });
+  assert.ok(check({ type: 'ranged', mode: 'laserzao' }).some((e) => e.includes('modo desconhecido')));
+  assert.ok(check({ type: 'melee', melee: { style: 'voadora' } }).some((e) => e.includes('estilo de corpo a corpo desconhecido')));
+  assert.ok(check({ type: 'ranged', mode: 'variants', variants: { list: [] } }).some((e) => e.includes('variants')));
+  assert.ok(check({ type: 'ranged', mode: 'deploy', deploy: { kind: 'canhao' } }).some((e) => e.includes('deploy')));
+  assert.ok(check({ type: 'ranged', mode: 'charge', charge: { tiem: 1 } }).some((e) => e.includes('campo desconhecido "tiem"')));
+  assert.deepEqual(check({ type: 'ranged', mode: 'charge', charge: { time: 1 } }), []);
+});
+
+test('todo modo e estilo tem nome em português', () => {
+  for (const m of [...WEAPON_MODES, ...MELEE_STYLES]) assert.ok(MODE_LABELS[m], m);
+  assert.equal(WEAPON_MODES.length, 14);
+  assert.deepEqual(MELEE_STYLES, ['swing', 'thrust', 'combo', 'shield']);
+});
