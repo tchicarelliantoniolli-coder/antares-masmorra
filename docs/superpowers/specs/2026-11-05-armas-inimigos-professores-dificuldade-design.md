@@ -266,11 +266,17 @@ tão difícil quanto o solo.
 - Cura mais rara: menos drops de vida, loja e estátua mais caras, enfermaria cura menos.
 - Escudo do jogador demora mais a regenerar.
 
+**Referência real (do dono):** na v0.2, ele e o amigo terminaram os 3 andares **de primeira**, em dupla. Na v0.3, ele
+quer que o jogo seja bem difícil: ninguém deve terminar na primeira tentativa, e terminar deve exigir prática.
+
 **Calibração com bots.** Não existe hoje um bot de teste. Criar um bot sem interface (Node) que joga uma partida
 completa: anda até os inimigos, mira e atira, desvia de balas próximas com qualidade configurável (tempo de reação e
-precisão), pega armas e itens, usa a habilidade. Rodar várias sementes em dois níveis:
-- bot "bom": termina em poucas sementes (cerca de 20-35%);
-- bot "médio": morre em geral no andar 2.
+precisão), pega armas e itens, usa a habilidade. Rodar várias sementes, com 1 e 2 jogadores, em dois níveis:
+- **bot "dupla do dono"**: o nível mais fraco que termina a v0.2 de forma confiável (cerca de 80% ou mais das
+  sementes), calibrado rodando o bot na v0.2 antes das mudanças. Na v0.3, ele deve terminar em poucas sementes
+  (cerca de 5-15%) e cair em geral no andar 2 ou no chefe do andar 3;
+- **bot "experiente"**: melhor que o anterior (reage mais rápido, mira melhor). Na v0.3, termina em cerca de 25-40%
+  das sementes, mostrando que dá para vencer com habilidade.
 
 O teste definitivo é o dono e o amigo jogarem. Depois da etapa 5, ajustar os números conforme o que eles acharem.
 
