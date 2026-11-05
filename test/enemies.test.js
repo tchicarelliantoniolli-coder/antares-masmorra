@@ -389,6 +389,7 @@ test('monitor morto leva os invocados junto e a sala limpa', () => {
 // ---------------------------------------------------------------- elites com modificadores
 import { AFFIXES } from '../shared/sim/inimigos/affixes.js';
 import { hurtPlayer } from '../shared/sim/combat.js';
+import { TILE, T } from '../shared/sim/constants.js';
 import { spawnWave } from '../shared/sim/salas/RoomDirector.js';
 
 function elite(w, type, x, y, affix) {
@@ -478,6 +479,29 @@ test('duplicador: ao chegar a 50% cria uma cópia não elite, uma vez só', () =
   assert.equal(w.enemies.length, antes + 1, 'só uma vez');
 });
 
+test('duplicador: cópia nunca nasce dentro de parede', () => {
+  const { w, p } = arena();
+  const cx = Math.floor((p.x + 100) / TILE), cy = Math.floor(p.y / TILE);
+  const e = elite(w, 'caderno_zumbi', (cx + 0.5) * TILE, (cy + 0.5) * TILE, 'duplicador');
+  e.hp = e.maxHp = 100;
+  for (const [dx, dy] of [[-1, 0], [1, 0], [-1, -1], [1, -1], [-1, 1], [1, 1], [0, -1], [0, 1]]) w.map.set(cx + dx, cy + dy, T.WALL);
+  const antes = w.enemies.length;
+  damageEnemy(w, e, 60, { noMul: true });
+  assert.equal(w.enemies.length, antes + 1);
+  const c = w.enemies[w.enemies.length - 1];
+  assert.ok(!w.map.boxSolid(c.x - c.r, c.y - c.r, c.x + c.r, c.y + c.r), 'cópia fora de tile sólido');
+  // com só um lado bloqueado, acha outra vaga
+  const { w: w2, p: p2 } = arena();
+  const tx = Math.floor((p2.x + 100) / TILE), ty = Math.floor(p2.y / TILE);
+  const e2 = elite(w2, 'caderno_zumbi', (tx + 0.5) * TILE, (ty + 0.5) * TILE, 'duplicador');
+  e2.hp = e2.maxHp = 100;
+  w2.map.set(tx + 1, ty, T.WALL);
+  damageEnemy(w2, e2, 60, { noMul: true });
+  const c2 = w2.enemies[w2.enemies.length - 1];
+  assert.ok(!w2.map.boxSolid(c2.x - c2.r, c2.y - c2.r, c2.x + c2.r, c2.y + c2.r));
+  assert.ok(Math.hypot(c2.x - e2.x, c2.y - e2.y) > e2.r, 'achou vaga ao lado em vez de nascer em cima');
+});
+
 test('elite sempre tem modificador e chefe nunca', () => {
   const { w } = arena();
   const nomes = new Set();
@@ -508,13 +532,16 @@ test('todo inimigo do enemyPool de cada andar existe e tem role; chefes nunca', 
 });
 
 test('onda do andar 3 tem pelo menos um de cada papel quando cabe', () => {
+  let exercitadas = 0;
   for (let seed = 1; seed <= 12; seed++) {
     const w = makeWorld({ seed, floor: 3 });
     const room = w.rooms.find((r) => r.type === 'combat' && r.waves.some((x) => x.length >= 5));
     if (!room) continue;
     const idx = room.waves.findIndex((x) => x.length >= 5);
+    exercitadas++;
     spawnWave(w, room, idx);
     const roles = new Set(w.enemies.filter((e) => e.roomId === room.id).map((e) => e.def.role));
     for (const r of w.floorDef.waveRoles) assert.ok(roles.has(r), `seed ${seed}: falta ${r}`);
   }
+  assert.ok(exercitadas > 0, 'nenhuma semente exercitou o teste');
 });

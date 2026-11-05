@@ -41,9 +41,14 @@ export const AFFIXES = {
     onDamaged(world, e) {
       if (e.splitDone || e.dead || e.hp <= 0 || e.hp > e.maxHp * 0.5) return;
       e.splitDone = true;
-      const d = e.r * 2.2;
-      const livre = !world.map.boxSolid(e.x + d - e.r, e.y - e.r, e.x + d + e.r, e.y + e.r);
-      createEnemy(world, e.type, e.x + (livre ? d : -d), e.y, e.roomId, { spawnTime: 0.5 });
+      // procura um ponto livre ao redor (copia tem o raio base, sem o aumento de elite); sem vaga, nasce no lugar do original
+      const r = e.def.radius, d = e.r * 2.2;
+      let x = e.x, y = e.y;
+      for (let i = 0; i < 8; i++) {
+        const a = (i * Math.PI) / 4, cx = e.x + Math.cos(a) * d, cy = e.y + Math.sin(a) * d;
+        if (!world.map.boxSolid(cx - r, cy - r, cx + r, cy + r)) { x = cx; y = cy; break; }
+      }
+      createEnemy(world, e.type, x, y, e.roomId, { spawnTime: 0.5 });
     }
   }
 };
