@@ -12,6 +12,8 @@ export const TICK = 1 / 60;        // passo fixo da simulação
 
 export const PLAYER_RADIUS = 10;
 export const INTERACT_RADIUS = 40;
+export const DEFAULT_AIM_DIST = 220;  // distância da mira quando não há mouse (controle, 2º teclado)
+export const MAX_AIM_DIST = 1200;
 export const PICKUP_MAGNET_RADIUS = 90;
 export const INVULN_TIME = 0.8;
 export const SHIELD_REGEN_DELAY = 4;

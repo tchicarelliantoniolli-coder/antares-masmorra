@@ -64,6 +64,31 @@ export const SCENARIOS = {
   }
 };
 
+/** Começa uma partida solo direto (sem clicar nos menus). */
+async function startSolo(page, characterId = 'harilson') {
+  await page.evaluate((c) => {
+    const g = window.__game;
+    g.scene.getScenes(true).forEach((sc) => sc.scene.stop());
+    g.scene.start('Game', { mode: 'solo', players: [{ id: 'p1', characterId: c, name: 'Jogador 1', device: 'auto' }] });
+  }, characterId);
+  await waitScene(page, 'Game', 5000);
+  await page.waitForTimeout(600);
+}
+
+SCENARIOS['partida-solo'] = async (browser) => {
+  const { page, errors } = await openGame(browser);
+  await startSolo(page);
+  await clickGame(page, GAME_W / 2 + 200, GAME_H / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(1000);
+  await page.mouse.up();
+  const shots = await page.evaluate(() => window.__game.scene.getScene('Game').world.stats.shots);
+  if (!(shots > 0)) errors.push('nenhum tiro disparado segurando o mouse');
+  if (SHOTS) await page.screenshot({ path: join(SHOTS, 'partida-solo.png') });
+  await page.close();
+  return errors;
+};
+
 const browser = await launch();
 let failed = 0;
 for (const [name, fn] of Object.entries(SCENARIOS)) {

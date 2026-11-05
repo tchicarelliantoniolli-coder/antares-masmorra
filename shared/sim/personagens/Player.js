@@ -1,7 +1,7 @@
 import {
-  PLAYER_RADIUS, SHIELD_REGEN_DELAY, SHIELD_REGEN_INTERVAL, REVIVE_TIME, REVIVE_RADIUS
+  PLAYER_RADIUS, SHIELD_REGEN_DELAY, SHIELD_REGEN_INTERVAL, REVIVE_TIME, REVIVE_RADIUS, DEFAULT_AIM_DIST, MAX_AIM_DIST
 } from '../constants.js';
-import { fireWeapon } from '../armas/Weapons.js';
+import { updateWeapon } from '../armas/Weapons.js';
 import { castSkill } from './skills.js';
 import { applyPassive } from './passives.js';
 import { findInteractable, interact } from '../salas/Pickups.js';
@@ -14,7 +14,7 @@ export function createPlayer(world, { id, characterId, name, slot = 0 }) {
     charId: c.id,
     x: 0, y: 0, r: PLAYER_RADIUS,
     vx: 0, vy: 0,
-    aim: 0, moving: false,
+    aim: 0, aimDist: DEFAULT_AIM_DIST, moving: false, firing: false, prevFire: false,
     maxHp: c.stats.hp, hp: c.stats.hp,
     maxShield: c.stats.shield, shield: c.stats.shield,
     maxEnergy: c.stats.energy, energy: c.stats.energy,
@@ -22,6 +22,8 @@ export function createPlayer(world, { id, characterId, name, slot = 0 }) {
     weapons: [c.starterWeapon],
     cur: 0,
     fireCd: 0, noEnergyCd: 0,
+    wstate: null,                   // estado da arma na mão (carga, aquecimento...), ver armas/common.js
+    dash: null,                     // estocada em andamento
     skillId: c.skill.id,
     skillCooldown: c.skill.cooldown,
     skillCd: 0,
@@ -62,6 +64,7 @@ function updatePlayer(world, p, inp, dt) {
     return;
   }
   if (typeof inp.aim === 'number' && !Number.isNaN(inp.aim)) p.aim = inp.aim;
+  if (typeof inp.aimDist === 'number' && Number.isFinite(inp.aimDist)) p.aimDist = Math.max(0, Math.min(MAX_AIM_DIST, inp.aimDist));
 
   // Suspensão: preso na cela, fora da luta
   if (p.jailTimer > 0) {
@@ -118,10 +121,9 @@ function updatePlayer(world, p, inp, dt) {
     world.emit('weapon_swap', { playerId: p.id, weaponId: p.weapons[p.cur] });
   }
 
-  // Tiro
-  p.fireCd -= dt;
+  // Tiro (cada arma tem seu modo: veja armas/Weapons.js)
   p.noEnergyCd -= dt;
-  if (inp.fire && p.fireCd <= 0 && !signing) fireWeapon(world, p);
+  updateWeapon(world, p, inp, dt);
 
   // Habilidade (Espaço)
   if (inp.skill && !signing) {

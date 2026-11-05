@@ -36,6 +36,11 @@ export function spawnProjectile(world, o) {
     glyph: o.glyph || null,
     style: o.style || null,        // estilo de bala inimiga
     slow: o.slow || 0,             // lentidão aplicada ao jogador (balas inimigas)
+    split: o.split || null,        // divide-se ao bater (modo split)
+    child: !!o.child,              // filho de uma divisão (não divide de novo)
+    singularity: o.singularity || null, // vira buraco negro ao bater
+    pool: o.pool || null,          // deixa poça ao bater
+    growOnReturn: o.growOnReturn ?? 1,  // bumerangue cresce na volta
     hit: new Set(),
     dead: false,
     age: 0

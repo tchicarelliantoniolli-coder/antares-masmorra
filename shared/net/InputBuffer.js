@@ -3,6 +3,8 @@
  * até a simulação consumir, para nenhum toque se perder entre dois passos.
  * Usado pela sessão local (navegador) e pelas salas online (servidor).
  */
+import { DEFAULT_AIM_DIST, MAX_AIM_DIST } from '../sim/constants.js';
+
 const EDGE_KEYS = ['skill', 'interact', 'swap'];
 
 export class InputBuffer {
@@ -32,6 +34,7 @@ export function sanitizeInput(inp = {}) {
   return {
     moveX: mx, moveY: my,
     aim: num(inp.aim),
+    aimDist: typeof inp.aimDist === 'number' && Number.isFinite(inp.aimDist) ? Math.max(0, Math.min(MAX_AIM_DIST, inp.aimDist)) : DEFAULT_AIM_DIST,
     fire: !!inp.fire, skill: !!inp.skill, interact: !!inp.interact, swap: !!inp.swap
   };
 }

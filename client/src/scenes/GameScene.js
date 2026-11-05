@@ -90,7 +90,7 @@ export class GameScene extends Phaser.Scene {
     for (const { id, ctrl } of this.controllers) {
       const p = w.getPlayer(id);
       let inp = ctrl.poll(w, p);
-      if (this.menuOpen) inp = { moveX: 0, moveY: 0, aim: inp.aim, fire: false };
+      if (this.menuOpen) inp = { moveX: 0, moveY: 0, aim: inp.aim, aimDist: inp.aimDist, fire: false };
       this.session.setInput(id, inp);
     }
     this.keys.endFrame();

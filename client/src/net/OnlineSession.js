@@ -29,7 +29,7 @@ export class OnlineSession {
     this.sendT = 0;
     this.history = [];
     this.pred = null;
-    this.input = { moveX: 0, moveY: 0, aim: 0, fire: false };
+    this.input = { moveX: 0, moveY: 0, aim: 0, aimDist: 220, fire: false };
     this.edges = { skill: false, interact: false, swap: false };
     this.endData = null;
     this.off = [
@@ -69,7 +69,7 @@ export class OnlineSession {
   setInput(id, inp) {
     if (id !== this.myId) return;
     const changed = inp.fire !== this.input.fire || Math.sign(inp.moveX) !== Math.sign(this.input.moveX) || Math.sign(inp.moveY) !== Math.sign(this.input.moveY);
-    this.input = { moveX: inp.moveX, moveY: inp.moveY, aim: inp.aim, fire: inp.fire };
+    this.input = { moveX: inp.moveX, moveY: inp.moveY, aim: inp.aim, aimDist: inp.aimDist, fire: inp.fire };
     let edge = false;
     for (const k of ['skill', 'interact', 'swap']) if (inp[k]) { this.edges[k] = true; edge = true; }
     if (edge || changed) this.sendT = SEND_EVERY; // envia já

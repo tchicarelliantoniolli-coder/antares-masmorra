@@ -1,6 +1,8 @@
+import { DEFAULT_AIM_DIST } from '/shared/sim/constants.js';
+
 /**
  * Controles por dispositivo. Cada jogador local tem um "controller" que produz o input da simulação:
- *   { moveX, moveY, aim, fire, skill, interact, swap }
+ *   { moveX, moveY, aim, aimDist, fire, skill, interact, swap }
  *
  * Dispositivos:
  *  - 'auto'  (solo/online): teclado + mouse e qualquer controle conectado
@@ -63,6 +65,18 @@ export function autoAim(world, p) {
   return best ? Math.atan2(best.y - p.y, best.x - p.x) : null;
 }
 
+/** Distância até o inimigo que a mira automática escolheria (ou null). */
+export function autoAimDist(world, p) {
+  if (!world) return null;
+  let bd = 420, found = false;
+  for (const e of world.enemies) {
+    if (e.dead || e.spawning > 0 || e.def?.invulnerable) continue;
+    const d = Math.hypot(e.x - p.x, e.y - p.y);
+    if (d < bd && world.map.lineOfSight(p.x, p.y, e.x, e.y)) { bd = d; found = true; }
+  }
+  return found ? bd : null;
+}
+
 export class Controller {
   constructor(scene, keys, device) {
     this.scene = scene;
@@ -113,6 +127,7 @@ export class Controller {
     const d = this.device;
     let mx = 0, my = 0, fire = false, skill = false, interact = false, swap = false;
     let aim = this.lastAim;
+    let aimDist = null;
     const usesLeft = d === 'auto' || d === 'kbm';
     const usesArrows = d === 'auto' || d === 'kb2';
 
@@ -130,6 +145,7 @@ export class Controller {
       if (player && this.mode === 'mouse') {
         const wp = this.scene.cameras.main.getWorldPoint(ptr.x, ptr.y);
         aim = Math.atan2(wp.y - (player.y - 4), wp.x - player.x);
+        aimDist = Math.hypot(wp.y - (player.y - 4), wp.x - player.x);
       }
     }
     if (usesArrows) {
@@ -164,7 +180,8 @@ export class Controller {
     if (this.mode === 'keys') this.autoAimFor(world, player, mx, my, (a) => { aim = a; });
 
     this.lastAim = aim;
-    return { moveX: mx, moveY: my, aim, fire, skill, interact, swap };
+    if (aimDist === null) aimDist = (player && autoAimDist(world, player)) ?? DEFAULT_AIM_DIST;
+    return { moveX: mx, moveY: my, aim, aimDist, fire, skill, interact, swap };
   }
 
   autoAimFor(world, player, mx, my, set) {

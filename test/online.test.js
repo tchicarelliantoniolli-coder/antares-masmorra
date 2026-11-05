@@ -67,3 +67,14 @@ test('sala cheia com 4 jogadores e fim de jogo volta para o lobby', () => {
   const end = conns[0].last('game:end');
   assert.equal(end.victory, false);
 });
+
+import { sanitizeInput } from '../shared/net/InputBuffer.js';
+import { DEFAULT_AIM_DIST, MAX_AIM_DIST } from '../shared/sim/constants.js';
+
+test('aimDist vindo da rede é sanitizado', () => {
+  assert.equal(sanitizeInput({ aimDist: NaN }).aimDist, DEFAULT_AIM_DIST);
+  assert.equal(sanitizeInput({}).aimDist, DEFAULT_AIM_DIST, 'cliente antigo sem aimDist');
+  assert.equal(sanitizeInput({ aimDist: -5 }).aimDist, 0);
+  assert.equal(sanitizeInput({ aimDist: 1e9 }).aimDist, MAX_AIM_DIST);
+  assert.equal(sanitizeInput({ aimDist: 'x' }).aimDist, DEFAULT_AIM_DIST);
+});
