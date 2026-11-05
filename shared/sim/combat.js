@@ -2,6 +2,7 @@ import { INVULN_TIME, TILE } from './constants.js';
 import { dropEnergy, dropCoins, dropWeapon, createPickup } from './salas/Pickups.js';
 import { damagePropsInRadius } from './salas/Props.js';
 import { BEHAVIOR_HOOKS } from './inimigos/behaviors.js';
+import { AFFIXES } from './inimigos/affixes.js';
 
 /**
  * Dano em inimigo. opts: { crit, source (jogador), effect, knockback, angle, noMul }
@@ -12,6 +13,7 @@ export function damageEnemy(world, e, amount, opts = {}) {
   if (e.def.invulnerable || e.shielded > 0) {
     if (e.shieldHit) { e.shielded = 0; e.shieldHit = false; } // escudo do grêmio: vale por 1 golpe
     world.emit('immune', { x: e.x, y: e.y - e.r });
+    if (e.affix) AFFIXES[e.affix]?.onDamaged?.(world, e);
     return 0;
   }
   let dmg = amount;
@@ -46,6 +48,7 @@ export function damageEnemy(world, e, amount, opts = {}) {
   }
   if (opts.effect && world.rng.chance(opts.effect.chance ?? 1)) applyEffect(world, e, opts.effect, src);
   if (e.hp <= 0) killEnemy(world, e, src);
+  else if (e.affix) AFFIXES[e.affix]?.onDamaged?.(world, e);
   return dmg;
 }
 
@@ -137,6 +140,7 @@ export function killEnemy(world, e, src) {
     explode(world, e.x, e.y, e.def.onDeathExplode.radius, e.def.onDeathExplode.damage, { style: 'barrel' });
   }
   if (!e.minion) BEHAVIOR_HOOKS[e.def.behavior]?.onDeath?.(world, e);
+  if (!e.minion && e.affix) AFFIXES[e.affix]?.onDeath?.(world, e);
   if (e.minion) return; // invocações do chefe não dão drop
   const mul = e.elite ? 2 : 1;
   if (drops.energy) dropEnergy(world, e.x, e.y, world.rng.int(drops.energy[0], drops.energy[1]) * mul);

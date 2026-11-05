@@ -2,72 +2,72 @@
   "_doc": "Inimigos e configuração dos andares. 'behavior' escolhe a IA (chaser, shooter, fan_shooter, turret, ringer, kamikaze, boss_xerox, boss_katia, boss_samara, splitter, charger, sniper, burrower, summoner, buffer, blinker...). Os números podem ser ajustados livremente.",
   "enemies": {
     "caderno_zumbi": {
-      "name": "Caderno Zumbi", "behavior": "chaser", "hp": 12, "speed": 78, "radius": 11, "contactDamage": 1,
+      "name": "Caderno Zumbi", "role": "tanque", "behavior": "chaser", "hp": 12, "speed": 78, "radius": 11, "contactDamage": 1,
       "lunge": { "range": 74, "windup": 0.4, "speed": 270, "duration": 0.3, "cooldown": 1.6 },
       "drops": { "energy": [1, 2], "coins": [0, 2] }
     },
     "prova_voadora": {
-      "name": "Prova Voadora", "behavior": "shooter", "hp": 7, "speed": 86, "radius": 10, "flying": true, "contactDamage": 0,
+      "name": "Prova Voadora", "role": "atirador", "behavior": "shooter", "hp": 7, "speed": 86, "radius": 10, "flying": true, "contactDamage": 0,
       "preferredRange": [150, 260],
       "attack": { "interval": 2.2, "windup": 0.4, "burst": 3, "bullets": 1, "spread": 0, "speed": 180, "damage": 1, "style": "paper" },
       "drops": { "energy": [1, 3], "coins": [0, 2] }
     },
     "estojo": {
-      "name": "Estojo Raivoso", "behavior": "fan_shooter", "hp": 16, "speed": 46, "radius": 12, "contactDamage": 1,
+      "name": "Estojo Raivoso", "role": "tanque", "behavior": "fan_shooter", "hp": 16, "speed": 46, "radius": 12, "contactDamage": 1,
       "preferredRange": [120, 220], "openTime": 1.2,
       "attack": { "interval": 2.6, "windup": 0.55, "bullets": 4, "spread": 48, "speed": 185, "damage": 1, "style": "pencil" },
       "drops": { "energy": [2, 3], "coins": [1, 3] }
     },
     "lousa": {
-      "name": "Lousa Assombrada", "behavior": "turret", "hp": 24, "speed": 0, "radius": 13, "contactDamage": 1,
+      "name": "Lousa Assombrada", "role": "atirador", "behavior": "turret", "hp": 24, "speed": 0, "radius": 13, "contactDamage": 1,
       "attack": { "interval": 3.2, "windup": 0.6, "arms": 3, "turnRate": 1.6, "duration": 1.8, "speed": 140, "damage": 1, "style": "chalk" },
       "drops": { "energy": [2, 4], "coins": [1, 3] }
     },
     "sinal_recreio": {
-      "name": "Sinal do Recreio", "behavior": "ringer", "hp": 14, "speed": 64, "radius": 11, "flying": true, "contactDamage": 0,
+      "name": "Sinal do Recreio", "role": "atirador", "behavior": "ringer", "hp": 14, "speed": 64, "radius": 11, "flying": true, "contactDamage": 0,
       "attack": { "interval": 3, "windup": 0.6, "bullets": 18, "speed": 120, "ringSpeeds": [170, 85], "damage": 1, "style": "wave" },
       "drops": { "energy": [2, 3], "coins": [1, 2] }
     },
     "mochila": {
-      "name": "Mochila-Bomba", "behavior": "kamikaze", "hp": 9, "speed": 118, "radius": 11, "contactDamage": 0,
+      "name": "Mochila-Bomba", "role": "pressao", "behavior": "kamikaze", "hp": 9, "speed": 118, "radius": 11, "contactDamage": 0,
       "onDeathExplode": { "radius": 52, "damage": 6 },
       "explosion": { "radius": 60, "damage": 6, "fireTime": 3 },
       "drops": { "energy": [1, 2], "coins": [0, 2] }
     },
     "borracha": {
-      "name": "Borracha Divisora", "behavior": "splitter", "hp": 16, "speed": 72, "radius": 12, "contactDamage": 1,
+      "name": "Borracha Divisora", "role": "pressao", "behavior": "splitter", "hp": 16, "speed": 72, "radius": 12, "contactDamage": 1,
       "split": { "maxGen": 2, "count": 2, "size": 0.8 },
       "drops": { "energy": [1, 2], "coins": [0, 2] }
     },
     "grampeador": {
-      "name": "Grampeador Touro", "behavior": "charger", "hp": 22, "speed": 66, "radius": 13, "contactDamage": 1,
+      "name": "Grampeador Touro", "role": "tanque", "behavior": "charger", "hp": 22, "speed": 66, "radius": 13, "contactDamage": 1,
       "charge": { "range": 420, "windup": 0.8, "lockTime": 0.25, "speed": 420, "maxDistance": 900, "damage": 2, "stun": 1.2, "cooldown": 2.4 },
       "drops": { "energy": [2, 3], "coins": [1, 3] }
     },
     "regua_mira": {
-      "name": "Régua Mira-Laser", "behavior": "sniper", "hp": 9, "speed": 70, "radius": 10, "contactDamage": 0,
+      "name": "Régua Mira-Laser", "role": "atirador", "behavior": "sniper", "hp": 9, "speed": 70, "radius": 10, "contactDamage": 0,
       "preferredRange": [280, 420],
       "attack": { "interval": 3.2, "aimTime": 1, "lockTime": 0.25, "bullets": 1, "spread": 0, "speed": 650, "damage": 2, "range": 900, "radius": 4, "style": "toner" },
       "drops": { "energy": [2, 3], "coins": [1, 3] }
     },
     "apontador": {
-      "name": "Apontador Escavador", "behavior": "burrower", "hp": 18, "speed": 95, "radius": 11, "contactDamage": 1,
+      "name": "Apontador Escavador", "role": "pressao", "behavior": "burrower", "hp": 18, "speed": 95, "radius": 11, "contactDamage": 1,
       "burrow": { "travel": [2, 3], "speedMul": 1.5, "warn": 0.8, "radius": 52, "damage": 2, "exposed": 2 },
       "drops": { "energy": [2, 3], "coins": [1, 3] }
     },
     "monitor": {
-      "name": "Monitor de Turma", "behavior": "summoner", "hp": 20, "speed": 60, "radius": 11, "contactDamage": 0,
+      "name": "Monitor de Turma", "role": "suporte", "behavior": "summoner", "hp": 20, "speed": 60, "radius": 11, "contactDamage": 0,
       "preferredRange": [260, 380],
       "summon": { "type": "caderno_zumbi", "interval": 5, "warn": 0.6, "count": [2, 3], "max": 6 },
       "drops": { "energy": [3, 4], "coins": [2, 4] }
     },
     "gremio": {
-      "name": "Grêmio Estudantil", "behavior": "buffer", "hp": 18, "speed": 84, "radius": 11, "contactDamage": 0,
+      "name": "Grêmio Estudantil", "role": "suporte", "behavior": "buffer", "hp": 18, "speed": 84, "radius": 11, "contactDamage": 0,
       "buff": { "interval": 3, "range": 200, "heal": 0.2, "linkTime": 0.5 },
       "drops": { "energy": [2, 3], "coins": [2, 4] }
     },
     "chamada": {
-      "name": "Chamada Fantasma", "behavior": "blinker", "hp": 14, "speed": 0, "radius": 10, "flying": true, "contactDamage": 0,
+      "name": "Chamada Fantasma", "role": "pressao", "behavior": "blinker", "hp": 14, "speed": 0, "radius": 10, "flying": true, "contactDamage": 0,
       "blink": { "interval": 3.5, "warn": 0.6, "minR": 90, "maxR": 140, "fireDelay": 0.3, "visible": 0.8 },
       "attack": { "bullets": 5, "spread": 40, "speed": 200, "damage": 1, "style": "paper_red" },
       "drops": { "energy": [2, 3], "coins": [1, 3] }
@@ -109,6 +109,7 @@
       "rooms": [5, 7],
       "themes": ["sala_aula", "patio", "quadra", "biblioteca"],
       "enemyPool": { "caderno_zumbi": 3, "prova_voadora": 3, "estojo": 2, "lousa": 1, "mochila": 1, "borracha": 2, "grampeador": 2 },
+      "waveRoles": ["tanque", "atirador"],
       "wavesPerRoom": [2, 3],
       "enemiesPerWave": [3, 5],
       "hpScale": 1,
@@ -126,6 +127,7 @@
       "rooms": [6, 8],
       "themes": ["laboratorio", "biblioteca", "quadra", "sala_aula"],
       "enemyPool": { "caderno_zumbi": 2, "prova_voadora": 3, "estojo": 2, "lousa": 2, "sinal_recreio": 2, "mochila": 2, "borracha": 2, "grampeador": 2, "regua_mira": 2, "apontador": 2, "monitor": 1 },
+      "waveRoles": ["tanque", "atirador", "pressao"],
       "wavesPerRoom": [2, 3],
       "enemiesPerWave": [4, 6],
       "hpScale": 1.35,
@@ -143,6 +145,7 @@
       "rooms": [6, 8],
       "themes": ["sala_aula", "laboratorio", "quadra", "biblioteca", "patio"],
       "enemyPool": { "caderno_zumbi": 2, "prova_voadora": 3, "estojo": 3, "lousa": 2, "sinal_recreio": 3, "mochila": 2, "borracha": 2, "grampeador": 2, "regua_mira": 2, "apontador": 2, "monitor": 1, "gremio": 1, "chamada": 2 },
+      "waveRoles": ["tanque", "atirador", "pressao", "suporte"],
       "wavesPerRoom": [2, 3],
       "enemiesPerWave": [5, 7],
       "hpScale": 1.7,

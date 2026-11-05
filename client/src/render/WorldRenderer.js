@@ -3,6 +3,7 @@ import { trapState } from '/shared/sim/salas/Props.js';
 import { BLESSINGS } from '/shared/sim/salas/Pickups.js';
 import { TILESET_COLS, TILE_KIND } from './tileArt.js';
 import { hexToInt } from './pixel.js';
+import { AFFIXES } from '/shared/sim/inimigos/affixes.js';
 import { textStyle } from '../config.js';
 
 const DEPTH_GROUND_FX = 2;
@@ -312,10 +313,11 @@ export class WorldRenderer {
         shadow: s.add.image(e.x, e.y, 'shadow').setScale(e.def.boss ? 2.6 : e.r > 15 ? 1.8 : 1),
         body: s.add.sprite(e.x, e.y, keys.tex).play(keys.anim),
         spawn: s.add.image(e.x, e.y, 'spawn_circle').setScale(e.def.boss ? 2.4 : 1),
+        affix: e.affix && AFFIXES[e.affix] ? s.add.text(e.x, e.y, AFFIXES[e.affix].label.toUpperCase(), textStyle(11, '#' + AFFIXES[e.affix].color.toString(16).padStart(6, '0'), { stroke: '#000', strokeThickness: 3 })).setOrigin(0.5).setVisible(false) : null,
         angry: false
       };
       objs.body.anims.setProgress(Math.random());
-      objs.destroy = () => { objs.shadow.destroy(); objs.body.destroy(); objs.spawn.destroy(); };
+      objs.destroy = () => { objs.shadow.destroy(); objs.body.destroy(); objs.spawn.destroy(); objs.affix?.destroy(); };
       return objs;
     });
     const flying = !!e.def.flying;
@@ -325,6 +327,7 @@ export class WorldRenderer {
     const by = e.y - lift + bob;
     v.shadow.setPosition(e.x, e.y + e.r * 0.8).setDepth(e.y - 1).setAlpha(flying ? 0.6 : 1);
     v.body.setPosition(e.x, by).setDepth(e.y).setFlipX(e.facing < 0 && e.type !== 'maquina_xerox');
+    v.affix?.setVisible(false);
 
     if (e.spawning > 0) {
       const k = 1 - e.spawning / 0.9;
@@ -375,8 +378,13 @@ export class WorldRenderer {
 
     if ((e.state === 'windup' && e.def.behavior === 'chaser') || e.state === 'fuse') v.body.x += Math.sin(time / 15) * 1.5;
 
+    const af = AFFIXES[e.affix];
+    if (v.affix && af && !e.burrowed) {
+      // nome do modificador acima da barra de vida
+      v.affix.setVisible(true).setPosition(e.x, by - (e.r > 15 ? 38 : 30) * scale).setDepth(e.y + 5);
+    }
     if (e.elite) {
-      this.groundFx.lineStyle(2, 0xffd23f, 0.6 + Math.sin(time / 150) * 0.3).strokeEllipse(e.x, e.y + e.r * 0.8, e.r * 2.6, e.r * 1.1);
+      this.groundFx.lineStyle(2, af ? af.color : 0xffd23f, 0.6 + Math.sin(time / 150) * 0.3).strokeEllipse(e.x, e.y + e.r * 0.8, e.r * 2.6, e.r * 1.1);
     }
     if (e.type === 'caderno_preto') {
       this.groundFx.fillStyle(0x000000, 0.35).fillCircle(e.x, e.y + 10, 22);

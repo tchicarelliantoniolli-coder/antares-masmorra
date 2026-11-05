@@ -385,3 +385,136 @@ test('monitor morto leva os invocados junto e a sala limpa', () => {
   assert.ok(!w.map.locked.has(room.id), 'portas destravadas');
   assert.equal(w.enemies.filter((e) => e.roomId === room.id && !e.dead).length, 0);
 });
+
+// ---------------------------------------------------------------- elites com modificadores
+import { AFFIXES } from '../shared/sim/inimigos/affixes.js';
+import { hurtPlayer } from '../shared/sim/combat.js';
+import { spawnWave } from '../shared/sim/salas/RoomDirector.js';
+
+function elite(w, type, x, y, affix) {
+  const e = createEnemy(w, type, x, y, -1, { spawnTime: 0, elite: true, affix });
+  e.def = { ...e.def, behavior: 'none', contactDamage: 0, drops: {} };
+  e.cd = 999;
+  return e;
+}
+
+test('rapido: velocidade x1,4 e ataque mais frequente', () => {
+  const { w, p } = arena();
+  const n = createEnemy(w, 'caderno_zumbi', p.x + 200, p.y, -1, { spawnTime: 0, elite: true, affix: 'none' });
+  const e = createEnemy(w, 'caderno_zumbi', p.x + 200, p.y, -1, { spawnTime: 0, elite: true, affix: 'rapido' });
+  assert.ok(Math.abs(e.speedMul / n.speedMul - 1.4) < 1e-9);
+  assert.ok(Math.abs(e.atkMul / n.atkMul - 0.8) < 1e-9);
+});
+
+test('blindado: primeiro golpe só quebra o escudo e ele volta após 6 s sem dano', () => {
+  const { w, p } = arena();
+  const e = elite(w, 'caderno_zumbi', p.x + 200, p.y, 'blindado');
+  const hp = e.hp;
+  assert.ok(e.shielded > 0);
+  assert.equal(damageEnemy(w, e, 3), 0);
+  assert.equal(e.hp, hp);
+  assert.ok(!(e.shielded > 0), 'escudo quebrou');
+  assert.ok(damageEnemy(w, e, 3) > 0, 'segundo golpe fere');
+  run(w, 5.5);
+  assert.ok(!(e.shielded > 0), 'ainda sem escudo antes de 6 s');
+  run(w, 1);
+  assert.ok(e.shielded > 0, 'escudo voltou');
+  damageEnemy(w, e, 1);
+  run(w, 3);
+  damageEnemy(w, e, 1);
+  run(w, 3);
+  assert.ok(!(e.shielded > 0), 'dano reinicia a contagem');
+});
+
+test('explosivo: ao morrer avisa 0,7 s e explode ferindo o jogador', () => {
+  const { w, p } = arena();
+  const e = elite(w, 'caderno_zumbi', p.x + 20, p.y, 'explosivo');
+  const hp = p.hp + p.shield;
+  damageEnemy(w, e, 99999);
+  assert.ok(e.dead);
+  const aviso = w.areas.find((a) => a.kind === 'warn_circle' && !a.dead);
+  assert.ok(aviso, 'aviso circular');
+  assert.equal(aviso.r, 60);
+  run(w, 0.5);
+  assert.equal(p.hp + p.shield, hp, 'ainda sem dano');
+  run(w, 0.3);
+  assert.equal(hp - (p.hp + p.shield), 2);
+});
+
+test('vampiro: acerto por contato e por bala cura 25% da vida máxima', () => {
+  const { w, p } = arena();
+  const e = createEnemy(w, 'caderno_zumbi', p.x + 5, p.y, -1, { spawnTime: 0, elite: true, affix: 'vampiro' });
+  e.hp = 1;
+  run(w, 0.2);
+  assert.ok(p.hp < p.maxHp || p.shield < p.maxShield, 'jogador foi ferido');
+  assert.equal(e.hp, Math.min(e.maxHp, 1 + Math.round(e.maxHp * 0.25)));
+  // bala
+  const { w: w2, p: p2 } = arena();
+  const v = elite(w2, 'prova_voadora', p2.x + 300, p2.y, 'vampiro');
+  v.hp = 1;
+  enemyShootFor(w2, v, p2);
+  run(w2, 2);
+  assert.ok(v.hp > 1, 'curou com a bala');
+});
+
+import { enemyShoot } from '../shared/sim/inimigos/Enemy.js';
+function enemyShootFor(w, e, p) {
+  enemyShoot(w, e, Math.atan2(p.y - e.y, p.x - e.x), { speed: 300, damage: 1, noExtra: true, bullets: 1 });
+}
+
+test('duplicador: ao chegar a 50% cria uma cópia não elite, uma vez só', () => {
+  const { w, p } = arena();
+  const e = elite(w, 'caderno_zumbi', p.x + 200, p.y, 'duplicador');
+  e.hp = e.maxHp = 100;
+  const antes = w.enemies.length;
+  damageEnemy(w, e, 30, { noMul: true });
+  assert.equal(w.enemies.length, antes, 'ainda acima de 50%');
+  damageEnemy(w, e, 25, { noMul: true });
+  assert.equal(w.enemies.length, antes + 1);
+  const copia = w.enemies[w.enemies.length - 1];
+  assert.equal(copia.type, e.type);
+  assert.ok(!copia.elite && !copia.affix);
+  damageEnemy(w, e, 5, { noMul: true });
+  assert.equal(w.enemies.length, antes + 1, 'só uma vez');
+});
+
+test('elite sempre tem modificador e chefe nunca', () => {
+  const { w } = arena();
+  const nomes = new Set();
+  for (let i = 0; i < 60; i++) {
+    const e = createEnemy(w, 'caderno_zumbi', 100, 100, -1, { spawnTime: 0, elite: true });
+    assert.ok(AFFIXES[e.affix], 'elite com modificador válido');
+    nomes.add(e.affix);
+    assert.equal(e.hp, Math.round(e.def.hp * (w.floorDef.hpScale || 1) * 2), 'dobro da vida');
+    assert.ok(!createEnemy(w, 'caderno_zumbi', 100, 100, -1, { spawnTime: 0 }).affix);
+  }
+  assert.equal(nomes.size, Object.keys(AFFIXES).length, 'todos aparecem');
+  const boss = createEnemy(w, 'maquina_xerox', 100, 100, -1, { spawnTime: 0, elite: true });
+  assert.ok(!boss.affix);
+  for (const k of Object.keys(AFFIXES)) assert.ok(AFFIXES[k].label && AFFIXES[k].color !== undefined);
+});
+
+test('todo inimigo do enemyPool de cada andar existe e tem role; chefes nunca', () => {
+  for (const f of [1, 2, 3]) {
+    const fd = data.floor(f);
+    for (const t of Object.keys(fd.enemyPool)) {
+      const d = data.enemy(t);
+      assert.ok(d, t);
+      assert.ok(['tanque', 'atirador', 'pressao', 'suporte'].includes(d.role), t + ' sem role');
+    }
+    for (const r of fd.waveRoles) assert.ok(['tanque', 'atirador', 'pressao', 'suporte'].includes(r));
+  }
+  for (const t of ['aluno', 'diva', 'caderno_preto', 'maquina_xerox', 'katia', 'samara']) assert.equal(data.enemy(t).role, undefined);
+});
+
+test('onda do andar 3 tem pelo menos um de cada papel quando cabe', () => {
+  for (let seed = 1; seed <= 12; seed++) {
+    const w = makeWorld({ seed, floor: 3 });
+    const room = w.rooms.find((r) => r.type === 'combat' && r.waves.some((x) => x.length >= 5));
+    if (!room) continue;
+    const idx = room.waves.findIndex((x) => x.length >= 5);
+    spawnWave(w, room, idx);
+    const roles = new Set(w.enemies.filter((e) => e.roomId === room.id).map((e) => e.def.role));
+    for (const r of w.floorDef.waveRoles) assert.ok(roles.has(r), `seed ${seed}: falta ${r}`);
+  }
+});

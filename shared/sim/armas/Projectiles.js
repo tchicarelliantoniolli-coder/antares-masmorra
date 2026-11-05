@@ -1,4 +1,5 @@
 import { damageEnemy, explode, hurtPlayer } from '../combat.js';
+import { AFFIXES } from '../inimigos/affixes.js';
 import { angleDiff } from '../math.js';
 import { propAt, damageProp } from '../salas/Props.js';
 import { createArea } from '../areas.js';
@@ -33,6 +34,7 @@ export function spawnProjectile(world, o) {
     explodeOnExpire: !!o.explodeOnExpire,
     effect: o.effect || null,
     knockback: o.knockback || 0,
+    shooter: o.shooter || null,    // id do inimigo que atirou (modificador vampiro)
     owner: o.owner || null,        // jogador dono (para buffs/estatísticas)
     sprite: o.sprite,              // chave de textura para o renderizador
     glyph: o.glyph || null,
@@ -270,7 +272,10 @@ export function updateProjectiles(world, dt) {
         if (Math.hypot(pl.x - p.x, pl.y - p.y) > pl.r + p.r - 2) continue;
         if (shieldBlocks(world, pl, p)) { p.dead = true; break; }
         if (pl.invuln > 0 || pl.dash) continue;
-        hurtPlayer(world, pl, p.damage, { slow: p.slow });
+        if (hurtPlayer(world, pl, p.damage, { slow: p.slow }) && p.shooter) {
+          const se = world.enemies.find((x) => x.id === p.shooter);
+          if (se?.affix) AFFIXES[se.affix]?.onHit?.(world, se, pl);
+        }
         impact(world, p);
         break;
       }

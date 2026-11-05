@@ -1,4 +1,4 @@
-import { hurtPlayer, damageEnemy } from './combat.js';
+import { hurtPlayer, damageEnemy, explode } from './combat.js';
 import { damagePropsInRadius } from './salas/Props.js';
 
 /** Áreas no chão: avisos de ataque, poças de toner, campo gravitacional, círculo da conversa, cela... */
@@ -109,6 +109,9 @@ export function updateAreas(world, dt) {
         }
         damagePropsInRadius(world, a.x, a.y, a.r, a.damage);
         world.emit('proj_hit', { x: a.x, y: a.y, team: 'player', style: a.sprite });
+      }
+      if (a.kind === 'warn_circle' && a.blast) {
+        explode(world, a.x, a.y, a.r, a.blast.damage, { hurtsPlayers: true, playerDamage: a.blast.damage, style: 'barrel' });
       }
       if (a.kind === 'toner_warning') {
         world.emit('toner_splash', { x: a.x, y: a.y, r: a.r });

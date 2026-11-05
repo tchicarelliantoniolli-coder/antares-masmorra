@@ -2,6 +2,7 @@
 import { damageEnemy, hurtPlayer } from '../combat.js';
 import { spawnProjectile } from '../armas/Projectiles.js';
 import { BEHAVIORS } from './behaviors.js';
+import { AFFIXES, rollAffix } from './affixes.js';
 
 export function createEnemy(world, type, x, y, roomId, { spawnTime = 0.9, minion = false, elite = false, ...extra } = {}) {
   const def = world.data.enemy(type);
@@ -28,6 +29,9 @@ export function createEnemy(world, type, x, y, roomId, { spawnTime = 0.9, minion
     ...extra
   };
   if (def.behavior === 'fan_shooter') { e.state = 'closed'; e.shielded = 1; }
+  // elite (nunca chefe) ganha um modificador sorteado
+  if (elite && !def.boss && !e.affix) e.affix = rollAffix(world, def);
+  AFFIXES[e.affix]?.onCreate?.(world, e);
   world.enemies.push(e);
   world.emit('enemy_spawn', { id: e.id, x, y, enemyType: type, boss: !!def.boss });
   return e;
@@ -84,7 +88,7 @@ export function enemyShoot(world, e, angle, atk) {
       team: 'enemy', x: e.x, y: e.y - 4, angle: a,
       speed: atk.speed, radius: atk.radius || 5, damage: atk.damage || 1,
       range: atk.range || 900, sprite: 'ebullet_' + (atk.style || 'paper'), style: atk.style || 'paper',
-      slow: atk.slow || 0, explode: atk.explode || null, explodeOnExpire: !!atk.explode
+      slow: atk.slow || 0, shooter: e.id, explode: atk.explode || null, explodeOnExpire: !!atk.explode
     });
   }
   world.emit('enemy_shoot', { x: e.x, y: e.y, style: atk.style, boss: !!e.def.boss });
@@ -126,6 +130,7 @@ export function updateEnemies(world, dt) {
     const fn = BEHAVIORS[e.def.behavior];
     if (fn) fn(world, e, dt, target);
     if (e.dead) continue;
+    if (e.affix) AFFIXES[e.affix]?.onUpdate?.(world, e, dt);
     if (e.life > 0) {
       e.life -= dt;
       if (e.life <= 0) { e.minion = true; e.dead = true; world.emit('enemy_vanish', { x: e.x, y: e.y, id: e.id, enemyType: e.type }); continue; }
@@ -136,7 +141,10 @@ export function updateEnemies(world, dt) {
       for (const p of world.players) {
         if (p.dead || p.downed || p.jailTimer > 0) continue;
         if (Math.hypot(p.x - e.x, p.y - e.y) < p.r + e.r - 2) {
-          if (hurtPlayer(world, p, cdmg)) e.contactCd = 0.8;
+          if (hurtPlayer(world, p, cdmg)) {
+            e.contactCd = 0.8;
+            if (e.affix) AFFIXES[e.affix]?.onHit?.(world, e, p);
+          }
         }
       }
     }

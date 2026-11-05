@@ -115,9 +115,30 @@ function activateRoom(world, room, trigger) {
   }
 }
 
-function spawnWave(world, room, index) {
+/**
+ * Garante um inimigo de cada papel do andar (floorDef.waveRoles) quando a onda comporta (mais inimigos que papéis; ondas pequenas ficam como foram geradas):
+ * troca um inimigo de papel repetido por um do papel que falta, sorteado do enemyPool com world.rng.
+ */
+function coverRoles(world, types) {
+  const roles = world.floorDef.waveRoles || [];
+  if (types.length <= roles.length) return types;
+  const roleOf = (t) => world.data.enemy(t).role;
+  for (const role of roles) {
+    if (types.some((t) => roleOf(t) === role)) continue;
+    const pool = {};
+    for (const [t, w] of Object.entries(world.floorDef.enemyPool)) if (roleOf(t) === role) pool[t] = w;
+    if (!Object.keys(pool).length) continue;
+    // só troca um inimigo cujo papel aparece mais de uma vez (ou não pertence a nenhum papel do andar)
+    const slot = types.findIndex((t) => !roles.includes(roleOf(t)) || types.filter((o) => roleOf(o) === roleOf(t)).length > 1);
+    if (slot < 0) continue;
+    types[slot] = world.rng.weighted(pool);
+  }
+  return types;
+}
+
+export function spawnWave(world, room, index) {
   room.waveIndex = index;
-  const types = [...room.waves[index]];
+  const types = coverRoles(world, [...room.waves[index]]);
   // Mais jogadores = mais inimigos
   const extra = Math.max(0, world.players.length - 1);
   for (let i = 0; i < extra; i++) types.push(world.rng.pick(room.waves[index]));
