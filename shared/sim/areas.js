@@ -29,7 +29,7 @@ export function updateAreas(world, dt) {
           if (e.dead || e.spawning > 0 || e.def.invulnerable) continue;
           const d = Math.hypot(e.x - a.x, e.y - a.y);
           if (d > a.r) continue;
-          if (a.tick >= 0.5) damageEnemy(world, e, dps * 0.5, { source: owner, noMul: true });
+          if (a.tick >= 0.5) damageEnemy(world, e, dps * 0.5, { source: owner, noMul: true, carry: 'grav' + a.id });
           if (d < 4) continue;
           const pull = (e.def.boss ? pullBase * 0.16 : pullBase) * dt;
           world.map.moveBox(e, ((a.x - e.x) / d) * Math.min(pull, d), ((a.y - e.y) / d) * Math.min(pull, d));
@@ -61,7 +61,13 @@ export function updateAreas(world, dt) {
           if (e.dead || e.spawning > 0 || e.def.invulnerable) continue;
           if (Math.hypot(e.x - a.x, e.y - a.y) > a.r + e.r * 0.5) continue;
           if (a.slowMul < 1) { e.status.slow = Math.max(e.status.slow || 0, 0.3); e.status.slowMul = Math.min(e.status.slowMul ?? 1, a.slowMul); }
-          if (pulse && a.dps > 0) damageEnemy(world, e, a.dps * 0.5, { source: owner, noMul: true, effect: a.effect });
+          if (!pulse || a.dps <= 0) continue;
+          // poças da mesma arma/dono não somam: cada inimigo leva no máximo um pulso por dono e estilo
+          const key = a.ownerId + ':' + a.style;
+          e.poolHits = e.poolHits || {};
+          if (world.time - (e.poolHits[key] ?? -1) < 0.45) continue;
+          e.poolHits[key] = world.time;
+          damageEnemy(world, e, a.dps * 0.5, { source: owner, noMul: true, effect: a.effect, carry: 'pool' + key });
         }
         if (pulse) a.tick = 0;
         break;

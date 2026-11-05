@@ -21,11 +21,21 @@ test('validador acusa erros comuns', () => {
   assert.ok(errs.some((e) => e.includes('damage')));
 });
 
-test('personagens jogáveis têm arma inicial existente; são 14 professores', () => {
+test('todos os 14 professores têm arma inicial existente e grátis', () => {
   assert.equal(data.characterList.length, 14);
-  const playable = data.characterList.filter((c) => c.playable);
-  assert.ok(playable.length >= 2);
-  for (const c of playable) assert.ok(data.hasWeapon(c.starterWeapon), c.id);
+  for (const c of data.characterList) {
+    assert.ok(data.hasWeapon(c.starterWeapon), `${c.id}: ${c.starterWeapon}`);
+    const w = data.weapon(c.starterWeapon);
+    assert.equal(w.energyCost, 0, c.starterWeapon);
+    assert.ok(w.starterOnly, c.starterWeapon);
+  }
+});
+
+test('há pelo menos 45 armas e pelo menos 12 modos/estilos diferentes em uso', () => {
+  const all = [...data.weapons.values()].filter((w) => !w.id.startsWith('t_'));
+  assert.ok(all.length >= 45, `${all.length} armas`);
+  const used = new Set(all.map((w) => (w.type === 'melee' ? 'melee:' + w.melee.style : w.mode)));
+  assert.ok(used.size >= 12, [...used].join(', '));
 });
 
 test('sorteio de arma respeita raridade mínima e nunca dá arma inicial', () => {

@@ -218,6 +218,24 @@ export function drawProjectile(shape, color, accent) {
       ctx.globalAlpha = 0.8; px(ctx, 0, 3, 26, 8, color); ctx.globalAlpha = 1; px(ctx, 0, 6, 26, 2, '#ffffff'); px(ctx, 20, 2, 6, 10, accent);
     }, false);
     case 'seed': return canvasFrom(10, 10, (ctx) => { circle(ctx, 5, 5, 3, color); px(ctx, 4, 3, 2, 2, accent); });
+    // ---- formatos da v0.3
+    case 'stone': return canvasFrom(12, 12, (ctx) => { circle(ctx, 6, 6, 4, color); px(ctx, 4, 4, 2, 1, shade(color, 0.4)); px(ctx, 7, 7, 2, 2, accent); });
+    case 'paint': return canvasFrom(12, 10, (ctx) => { circle(ctx, 6, 5, 3, color); px(ctx, 2, 4, 2, 2, color); px(ctx, 9, 6, 2, 1, color); px(ctx, 5, 4, 1, 1, accent); });
+    case 'page': return canvasFrom(14, 12, (ctx) => {
+      px(ctx, 1, 1, 12, 10, color); for (let y = 3; y < 10; y += 2) px(ctx, 3, y, 8, 1, '#9aa0a6'); px(ctx, 1, 1, 12, 1, accent);
+    });
+    case 'flame': return canvasFrom(12, 12, (ctx) => {
+      ctx.globalAlpha = 0.9; circle(ctx, 6, 7, 4, color); circle(ctx, 6, 6, 2, accent); ctx.globalAlpha = 1;
+    }, false);
+    case 'bubble': return canvasFrom(16, 14, (ctx) => {
+      circle(ctx, 8, 6, 5, color); px(ctx, 4, 10, 3, 3, color); px(ctx, 5, 4, 6, 1, accent); px(ctx, 5, 7, 4, 1, accent);
+    });
+    case 'tack': return canvasFrom(10, 10, (ctx) => { circle(ctx, 5, 5, 3, color); px(ctx, 4, 4, 2, 2, accent); px(ctx, 5, 8, 1, 2, '#c9d1d9'); });
+    case 'confetti': return canvasFrom(8, 6, (ctx) => { px(ctx, 1, 1, 3, 2, color); px(ctx, 4, 3, 3, 2, accent); }, false);
+    case 'globe': return canvasFrom(18, 18, (ctx) => { circle(ctx, 9, 9, 7, color); px(ctx, 5, 5, 5, 3, accent); px(ctx, 10, 10, 4, 3, accent); px(ctx, 6, 4, 2, 1, '#ffffff'); });
+    case 'basketball': return canvasFrom(14, 14, (ctx) => { circle(ctx, 7, 7, 5, color); px(ctx, 2, 7, 11, 1, accent); px(ctx, 7, 2, 1, 11, accent); ring(ctx, 7, 7, 3, accent); });
+    case 'soccer': return canvasFrom(14, 14, (ctx) => { circle(ctx, 7, 7, 5, color); circle(ctx, 7, 7, 1, accent); dots(ctx, [[4, 4], [10, 4], [4, 10], [10, 10], [7, 3]], accent); });
+    case 'bowling': return canvasFrom(18, 18, (ctx) => { circle(ctx, 9, 9, 7, color); dots(ctx, [[7, 6], [10, 6], [8, 9]], accent); px(ctx, 5, 5, 2, 1, shade(color, 0.5)); });
     default: return canvasFrom(10, 10, (ctx) => circle(ctx, 5, 5, 3, color));
   }
 }

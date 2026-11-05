@@ -46,7 +46,7 @@ export const beam = {
       ws.beamT += b.tick;
       const crit = critChanceOf(p, w) * CONT_MUL;
       for (const { e } of targets) {
-        damageEnemy(world, e, b.dps * b.tick, { crit: world.rng.chance(crit), source: p, effect: halfEffect(w), knockback: p.mods.knockback * 0.2, angle: a });
+        damageEnemy(world, e, b.dps * b.tick, { crit: world.rng.chance(crit), source: p, effect: halfEffect(w), knockback: p.mods.knockback * 0.2, angle: a, carry: 'beam' + p.id });
       }
       if (!targets.length || b.pierce) {
         const prop = propAt(world, x2 + cx * 6, y2 + cy * 6);

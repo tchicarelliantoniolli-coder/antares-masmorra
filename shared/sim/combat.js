@@ -22,7 +22,14 @@ export function damageEnemy(world, e, amount, opts = {}) {
   }
   if (opts.crit) dmg *= 2;
   if (src) dmg *= src.mods.damageMul;
-  dmg = Math.max(1, Math.round(dmg));
+  if (opts.carry) {
+    // dano contínuo (laser, poça, campo): guarda a fração para o próximo tique em vez de arredondar
+    e.dmgCarry = e.dmgCarry || {};
+    const total = (e.dmgCarry[opts.carry] || 0) + dmg;
+    dmg = Math.floor(total);
+    e.dmgCarry[opts.carry] = total - dmg;
+    if (dmg < 1) return 0;
+  } else dmg = Math.max(1, Math.round(dmg));
   e.hp -= dmg;
   e.flash = 0.1;
   world.stats.damage += dmg;

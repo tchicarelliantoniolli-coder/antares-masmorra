@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { run, data, dummy, withWeapon, arena, wallDistRight, countEvents } from './helpers.js';
 import { energyCost } from '../shared/sim/armas/Weapons.js';
+import * as areasMod from '../shared/sim/areas.js';
 
 test('shot sem mode dispara igual a antes', () => {
   const { w, p } = arena();
@@ -480,4 +481,75 @@ test('cair no meio da estocada ou com escudo levantado limpa o estado', () => {
   t.p.jailTimer = 2;
   run(t.w, 1 / 60);
   assert.equal(t.p.dash, null);
+});
+
+// ---------------------------------------------------------------- todas as armas do jogo
+test('toda arma dispara 5 s sem erro e funciona contra um alvo', () => {
+  const ids = [...data.weapons.keys()].filter((id) => !id.startsWith('t_'));
+  for (const id of ids) {
+    const { w, p } = arena();
+    const wp = data.weapon(id);
+    p.weapons = [id];
+    const e = dummy(w, p.x + 110, p.y, 1e6);
+    if (wp.type === 'melee' && wp.melee.style !== 'thrust') { e.x = p.x + 30; }
+    if (wp.mode === 'deploy') { e.x = p.x + 40; }
+    if (wp.type === 'melee' && wp.melee.style === 'shield') {
+      // escudo: bloqueia de frente e empurra ao soltar
+      run(w, 0.2, { p1: { fire: true, aim: 0 } });
+      spawnProjectile(w, { team: 'enemy', x: p.x + 40, y: p.y, angle: Math.PI, speed: 300, damage: 1, range: 900, sprite: 'ebullet_paper' });
+      run(w, 0.3, { p1: { fire: true, aim: 0 } });
+      assert.ok(countEvents(w, 'block') >= 1, `${id}: bloqueou`);
+      run(w, 1 / 60, { p1: { fire: false, aim: 0 } });
+      assert.ok(e.hp < 1e6, `${id}: empurrão causa dano`);
+      continue;
+    }
+    for (let i = 0; i < 300; i++) {
+      // segura e solta (para armas de carregar), mirando no alvo
+      const fire = wp.mode === 'charge' ? i % 80 < 70 : true;
+      run(w, 1 / 60, { p1: { fire, aim: Math.atan2(e.y - p.y, e.x - p.x), aimDist: Math.hypot(e.x - p.x, e.y - p.y) } });
+      if (wp.type === 'melee' && wp.melee.style === 'thrust' && !p.dash) { p.x = e.x - 90; p.y = e.y; }
+    }
+    assert.ok(e.hp < 1e6, `${id} (${wp.mode || wp.melee.style}) não causou dano`);
+  }
+});
+
+test('globo bumerangue volta 50% maior e mais forte', () => {
+  const { w, p } = arena();
+  p.weapons = ['globo_bumerangue'];
+  run(w, 1 / 60, { p1: { fire: true, aim: 0 } });
+  const g = w.projectiles[0];
+  const r0 = g.r, d0 = g.damage;
+  for (let i = 0; i < 120 && !g.returning; i++) run(w, 1 / 60);
+  assert.ok(g.returning);
+  assert.ok(Math.abs(g.r - r0 * 1.5) < 1e-9 && Math.abs(g.damage - d0 * 1.5) < 1e-9);
+});
+
+test('laser com dano fracionado não perde dano no arredondamento', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'beam', critChance: 0, beam: { dps: 14, tick: 0.1, energyPerSec: 0 } });
+  const e = dummy(w, p.x + 100, p.y, 9999);
+  run(w, 2, { p1: { fire: true, aim: 0 } });
+  const dealt = 9999 - e.hp;
+  assert.ok(dealt >= 26 && dealt <= 30, `causou ${dealt} em 2 s (esperado ~28)`);
+});
+
+test('poças da mesma arma não empilham dano', () => {
+  const { w, p } = arena();
+  const e = dummy(w, p.x + 100, p.y, 9999);
+  const { createArea } = areasMod;
+  for (let i = 0; i < 5; i++) createArea(w, 'pool', e.x, e.y, { r: 40, life: 3, dps: 4, effect: null, slowMul: 1, style: 'paint', ownerId: p.id });
+  run(w, 2);
+  const dealt = 9999 - e.hp;
+  assert.ok(dealt <= 9, `5 poças sobrepostas causaram ${dealt} em 2 s (uma só causaria 8)`);
+});
+
+test('órbita lança os projéteis em direção ao ponto mirado', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'orbit', damage: 5, fireRate: 10, orbit: { max: 4, launchSpeed: 500 } });
+  const e = dummy(w, p.x + 140, p.y, 9999);
+  const orbiting = () => w.projectiles.filter((q) => q.orbit && !q.dead).length;
+  for (let i = 0; i < 60 && orbiting() < 4; i++) run(w, 1 / 60, { p1: { fire: true, aim: 0, aimDist: 140 } });
+  for (let i = 0; i < 30 && orbiting() === 4; i++) run(w, 1 / 60, { p1: { fire: true, aim: 0, aimDist: 140 } });
+  run(w, 0.6, { p1: { fire: false, aim: 0, aimDist: 140 } });
+  assert.ok(9999 - e.hp >= 15, `acertou ${9999 - e.hp} (4 projéteis de 5)`);
 });

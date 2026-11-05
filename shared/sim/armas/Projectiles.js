@@ -156,6 +156,13 @@ function updateOrbit(world, p, dt) {
   }
 }
 
+/** Bumerangue começa a voltar; com growOnReturn > 1, volta maior e mais forte (uma vez). */
+function startReturn(p) {
+  if (p.returning) return;
+  p.returning = true;
+  if (p.growOnReturn > 1) { p.r *= p.growOnReturn; p.damage *= p.growOnReturn; }
+}
+
 /** Direção refletida ao bater numa parede em (nx, ny). */
 function reflectAngle(map, p, nx, ny) {
   let vx = p.vx, vy = p.vy;
@@ -193,7 +200,7 @@ export function updateProjectiles(world, dt) {
 
     // Bumerangue: na metade do alcance, volta para o dono
     if (p.boomerang) {
-      if (!p.returning && p.traveled >= p.range) { p.returning = true; p.hit.clear(); }
+      if (!p.returning && p.traveled >= p.range) { startReturn(p); p.hit.clear(); }
       if (p.returning && p.owner) {
         const a = Math.atan2(p.owner.y - p.y, p.owner.x - p.x);
         p.vx = Math.cos(a) * p.speed * 1.1;
@@ -207,10 +214,10 @@ export function updateProjectiles(world, dt) {
       const prop = propAt(world, nx, ny);
       if (prop) {
         damageProp(world, prop.tx, prop.ty, p.team === 'player' ? p.damage : 1);
-        if (p.boomerang) { p.returning = true; } else { const ra = reflectAngle(map, p, nx, ny); impact(world, p, ra); continue; }
+        if (p.boomerang) { startReturn(p); } else { const ra = reflectAngle(map, p, nx, ny); impact(world, p, ra); continue; }
       }
       if (p.boomerang) {
-        p.returning = true;
+        startReturn(p);
       } else if (p.bounce > 0) {
         p.bounce--;
         if (map.solidAt(nx, p.y)) p.vx = -p.vx;

@@ -106,6 +106,81 @@ export function drawWeapon(shape, color, accent) {
       px(ctx, 2, 2, 12, 4, color); px(ctx, 2, 10, 12, 4, color); px(ctx, 2, 2, 4, 12, color);
       px(ctx, 12, 2, 4, 4, accent); px(ctx, 12, 10, 4, 4, accent);
     });
+    // ---- formatos da v0.3
+    case 'laser_pen': return c(22, 8, (ctx) => {
+      px(ctx, 1, 2, 17, 4, color); px(ctx, 1, 2, 17, 1, light); px(ctx, 18, 3, 3, 2, '#c9d1d9'); px(ctx, 21, 3, 1, 2, accent); px(ctx, 6, 3, 2, 2, accent);
+    });
+    case 'bunsen': return c(18, 16, (ctx) => {
+      px(ctx, 2, 12, 10, 3, color); px(ctx, 6, 4, 3, 8, color); px(ctx, 9, 8, 6, 2, '#9aa0a6'); px(ctx, 5, 1, 5, 3, accent); px(ctx, 6, 0, 3, 2, '#ffd23f');
+    });
+    case 'grenade': return c(14, 14, (ctx) => {
+      circle(ctx, 7, 8, 5, color); px(ctx, 5, 2, 4, 2, '#6a6f78'); px(ctx, 9, 1, 3, 1, accent); px(ctx, 4, 6, 2, 2, '#ffffff');
+    });
+    case 'stapler': return c(22, 10, (ctx) => {
+      px(ctx, 1, 6, 20, 3, dark); px(ctx, 2, 2, 18, 4, color); px(ctx, 2, 2, 18, 1, light); px(ctx, 18, 5, 3, 2, accent);
+    });
+    case 'drill': return c(24, 14, (ctx) => {
+      px(ctx, 2, 3, 12, 6, color); px(ctx, 2, 3, 12, 1, light); px(ctx, 5, 9, 4, 5, dark);
+      for (let x = 14; x < 23; x++) px(ctx, x, 5 + (x % 2), 1, 2, accent);
+    });
+    case 'tack_box': return c(16, 12, (ctx) => {
+      px(ctx, 1, 3, 14, 8, color); px(ctx, 1, 3, 14, 1, light); dots(ctx, [[4, 2], [8, 1], [12, 2]], accent); px(ctx, 3, 6, 10, 2, accent);
+    });
+    case 'fan': return c(18, 18, (ctx) => {
+      circle(ctx, 9, 9, 2, accent); px(ctx, 8, 1, 2, 6, color); px(ctx, 8, 11, 2, 6, color); px(ctx, 1, 8, 6, 2, color); px(ctx, 11, 8, 6, 2, color);
+    });
+    case 'blackhole': return c(16, 16, (ctx) => {
+      ring(ctx, 8, 8, 6, accent, 2); circle(ctx, 8, 8, 4, color); px(ctx, 6, 6, 1, 1, '#ffffff');
+    });
+    case 'scissors': return c(20, 12, (ctx) => {
+      ring(ctx, 3, 3, 2, color); ring(ctx, 3, 9, 2, color); px(ctx, 5, 4, 14, 1, accent); px(ctx, 5, 7, 14, 1, accent); px(ctx, 7, 5, 2, 2, '#3a3a3a');
+    });
+    case 'clipboard': return c(16, 20, (ctx) => {
+      px(ctx, 1, 2, 14, 17, color); px(ctx, 3, 4, 10, 13, accent); px(ctx, 5, 0, 6, 3, '#9aa0a6');
+      for (let y = 7; y < 16; y += 3) px(ctx, 4, y, 8, 1, '#9cc3e6');
+    });
+    case 'flagpole': return c(30, 14, (ctx) => {
+      px(ctx, 1, 9, 27, 2, color); px(ctx, 1, 9, 27, 1, light); px(ctx, 20, 1, 9, 8, accent); px(ctx, 22, 3, 4, 3, '#ffd23f');
+    });
+    case 'exam_stack': return c(16, 14, (ctx) => {
+      px(ctx, 1, 6, 13, 7, shade(color, -0.15)); px(ctx, 2, 4, 13, 7, shade(color, -0.05)); px(ctx, 3, 2, 12, 7, color); px(ctx, 11, 3, 3, 2, accent);
+    });
+    case 'atom': return c(18, 18, (ctx) => {
+      ring(ctx, 9, 9, 7, color); px(ctx, 2, 8, 14, 2, accent); px(ctx, 8, 2, 2, 14, accent); circle(ctx, 9, 9, 2, '#ffffff');
+    });
+    case 'confetti': return c(22, 14, (ctx) => {
+      px(ctx, 2, 4, 14, 7, color); px(ctx, 16, 2, 4, 11, light); dots(ctx, [[19, 1], [21, 4], [20, 12], [18, 0]], accent); px(ctx, 5, 11, 3, 3, dark);
+    });
+    case 'tuning_fork': return c(24, 10, (ctx) => {
+      px(ctx, 1, 4, 10, 2, color); px(ctx, 11, 2, 2, 6, color); px(ctx, 13, 2, 10, 2, color); px(ctx, 13, 6, 10, 2, color); px(ctx, 22, 0, 1, 10, accent);
+    });
+    case 'xray': return c(26, 14, (ctx) => {
+      px(ctx, 2, 3, 18, 8, color); px(ctx, 2, 3, 18, 1, light); px(ctx, 20, 4, 4, 6, accent); px(ctx, 6, 5, 8, 4, accent); px(ctx, 7, 11, 4, 3, dark);
+    });
+    case 'balloon': return c(16, 18, (ctx) => {
+      circle(ctx, 8, 7, 6, color); px(ctx, 4, 12, 3, 4, color); px(ctx, 3, 15, 2, 2, color); px(ctx, 5, 5, 6, 1, accent); px(ctx, 5, 8, 4, 1, accent);
+    });
+    case 'catapult': return c(22, 16, (ctx) => {
+      px(ctx, 1, 12, 18, 3, color); px(ctx, 4, 6, 2, 6, color); px(ctx, 5, 6, 14, 2, color); ring(ctx, 18, 5, 2, accent); circle(ctx, 3, 15, 1, '#3a3a3a'); circle(ctx, 16, 15, 1, '#3a3a3a');
+    });
+    case 'brush': return c(24, 8, (ctx) => {
+      px(ctx, 1, 3, 13, 2, color); px(ctx, 14, 2, 3, 4, '#c9d1d9'); px(ctx, 17, 1, 6, 6, accent); px(ctx, 22, 2, 1, 4, shade(accent, -0.3));
+    });
+    case 'spear': return c(32, 10, (ctx) => {
+      px(ctx, 1, 4, 22, 2, accent); px(ctx, 6, 3, 3, 4, color); dots(ctx, [[23, 3], [23, 6], [24, 2], [24, 7]], color); px(ctx, 23, 4, 7, 2, color); px(ctx, 30, 4, 1, 2, light);
+    });
+    case 'flask': return c(14, 16, (ctx) => {
+      px(ctx, 5, 1, 4, 5, '#c9d1d9'); px(ctx, 3, 6, 8, 2, accent); px(ctx, 2, 8, 10, 7, accent); px(ctx, 3, 9, 8, 5, color); px(ctx, 4, 10, 2, 2, '#ffffff');
+    });
+    case 'book': return c(18, 14, (ctx) => {
+      px(ctx, 1, 2, 16, 11, color); px(ctx, 2, 3, 14, 9, '#fbfbf3'); px(ctx, 8, 2, 2, 11, dark); px(ctx, 3, 5, 4, 1, accent); px(ctx, 11, 5, 4, 1, accent);
+    });
+    case 'coil': return c(22, 12, (ctx) => {
+      px(ctx, 1, 4, 8, 5, color); for (let x = 9; x < 19; x += 2) px(ctx, x, 3, 1, 7, accent); circle(ctx, 20, 6, 2, '#ffffff');
+    });
+    case 'globe': return c(16, 18, (ctx) => {
+      circle(ctx, 8, 7, 6, color); px(ctx, 4, 4, 4, 3, accent); px(ctx, 9, 8, 4, 3, accent); px(ctx, 7, 14, 2, 2, '#c9a227'); px(ctx, 4, 16, 8, 2, '#c9a227');
+    });
     default: return c(18, 10, (ctx) => { px(ctx, 2, 2, 14, 6, color); px(ctx, 2, 2, 14, 1, accent); });
   }
 }

@@ -33,10 +33,14 @@ export function orbiters(world, p) {
 /** Lança na direção da mira todos os projéteis que estão girando em volta do jogador. */
 export function launchOrbiters(world, p) {
   const list = orbiters(world, p);
+  // todos convergem para o ponto mirado (senão saem em linhas paralelas e erram alvos pequenos)
+  const d = Math.max(80, p.aimDist);
+  const tx = p.x + Math.cos(p.aim) * d, ty = p.y + Math.sin(p.aim) * d;
   for (const q of list) {
     const sp = q.orbit.launchSpeed;
-    q.vx = Math.cos(p.aim) * sp;
-    q.vy = Math.sin(p.aim) * sp;
+    const a = Math.atan2(ty - q.y, tx - q.x);
+    q.vx = Math.cos(a) * sp;
+    q.vy = Math.sin(a) * sp;
     q.speed = sp;
     q.range = q.orbit.range;
     q.traveled = 0;

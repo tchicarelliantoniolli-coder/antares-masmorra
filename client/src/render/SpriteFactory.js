@@ -52,6 +52,7 @@ export function generateTextures(scene, data, overrideKeys = new Set()) {
     if (w.projectile) {
       const s = w.projectile.sprite;
       add('proj_' + w.id, drawProjectile(s.shape, s.color, s.accent));
+      for (const v of w.variants?.list || []) add(v.spriteKey, drawProjectile(v.sprite.shape, v.sprite.color, v.sprite.accent));
       if (w.projectile.glyphs) {
         for (const ch of w.projectile.glyphs) add('glyph_' + ch.codePointAt(0), drawGlyph(ch, s.color, s.accent));
       }

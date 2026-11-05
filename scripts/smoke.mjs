@@ -89,6 +89,19 @@ SCENARIOS['partida-solo'] = async (browser) => {
   return errors;
 };
 
+/** Galeria: todos os sprites (inclusive armas novas) são gerados sem erro. */
+SCENARIOS['galeria'] = async (browser) => {
+  const page = await browser.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+  page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+  await page.goto(URL_ + '/galeria.html');
+  await page.waitForTimeout(2500);
+  if (SHOTS) await page.screenshot({ path: join(SHOTS, 'galeria.png'), fullPage: true });
+  await page.close();
+  return errors;
+};
+
 const browser = await launch();
 let failed = 0;
 for (const [name, fn] of Object.entries(SCENARIOS)) {

@@ -1,5 +1,5 @@
 {
-  "_doc": "Arquivo de dados das armas. Crie armas novas copiando um bloco de 'weapons' e mudando os valores — não precisa mexer no código. Veja docs/ARMAS.md para a lista completa de campos.",
+  "_doc": "Arquivo de dados das armas. Crie armas novas copiando um bloco de 'weapons' e mudando os valores — não precisa mexer no código. Cada arma escolhe uma mecânica com 'mode' (tiro) ou 'melee.style' (corpo a corpo). Veja docs/ARMAS.md para a lista completa de campos.",
   "rarities": {
     "comum": {
       "label": "Comum",
@@ -71,7 +71,7 @@
       "starterOnly": true,
       "type": "ranged",
       "damage": 3,
-      "fireRate": 3.5,
+      "fireRate": 1.4,
       "energyCost": 0,
       "critChance": 0.08,
       "inaccuracy": 5,
@@ -92,7 +92,12 @@
         "color": "#fdfdf5",
         "accent": "#d94a4a"
       },
-      "description": "Folhas pautadas com cantos afiadíssimos. Atravessam 1 inimigo."
+      "description": "Rajada de 3 folhas pautadas que atravessam 1 inimigo.",
+      "mode": "burst",
+      "burst": {
+        "count": 3,
+        "interval": 0.08
+      }
     },
     {
       "id": "numeros_sinais",
@@ -102,7 +107,7 @@
       "starterOnly": true,
       "type": "ranged",
       "damage": 3,
-      "fireRate": 4.5,
+      "fireRate": 4,
       "energyCost": 0,
       "critChance": 0.1,
       "inaccuracy": 7,
@@ -120,14 +125,15 @@
           "shape": "glyph",
           "color": "#ffe066",
           "accent": "#7a4b00"
-        }
+        },
+        "glyphSplit": "÷"
       },
       "sprite": {
         "shape": "calculator",
         "color": "#3a3f4a",
         "accent": "#9be27a"
       },
-      "description": "Dispara números e sinais. O sinal × causa o dobro de dano."
+      "description": "Dispara números e sinais. × causa o dobro de dano e ÷ se divide em dois ao acertar."
     },
     {
       "id": "pistola_grampos",
@@ -164,8 +170,8 @@
       "rarity": "incomum",
       "type": "ranged",
       "damage": 2,
-      "fireRate": 11,
-      "energyCost": 1,
+      "fireRate": 10,
+      "energyCost": 0.5,
       "critChance": 0.04,
       "inaccuracy": 14,
       "projectile": {
@@ -184,7 +190,13 @@
         "color": "#4a7bd8",
         "accent": "#ff8fb1"
       },
-      "description": "Borrachas em rajada. Ricocheteiam nas paredes."
+      "description": "Começa devagar e vai acelerando enquanto segura. Borrachas quicam 1 vez.",
+      "mode": "spinup",
+      "spinup": {
+        "startMul": 0.35,
+        "maxMul": 1.3,
+        "rampTime": 1.2
+      }
     },
     {
       "id": "escopeta_clipes",
@@ -192,7 +204,7 @@
       "category": "fogo",
       "rarity": "rara",
       "type": "ranged",
-      "damage": 3,
+      "damage": 4,
       "fireRate": 1.7,
       "energyCost": 3,
       "critChance": 0.05,
@@ -222,16 +234,16 @@
       "category": "fogo",
       "rarity": "incomum",
       "type": "ranged",
-      "damage": 8,
-      "fireRate": 1.6,
+      "damage": 7,
+      "fireRate": 2,
       "energyCost": 2,
       "critChance": 0.2,
       "inaccuracy": 0,
       "projectile": {
-        "speed": 820,
+        "speed": 900,
         "radius": 4,
         "range": 800,
-        "pierce": 3,
+        "pierce": 0,
         "sprite": {
           "shape": "pencil",
           "color": "#ffd23f",
@@ -243,7 +255,14 @@
         "color": "#3a6b4a",
         "accent": "#ffd23f"
       },
-      "description": "Lápis HB apontado na precisão. Perfura até 3 inimigos."
+      "description": "Rifle de precisão: segure para carregar. Com carga cheia, o lápis atravessa todos.",
+      "mode": "charge",
+      "charge": {
+        "time": 0.9,
+        "minMul": 0.3,
+        "maxMul": 3,
+        "fullPierce": 99
+      }
     },
     {
       "id": "regua_espada",
@@ -251,12 +270,13 @@
       "category": "corpo",
       "rarity": "comum",
       "type": "melee",
-      "damage": 6,
-      "fireRate": 2.6,
+      "damage": 4,
+      "fireRate": 2.8,
       "energyCost": 0,
       "critChance": 0.1,
       "inaccuracy": 0,
       "melee": {
+        "style": "combo",
         "range": 54,
         "arc": 120,
         "knockback": 180,
@@ -267,7 +287,7 @@
         "color": "#cfe8ff",
         "accent": "#3a6fd8"
       },
-      "description": "Régua de 30 cm afiada. Corta projéteis inimigos no ar."
+      "description": "Combo de 3 golpes; o terceiro é mais forte e mais largo. Corta balas."
     },
     {
       "id": "taco_beisebol",
@@ -300,8 +320,8 @@
       "category": "magica",
       "rarity": "rara",
       "type": "ranged",
-      "damage": 4,
-      "fireRate": 2.2,
+      "damage": 3,
+      "fireRate": 1.6,
       "energyCost": 3,
       "critChance": 0.06,
       "inaccuracy": 3,
@@ -309,10 +329,11 @@
         "speed": 360,
         "radius": 6,
         "range": 320,
-        "explodeOnExpire": true,
+        "explodeOnExpire": null,
         "explode": {
           "radius": 48,
-          "damage": 4
+          "damage": 8,
+          "style": "acid"
         },
         "sprite": {
           "shape": "blob",
@@ -331,7 +352,25 @@
         "color": "#bfe9ff",
         "accent": "#7be04a"
       },
-      "description": "Estoura em uma poça ácida que envenena."
+      "description": "Tubo arremessado em arco que estoura numa poça de ácido.",
+      "mode": "lob",
+      "lob": {
+        "maxRange": 340,
+        "flightTime": 0.5,
+        "peak": 45,
+        "pool": {
+          "r": 48,
+          "life": 3.5,
+          "dps": 4,
+          "style": "acid",
+          "effect": {
+            "type": "veneno",
+            "chance": 1,
+            "duration": 4,
+            "power": 3
+          }
+        }
+      }
     },
     {
       "id": "cajado_tesla",
@@ -339,8 +378,8 @@
       "category": "magica",
       "rarity": "epica",
       "type": "ranged",
-      "damage": 5,
-      "fireRate": 3.2,
+      "damage": 8,
+      "fireRate": 2.5,
       "energyCost": 2,
       "critChance": 0.1,
       "inaccuracy": 2,
@@ -354,19 +393,19 @@
           "accent": "#ffffff"
         }
       },
-      "effect": {
-        "type": "choque",
-        "chance": 1,
-        "chains": 3,
-        "power": 4,
-        "radius": 140
-      },
       "sprite": {
         "shape": "staff",
         "color": "#6b4a8a",
         "accent": "#5ef2ff"
       },
-      "description": "Raios que pulam para até 3 inimigos próximos."
+      "description": "Raio em cadeia: acerta na hora e pula para até 4 inimigos.",
+      "mode": "chain",
+      "chain": {
+        "range": 340,
+        "chains": 4,
+        "radius": 150,
+        "falloff": 0.85
+      }
     },
     {
       "id": "estilingue_elastico",
@@ -395,7 +434,13 @@
         "color": "#b5743c",
         "accent": "#e8c84a"
       },
-      "description": "Bolinhas de papel que quicam 2 vezes nas paredes."
+      "description": "Puxe o elástico (segure) e solte. A bolinha ricocheteia 2 vezes.",
+      "mode": "charge",
+      "charge": {
+        "time": 0.45,
+        "minMul": 0.5,
+        "maxMul": 2.2
+      }
     },
     {
       "id": "lanca_misseis_giz",
@@ -403,7 +448,7 @@
       "category": "fogo",
       "rarity": "lendaria",
       "type": "ranged",
-      "damage": 10,
+      "damage": 4,
       "fireRate": 1.1,
       "energyCost": 5,
       "critChance": 0.1,
@@ -412,10 +457,10 @@
         "speed": 380,
         "radius": 7,
         "range": 700,
-        "homing": 2.5,
+        "homing": 3,
         "explode": {
-          "radius": 64,
-          "damage": 12
+          "radius": 50,
+          "damage": 10.5
         },
         "sprite": {
           "shape": "chalk",
@@ -428,7 +473,12 @@
         "color": "#2e4a3a",
         "accent": "#ffffff"
       },
-      "description": "Mísseis teleguiados de giz que explodem em pó."
+      "description": "Rajada de 3 mísseis de giz teleguiados que explodem.",
+      "mode": "burst",
+      "burst": {
+        "count": 3,
+        "interval": 0.12
+      }
     },
     {
       "id": "lupa_solar",
@@ -436,9 +486,9 @@
       "category": "magica",
       "rarity": "rara",
       "type": "ranged",
-      "damage": 2,
-      "fireRate": 9,
-      "energyCost": 1,
+      "damage": 1,
+      "fireRate": 1,
+      "energyCost": 0,
       "critChance": 0.05,
       "inaccuracy": 6,
       "projectile": {
@@ -453,16 +503,23 @@
       },
       "effect": {
         "type": "fogo",
-        "chance": 0.35,
+        "chance": 0.5,
         "duration": 3,
-        "power": 2
+        "power": 3
       },
       "sprite": {
         "shape": "magnifier",
         "color": "#c0a060",
         "accent": "#bfe9ff"
       },
-      "description": "Concentra a luz do sol. Pode incendiar."
+      "description": "Concentra o sol num raio contínuo que queima.",
+      "mode": "beam",
+      "beam": {
+        "dps": 16,
+        "range": 300,
+        "width": 5,
+        "energyPerSec": 4
+      }
     },
     {
       "id": "extintor_incendio",
@@ -470,9 +527,9 @@
       "category": "especial",
       "rarity": "epica",
       "type": "ranged",
-      "damage": 1,
-      "fireRate": 14,
-      "energyCost": 1,
+      "damage": 2,
+      "fireRate": 13,
+      "energyCost": 0.5,
       "critChance": 0.03,
       "inaccuracy": 18,
       "projectile": {
@@ -498,7 +555,13 @@
         "color": "#e03a3a",
         "accent": "#2b2b2b"
       },
-      "description": "Jato gelado que deixa os inimigos lentos e às vezes congela."
+      "description": "Jato curto e contínuo de espuma gelada que deixa lento e às vezes congela.",
+      "mode": "flame",
+      "flame": {
+        "range": 140,
+        "arc": 40,
+        "particles": 2
+      }
     },
     {
       "id": "bumerangue_transferidor",
@@ -560,7 +623,48 @@
         "color": "#f6f6f6",
         "accent": "#ff7a1a"
       },
-      "description": "Bolas de vôlei, basquete e futebol. Quicam 2 vezes nas paredes."
+      "description": "Cada arremesso sorteia uma bola: basquete quica muito, futebol é rápida, boliche é lenta e atravessa.",
+      "mode": "variants",
+      "variants": {
+        "list": [
+          {
+            "bounce": 4,
+            "speed": 430,
+            "radius": 7,
+            "spin": 10,
+            "sprite": {
+              "shape": "basketball",
+              "color": "#ff7a1a",
+              "accent": "#3a1a00"
+            }
+          },
+          {
+            "bounce": 1,
+            "speed": 640,
+            "radius": 6,
+            "spin": 14,
+            "damageMul": 0.9,
+            "sprite": {
+              "shape": "soccer",
+              "color": "#f6f6f6",
+              "accent": "#1b1b1b"
+            }
+          },
+          {
+            "bounce": 0,
+            "speed": 300,
+            "radius": 9,
+            "pierce": 3,
+            "spin": 6,
+            "damageMul": 1.6,
+            "sprite": {
+              "shape": "bowling",
+              "color": "#2b2b5a",
+              "accent": "#9a9ad0"
+            }
+          }
+        ]
+      }
     },
     {
       "id": "canhao_protons",
@@ -569,8 +673,8 @@
       "rarity": "comum",
       "starterOnly": true,
       "type": "ranged",
-      "damage": 5,
-      "fireRate": 2.4,
+      "damage": 1,
+      "fireRate": 1,
       "energyCost": 0,
       "critChance": 0.08,
       "inaccuracy": 3,
@@ -590,7 +694,14 @@
         "color": "#5a4a9a",
         "accent": "#9a7aff"
       },
-      "description": "Partículas carregadas que atravessam 1 inimigo."
+      "description": "Feixe contínuo de prótons enquanto segura o botão.",
+      "mode": "beam",
+      "beam": {
+        "dps": 13,
+        "range": 380,
+        "width": 6,
+        "energyPerSec": 0
+      }
     },
     {
       "id": "dna_celulas",
@@ -600,7 +711,7 @@
       "starterOnly": true,
       "type": "ranged",
       "damage": 3,
-      "fireRate": 4,
+      "fireRate": 3.5,
       "energyCost": 0,
       "critChance": 0.06,
       "inaccuracy": 4,
@@ -620,7 +731,13 @@
         "color": "#2fbf71",
         "accent": "#ff6b9a"
       },
-      "description": "Hélices de DNA levemente teleguiadas."
+      "description": "Células teleguiadas que fazem mitose: ao acertar, viram duas.",
+      "mode": "split",
+      "split": {
+        "into": 2,
+        "childDamageMul": 0.6,
+        "spread": 40
+      }
     },
     {
       "id": "arco_alfabeto",
@@ -629,8 +746,8 @@
       "rarity": "comum",
       "starterOnly": true,
       "type": "ranged",
-      "damage": 4,
-      "fireRate": 3,
+      "damage": 5,
+      "fireRate": 2.2,
       "energyCost": 0,
       "critChance": 0.08,
       "inaccuracy": 2,
@@ -650,7 +767,14 @@
         "color": "#c98b4a",
         "accent": "#ff8fa3"
       },
-      "description": "Atira letras do alfabeto. Rápido e preciso."
+      "description": "Segure para tensionar o arco. Com carga cheia, a letra atravessa 2 inimigos.",
+      "mode": "charge",
+      "charge": {
+        "time": 0.7,
+        "minMul": 0.4,
+        "maxMul": 2.4,
+        "fullPierce": 2
+      }
     },
     {
       "id": "compasso_lanca",
@@ -658,22 +782,27 @@
       "category": "corpo",
       "rarity": "incomum",
       "type": "melee",
-      "damage": 8,
-      "fireRate": 2,
+      "damage": 10,
+      "fireRate": 1.5,
       "energyCost": 0,
       "critChance": 0.15,
       "inaccuracy": 0,
       "melee": {
-        "range": 78,
+        "style": "thrust",
+        "range": 70,
         "arc": 40,
-        "knockback": 140
+        "knockback": 140,
+        "thrust": {
+          "distance": 100,
+          "time": 0.14
+        }
       },
       "sprite": {
         "shape": "compass",
         "color": "#c9d1d9",
         "accent": "#3a3f4a"
       },
-      "description": "Estocada longa e certeira."
+      "description": "Estocada com a ponta do compasso que avança acertando o caminho."
     },
     {
       "id": "guarda_chuva",
@@ -681,23 +810,30 @@
       "category": "corpo",
       "rarity": "rara",
       "type": "melee",
-      "damage": 7,
-      "fireRate": 2.2,
+      "damage": 11,
+      "fireRate": 2,
       "energyCost": 0,
       "critChance": 0.1,
       "inaccuracy": 0,
       "melee": {
+        "style": "shield",
         "range": 54,
         "arc": 170,
         "knockback": 260,
-        "deflect": true
+        "deflect": true,
+        "shield": {
+          "arc": 120,
+          "blockCost": 1,
+          "speedMul": 0.65,
+          "bashKnockback": 340
+        }
       },
       "sprite": {
         "shape": "umbrella",
         "color": "#d94a4a",
         "accent": "#2b2b2b"
       },
-      "description": "Abre e protege: corta balas num arco enorme."
+      "description": "Segure para abrir: bloqueia balas de frente (gasta energia). Solte para empurrar."
     },
     {
       "id": "mochila_pesada",
@@ -705,7 +841,7 @@
       "category": "corpo",
       "rarity": "epica",
       "type": "melee",
-      "damage": 16,
+      "damage": 22,
       "fireRate": 0.9,
       "energyCost": 0,
       "critChance": 0.1,
@@ -735,7 +871,7 @@
       "rarity": "incomum",
       "type": "ranged",
       "damage": 3,
-      "fireRate": 3.5,
+      "fireRate": 3,
       "energyCost": 1,
       "critChance": 0.08,
       "inaccuracy": 10,
@@ -765,8 +901,8 @@
       "category": "arremesso",
       "rarity": "rara",
       "type": "ranged",
-      "damage": 9,
-      "fireRate": 1.4,
+      "damage": 10,
+      "fireRate": 2,
       "energyCost": 2,
       "critChance": 0.25,
       "inaccuracy": 0,
@@ -774,7 +910,7 @@
         "speed": 760,
         "radius": 5,
         "range": 700,
-        "pierce": 4,
+        "pierce": 1,
         "sprite": {
           "shape": "pencil",
           "color": "#cfe8ff",
@@ -786,7 +922,15 @@
         "color": "#cfe8ff",
         "accent": "#3a6fd8"
       },
-      "description": "Flechas que perfuram 4 inimigos."
+      "description": "Segure para carregar. Com carga cheia, solta 3 flechas que atravessam 4 inimigos.",
+      "mode": "charge",
+      "charge": {
+        "time": 0.8,
+        "minMul": 0.4,
+        "maxMul": 2.2,
+        "fullCount": 3,
+        "fullPierce": 4
+      }
     },
     {
       "id": "apontador_triturador",
@@ -794,17 +938,17 @@
       "category": "especial",
       "rarity": "incomum",
       "type": "ranged",
-      "damage": 2,
-      "fireRate": 2,
-      "energyCost": 2,
+      "damage": 3,
+      "fireRate": 0.5,
+      "energyCost": 3,
       "critChance": 0.05,
       "inaccuracy": 6,
       "projectile": {
         "speed": 420,
         "radius": 4,
         "range": 220,
-        "count": 8,
-        "spread": 50,
+        "count": 1,
+        "spread": 0,
         "sprite": {
           "shape": "shaving",
           "color": "#e8c49a",
@@ -816,7 +960,16 @@
         "color": "#3ac46a",
         "accent": "#c9d1d9"
       },
-      "description": "Rajada de raspas de lápis. Devastador de perto."
+      "description": "Coloca um apontador no chão que tritura e cospe raspas nos inimigos sozinho.",
+      "mode": "deploy",
+      "deploy": {
+        "kind": "turret",
+        "max": 2,
+        "life": 10,
+        "fireRate": 3,
+        "damage": 3,
+        "range": 240
+      }
     },
     {
       "id": "sinal_recreio_arma",
@@ -824,18 +977,18 @@
       "category": "especial",
       "rarity": "epica",
       "type": "ranged",
-      "damage": 3,
-      "fireRate": 1.3,
-      "energyCost": 4,
+      "damage": 9,
+      "fireRate": 1.6,
+      "energyCost": 5,
       "critChance": 0.05,
       "inaccuracy": 0,
       "projectile": {
         "speed": 300,
         "radius": 8,
         "range": 260,
-        "count": 16,
-        "spread": 337.5,
-        "pierce": 2,
+        "count": 13,
+        "spread": 332.3,
+        "pierce": 99,
         "sprite": {
           "shape": "wave",
           "color": "#e0b0ff",
@@ -852,7 +1005,7 @@
         "color": "#f2c94c",
         "accent": "#7a4a22"
       },
-      "description": "TRIIIIM! Onda sonora em todas as direções."
+      "description": "Toca o sinal: um anel de ondas sonoras em todas as direções que atravessa tudo."
     },
     {
       "id": "projetor_slides",
@@ -860,9 +1013,9 @@
       "category": "especial",
       "rarity": "rara",
       "type": "ranged",
-      "damage": 4,
-      "fireRate": 2,
-      "energyCost": 2,
+      "damage": 1,
+      "fireRate": 1,
+      "energyCost": 0,
       "critChance": 0.05,
       "inaccuracy": 2,
       "projectile": {
@@ -878,15 +1031,23 @@
       },
       "effect": {
         "type": "atordoar",
-        "chance": 0.4,
-        "duration": 1.2
+        "chance": 0.15,
+        "duration": 0.6
       },
       "sprite": {
         "shape": "projector",
         "color": "#5a6a85",
         "accent": "#fff8c0"
       },
-      "description": "Luz que cega: atravessa tudo e atordoa."
+      "description": "Feixe largo de luz que atravessa inimigos e às vezes atordoa.",
+      "mode": "beam",
+      "beam": {
+        "dps": 17,
+        "range": 420,
+        "width": 18,
+        "pierce": true,
+        "energyPerSec": 5
+      }
     },
     {
       "id": "ima_gigante",
@@ -895,34 +1056,902 @@
       "rarity": "lendaria",
       "type": "ranged",
       "damage": 6,
-      "fireRate": 4,
-      "energyCost": 2,
+      "fireRate": 0.8,
+      "energyCost": 5,
       "critChance": 0.1,
       "inaccuracy": 4,
       "projectile": {
-        "speed": 360,
-        "radius": 7,
-        "range": 540,
-        "homing": 6,
-        "bounce": 1,
+        "speed": 300,
+        "radius": 8,
+        "range": 300,
+        "homing": 0,
+        "bounce": 0,
         "sprite": {
           "shape": "orb",
           "color": "#ff4d4d",
           "accent": "#4aa8ff"
         }
       },
-      "effect": {
-        "type": "choque",
-        "chance": 0.3,
-        "chains": 2,
-        "power": 3
-      },
       "sprite": {
         "shape": "magnet",
         "color": "#e03a3a",
         "accent": "#c9d1d9"
       },
-      "description": "Esferas magnéticas que grudam nos inimigos e dão choque."
+      "description": "Bola magnética lenta que vira um campo que puxa e esmaga os inimigos.",
+      "mode": "singularity",
+      "singularity": {
+        "pullRadius": 130,
+        "life": 2.5,
+        "dps": 14,
+        "pull": 200
+      }
+    },
+    {
+      "category": "inicial",
+      "rarity": "comum",
+      "starterOnly": true,
+      "energyCost": 0,
+      "id": "baloes_ingles",
+      "name": "Balões de Fala (English!)",
+      "type": "ranged",
+      "mode": "orbit",
+      "damage": 4,
+      "fireRate": 4,
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "projectile": {
+        "speed": 460,
+        "radius": 7,
+        "range": 520,
+        "sprite": {
+          "shape": "bubble",
+          "color": "#ffffff",
+          "accent": "#f5c400"
+        }
+      },
+      "orbit": {
+        "max": 4,
+        "radius": 36,
+        "spin": 4.5,
+        "launchSpeed": 460
+      },
+      "sprite": {
+        "shape": "balloon",
+        "color": "#ffffff",
+        "accent": "#f5c400"
+      },
+      "description": "Balões de fala giram em volta e apagam balas. Com 4 balões, o próximo disparo lança todos."
+    },
+    {
+      "category": "inicial",
+      "rarity": "comum",
+      "starterOnly": true,
+      "energyCost": 0,
+      "id": "catapulta_mini",
+      "name": "Catapulta Medieval em Miniatura",
+      "type": "ranged",
+      "mode": "lob",
+      "damage": 4,
+      "fireRate": 1.3,
+      "critChance": 0.06,
+      "inaccuracy": 3,
+      "projectile": {
+        "radius": 7,
+        "explode": {
+          "radius": 46,
+          "damage": 10
+        },
+        "sprite": {
+          "shape": "stone",
+          "color": "#9aa0a6",
+          "accent": "#5a5f66"
+        }
+      },
+      "lob": {
+        "maxRange": 380,
+        "flightTime": 0.55,
+        "peak": 60
+      },
+      "sprite": {
+        "shape": "catapult",
+        "color": "#8a5a3a",
+        "accent": "#c9d1d9"
+      },
+      "description": "Pedras em arco que passam por cima de tudo e explodem onde você mirar."
+    },
+    {
+      "category": "inicial",
+      "rarity": "comum",
+      "starterOnly": true,
+      "energyCost": 0,
+      "id": "pincel_tinta",
+      "name": "Pincel de Poças de Tinta",
+      "type": "ranged",
+      "damage": 3,
+      "fireRate": 3.5,
+      "critChance": 0.08,
+      "inaccuracy": 5,
+      "projectile": {
+        "speed": 420,
+        "radius": 6,
+        "range": 420,
+        "pool": {
+          "r": 34,
+          "life": 2.5,
+          "dps": 2,
+          "slowMul": 0.55,
+          "style": "paint"
+        },
+        "sprite": {
+          "shape": "paint",
+          "color": "#e04ad0",
+          "accent": "#ffffff"
+        }
+      },
+      "sprite": {
+        "shape": "brush",
+        "color": "#c98b4a",
+        "accent": "#e04ad0"
+      },
+      "description": "Pinceladas que deixam poças de tinta: quem pisa fica lento."
+    },
+    {
+      "category": "inicial",
+      "rarity": "comum",
+      "starterOnly": true,
+      "energyCost": 0,
+      "id": "lanca_romana",
+      "name": "Pergaminhos e Lança Romana",
+      "type": "melee",
+      "damage": 9,
+      "fireRate": 1.4,
+      "critChance": 0.12,
+      "inaccuracy": 0,
+      "melee": {
+        "style": "thrust",
+        "range": 60,
+        "arc": 60,
+        "knockback": 200,
+        "thrust": {
+          "distance": 120,
+          "time": 0.16
+        }
+      },
+      "sprite": {
+        "shape": "spear",
+        "color": "#c9a227",
+        "accent": "#8a5a3a"
+      },
+      "description": "Estocada que avança alguns passos acertando tudo no caminho."
+    },
+    {
+      "category": "inicial",
+      "rarity": "comum",
+      "starterOnly": true,
+      "energyCost": 0,
+      "id": "frascos_quimicos",
+      "name": "Frascos Químicos Explosivos",
+      "type": "ranged",
+      "mode": "lob",
+      "damage": 3,
+      "fireRate": 1.4,
+      "critChance": 0.06,
+      "inaccuracy": 3,
+      "projectile": {
+        "radius": 6,
+        "explode": {
+          "radius": 40,
+          "damage": 6,
+          "style": "acid"
+        },
+        "sprite": {
+          "shape": "flask",
+          "color": "#7be04a",
+          "accent": "#bfe9ff"
+        }
+      },
+      "effect": {
+        "type": "veneno",
+        "chance": 1,
+        "duration": 3,
+        "power": 2
+      },
+      "lob": {
+        "maxRange": 360,
+        "flightTime": 0.5,
+        "peak": 50,
+        "pool": {
+          "r": 44,
+          "life": 3,
+          "dps": 3,
+          "style": "acid",
+          "effect": {
+            "type": "veneno",
+            "chance": 1,
+            "duration": 3,
+            "power": 2
+          }
+        }
+      },
+      "sprite": {
+        "shape": "flask",
+        "color": "#7be04a",
+        "accent": "#bfe9ff"
+      },
+      "description": "Frascos em arco que estouram e deixam uma poça de ácido venenoso."
+    },
+    {
+      "category": "inicial",
+      "rarity": "comum",
+      "starterOnly": true,
+      "energyCost": 0,
+      "id": "livro_magico",
+      "name": "Livro Mágico",
+      "type": "ranged",
+      "mode": "rain",
+      "damage": 3,
+      "fireRate": 1.1,
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "projectile": {
+        "sprite": {
+          "shape": "page",
+          "color": "#fbfbf3",
+          "accent": "#c0392b"
+        }
+      },
+      "rain": {
+        "count": 4,
+        "radius": 40,
+        "delay": 0.45,
+        "hitRadius": 26,
+        "maxRange": 380
+      },
+      "sprite": {
+        "shape": "book",
+        "color": "#c0392b",
+        "accent": "#f2c94c"
+      },
+      "description": "Páginas caem do alto sobre o ponto mirado. O chão avisa onde vão cair."
+    },
+    {
+      "category": "inicial",
+      "rarity": "comum",
+      "starterOnly": true,
+      "energyCost": 0,
+      "id": "raios_eletricos",
+      "name": "Raios Elétricos",
+      "type": "ranged",
+      "mode": "chain",
+      "damage": 5,
+      "fireRate": 2.4,
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "projectile": {
+        "sprite": {
+          "shape": "bolt",
+          "color": "#5ef2ff",
+          "accent": "#ffffff"
+        }
+      },
+      "chain": {
+        "range": 300,
+        "chains": 2,
+        "radius": 120,
+        "falloff": 0.75
+      },
+      "sprite": {
+        "shape": "coil",
+        "color": "#5a6a85",
+        "accent": "#5ef2ff"
+      },
+      "description": "Raio instantâneo no inimigo mais perto da mira, que pula para mais 2."
+    },
+    {
+      "category": "inicial",
+      "rarity": "comum",
+      "starterOnly": true,
+      "energyCost": 0,
+      "id": "globo_bumerangue",
+      "name": "Globo Terrestre Bumerangue",
+      "type": "ranged",
+      "damage": 4,
+      "fireRate": 1.5,
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "projectile": {
+        "speed": 420,
+        "radius": 9,
+        "range": 280,
+        "pierce": 99,
+        "boomerang": true,
+        "spin": 14,
+        "growOnReturn": 1.5,
+        "sprite": {
+          "shape": "globe",
+          "color": "#2a8fd8",
+          "accent": "#5ee05e"
+        }
+      },
+      "sprite": {
+        "shape": "globe",
+        "color": "#2a8fd8",
+        "accent": "#5ee05e"
+      },
+      "description": "Globo que vai, atravessa tudo e volta 50% maior e mais forte."
+    },
+    {
+      "id": "caneta_laser",
+      "name": "Caneta Laser",
+      "category": "magica",
+      "rarity": "rara",
+      "type": "ranged",
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "mode": "beam",
+      "damage": 1,
+      "fireRate": 1,
+      "energyCost": 0,
+      "beam": {
+        "dps": 18,
+        "range": 520,
+        "width": 4,
+        "energyPerSec": 5
+      },
+      "projectile": {
+        "sprite": {
+          "shape": "orb",
+          "color": "#ff3d3d",
+          "accent": "#ffffff"
+        }
+      },
+      "sprite": {
+        "shape": "laser_pen",
+        "color": "#3a3f4a",
+        "accent": "#ff3d3d"
+      },
+      "description": "Laser vermelho contínuo e preciso."
+    },
+    {
+      "id": "bico_bunsen",
+      "name": "Bico de Bunsen",
+      "category": "magica",
+      "rarity": "rara",
+      "type": "ranged",
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "mode": "flame",
+      "damage": 2,
+      "fireRate": 12,
+      "energyCost": 0.5,
+      "flame": {
+        "range": 120,
+        "arc": 36,
+        "particles": 2
+      },
+      "effect": {
+        "type": "fogo",
+        "chance": 0.5,
+        "duration": 3,
+        "power": 2
+      },
+      "projectile": {
+        "radius": 7,
+        "sprite": {
+          "shape": "flame",
+          "color": "#ff7a2a",
+          "accent": "#ffd23f"
+        }
+      },
+      "sprite": {
+        "shape": "bunsen",
+        "color": "#9aa0a6",
+        "accent": "#4aa8ff"
+      },
+      "description": "Lança-chamas de laboratório: cone curto que queima."
+    },
+    {
+      "id": "granada_giz",
+      "name": "Granada de Giz",
+      "category": "arremesso",
+      "rarity": "incomum",
+      "type": "ranged",
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "mode": "lob",
+      "damage": 3,
+      "fireRate": 1,
+      "energyCost": 3,
+      "lob": {
+        "maxRange": 340,
+        "flightTime": 0.5,
+        "peak": 50,
+        "bounces": 1,
+        "fuse": 0.6
+      },
+      "projectile": {
+        "radius": 7,
+        "explode": {
+          "radius": 60,
+          "damage": 16
+        },
+        "sprite": {
+          "shape": "chalk",
+          "color": "#ffffff",
+          "accent": "#ff7a2a"
+        }
+      },
+      "sprite": {
+        "shape": "grenade",
+        "color": "#ffffff",
+        "accent": "#ff7a2a"
+      },
+      "description": "Quica uma vez, espera o pavio e explode numa nuvem de giz."
+    },
+    {
+      "id": "grampeador_automatico",
+      "name": "Grampeador Automático",
+      "category": "fogo",
+      "rarity": "comum",
+      "type": "ranged",
+      "critChance": 0.08,
+      "inaccuracy": 4,
+      "mode": "burst",
+      "damage": 3,
+      "fireRate": 1.2,
+      "energyCost": 2,
+      "burst": {
+        "count": 4,
+        "interval": 0.06
+      },
+      "projectile": {
+        "speed": 560,
+        "radius": 4,
+        "range": 500,
+        "sprite": {
+          "shape": "staple",
+          "color": "#c9d1d9",
+          "accent": "#7d8590"
+        }
+      },
+      "sprite": {
+        "shape": "stapler",
+        "color": "#d94a4a",
+        "accent": "#c9d1d9"
+      },
+      "description": "Rajadas de 4 grampos."
+    },
+    {
+      "id": "perfuradora_folhas",
+      "name": "Perfuradora de Folhas",
+      "category": "fogo",
+      "rarity": "epica",
+      "type": "ranged",
+      "critChance": 0.08,
+      "inaccuracy": 8,
+      "mode": "spinup",
+      "damage": 3,
+      "fireRate": 8,
+      "energyCost": 0.5,
+      "spinup": {
+        "startMul": 0.3,
+        "maxMul": 1.3,
+        "rampTime": 1.5
+      },
+      "projectile": {
+        "speed": 600,
+        "radius": 4,
+        "range": 480,
+        "pierce": 2,
+        "sprite": {
+          "shape": "paperball",
+          "color": "#fbfbf3",
+          "accent": "#9aa0a6"
+        }
+      },
+      "sprite": {
+        "shape": "drill",
+        "color": "#3a6fd8",
+        "accent": "#c9d1d9"
+      },
+      "description": "Esquenta e cospe bolinhas de papel cada vez mais rápido. Atravessa 2."
+    },
+    {
+      "id": "tachinhas_chao",
+      "name": "Tachinhas no Chão",
+      "category": "especial",
+      "rarity": "incomum",
+      "type": "ranged",
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "mode": "deploy",
+      "damage": 4,
+      "fireRate": 1.2,
+      "energyCost": 2,
+      "deploy": {
+        "kind": "mine",
+        "max": 4,
+        "life": 20,
+        "radius": 60,
+        "damage": 14,
+        "triggerRadius": 26
+      },
+      "projectile": {
+        "sprite": {
+          "shape": "tack",
+          "color": "#ffd23f",
+          "accent": "#d94a4a"
+        }
+      },
+      "sprite": {
+        "shape": "tack_box",
+        "color": "#d94a4a",
+        "accent": "#ffd23f"
+      },
+      "description": "Espalha minas de tachinha que explodem quando um inimigo pisa. Até 4."
+    },
+    {
+      "id": "ventilador_teto",
+      "name": "Ventilador de Teto",
+      "category": "especial",
+      "rarity": "epica",
+      "type": "ranged",
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "mode": "deploy",
+      "damage": 4,
+      "fireRate": 0.5,
+      "energyCost": 6,
+      "deploy": {
+        "kind": "turret",
+        "max": 1,
+        "life": 12,
+        "fireRate": 5,
+        "damage": 5,
+        "range": 260
+      },
+      "projectile": {
+        "sprite": {
+          "shape": "puff",
+          "color": "#e8f8ff",
+          "accent": "#8fe3ff"
+        }
+      },
+      "sprite": {
+        "shape": "fan",
+        "color": "#c9d1d9",
+        "accent": "#5a6a85"
+      },
+      "description": "Instala um ventilador-torreta que dispara rajadas de vento sozinho."
+    },
+    {
+      "id": "mini_buraco_negro",
+      "name": "Mini Buraco Negro",
+      "category": "magica",
+      "rarity": "lendaria",
+      "type": "ranged",
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "mode": "singularity",
+      "damage": 8,
+      "fireRate": 0.6,
+      "energyCost": 7,
+      "singularity": {
+        "pullRadius": 150,
+        "life": 3,
+        "dps": 18,
+        "pull": 240
+      },
+      "projectile": {
+        "speed": 280,
+        "radius": 9,
+        "range": 320,
+        "sprite": {
+          "shape": "orb",
+          "color": "#1b1424",
+          "accent": "#b08aff"
+        }
+      },
+      "sprite": {
+        "shape": "blackhole",
+        "color": "#1b1424",
+        "accent": "#b08aff"
+      },
+      "description": "Experimento proibido: um buraco negro que suga e esmaga tudo."
+    },
+    {
+      "id": "bola_papel_divisora",
+      "name": "Bola de Papel Divisora",
+      "category": "arremesso",
+      "rarity": "incomum",
+      "type": "ranged",
+      "critChance": 0.08,
+      "inaccuracy": 3,
+      "mode": "split",
+      "damage": 6,
+      "fireRate": 2.4,
+      "energyCost": 1,
+      "split": {
+        "into": 4,
+        "childDamageMul": 0.4,
+        "spread": 90
+      },
+      "projectile": {
+        "speed": 480,
+        "radius": 7,
+        "range": 520,
+        "sprite": {
+          "shape": "paperball",
+          "color": "#f2f2e6",
+          "accent": "#9aa0a6"
+        }
+      },
+      "sprite": {
+        "shape": "slingshot",
+        "color": "#4a7bd8",
+        "accent": "#f2f2e6"
+      },
+      "description": "Ao bater, a bola de papel se desfaz em 4 pedaços."
+    },
+    {
+      "id": "tesoura_sem_ponta",
+      "name": "Tesoura sem Ponta",
+      "category": "corpo",
+      "rarity": "comum",
+      "type": "melee",
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "damage": 4,
+      "fireRate": 3,
+      "energyCost": 0,
+      "melee": {
+        "style": "combo",
+        "range": 46,
+        "arc": 100,
+        "knockback": 120,
+        "combo": {
+          "finisherMul": 2
+        }
+      },
+      "sprite": {
+        "shape": "scissors",
+        "color": "#e03a3a",
+        "accent": "#c9d1d9"
+      },
+      "description": "Combo rápido de cortes; o terceiro corta com força."
+    },
+    {
+      "id": "escudo_prancheta",
+      "name": "Escudo de Prancheta",
+      "category": "corpo",
+      "rarity": "rara",
+      "type": "melee",
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "damage": 14,
+      "fireRate": 1.5,
+      "energyCost": 0,
+      "melee": {
+        "style": "shield",
+        "range": 56,
+        "arc": 140,
+        "knockback": 300,
+        "deflect": true,
+        "shield": {
+          "arc": 130,
+          "blockCost": 0.5,
+          "speedMul": 0.7,
+          "bashKnockback": 420
+        }
+      },
+      "sprite": {
+        "shape": "clipboard",
+        "color": "#b5743c",
+        "accent": "#fbfbf3"
+      },
+      "description": "Prancheta-escudo: bloqueia balas de frente gastando pouca energia."
+    },
+    {
+      "id": "mastro_bandeira",
+      "name": "Mastro da Bandeira",
+      "category": "corpo",
+      "rarity": "incomum",
+      "type": "melee",
+      "critChance": 0.12,
+      "inaccuracy": 0,
+      "damage": 12,
+      "fireRate": 1.1,
+      "energyCost": 0,
+      "melee": {
+        "style": "thrust",
+        "range": 64,
+        "arc": 50,
+        "knockback": 260,
+        "thrust": {
+          "distance": 150,
+          "time": 0.2
+        }
+      },
+      "sprite": {
+        "shape": "flagpole",
+        "color": "#c9d1d9",
+        "accent": "#2a8fd8"
+      },
+      "description": "Estocada longa com o mastro da bandeira da escola."
+    },
+    {
+      "id": "chuva_provas",
+      "name": "Chuva de Provas",
+      "category": "especial",
+      "rarity": "epica",
+      "type": "ranged",
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "mode": "rain",
+      "damage": 7,
+      "fireRate": 1,
+      "energyCost": 4,
+      "rain": {
+        "count": 8,
+        "radius": 60,
+        "delay": 0.55,
+        "hitRadius": 28,
+        "maxRange": 420
+      },
+      "projectile": {
+        "sprite": {
+          "shape": "paper",
+          "color": "#fdfdf5",
+          "accent": "#d94a4a"
+        }
+      },
+      "sprite": {
+        "shape": "exam_stack",
+        "color": "#fdfdf5",
+        "accent": "#d94a4a"
+      },
+      "description": "Uma pilha de provas corrigidas cai do céu sobre os inimigos."
+    },
+    {
+      "id": "eletrons_orbita",
+      "name": "Elétrons em Órbita",
+      "category": "magica",
+      "rarity": "epica",
+      "type": "ranged",
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "mode": "orbit",
+      "damage": 6,
+      "fireRate": 6,
+      "energyCost": 1,
+      "orbit": {
+        "max": 6,
+        "radius": 40,
+        "spin": 5,
+        "launchSpeed": 560
+      },
+      "projectile": {
+        "speed": 560,
+        "radius": 6,
+        "range": 560,
+        "sprite": {
+          "shape": "proton",
+          "color": "#5ef2ff",
+          "accent": "#ffffff"
+        }
+      },
+      "sprite": {
+        "shape": "atom",
+        "color": "#5ef2ff",
+        "accent": "#b08aff"
+      },
+      "description": "Até 6 elétrons giram em volta de você; dispare de novo para lançá-los."
+    },
+    {
+      "id": "canhao_confete",
+      "name": "Canhão de Confete",
+      "category": "especial",
+      "rarity": "comum",
+      "type": "ranged",
+      "critChance": 0.08,
+      "inaccuracy": 4,
+      "mode": "burst",
+      "damage": 2,
+      "fireRate": 1.1,
+      "energyCost": 2,
+      "burst": {
+        "count": 3,
+        "interval": 0.1
+      },
+      "projectile": {
+        "speed": 460,
+        "radius": 4,
+        "range": 360,
+        "count": 5,
+        "spread": 30,
+        "sprite": {
+          "shape": "confetti",
+          "color": "#ff6b9a",
+          "accent": "#ffd23f"
+        }
+      },
+      "sprite": {
+        "shape": "confetti",
+        "color": "#ff6b9a",
+        "accent": "#5ee05e"
+      },
+      "description": "Três rajadas de leques de confete. Festa!"
+    },
+    {
+      "id": "diapasao",
+      "name": "Diapasão",
+      "category": "magica",
+      "rarity": "rara",
+      "type": "ranged",
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "mode": "chain",
+      "damage": 8,
+      "fireRate": 2,
+      "energyCost": 2,
+      "chain": {
+        "range": 300,
+        "chains": 3,
+        "radius": 120,
+        "falloff": 0.8
+      },
+      "effect": {
+        "type": "atordoar",
+        "chance": 0.35,
+        "duration": 0.8
+      },
+      "projectile": {
+        "sprite": {
+          "shape": "wave",
+          "color": "#e0b0ff",
+          "accent": "#7a3fd0"
+        }
+      },
+      "sprite": {
+        "shape": "tuning_fork",
+        "color": "#c9d1d9",
+        "accent": "#7a3fd0"
+      },
+      "description": "Nota sônica que pula entre inimigos e pode atordoá-los."
+    },
+    {
+      "id": "raio_x",
+      "name": "Raio-X do Laboratório",
+      "category": "magica",
+      "rarity": "lendaria",
+      "type": "ranged",
+      "critChance": 0.08,
+      "inaccuracy": 0,
+      "mode": "beam",
+      "damage": 1,
+      "fireRate": 1,
+      "energyCost": 0,
+      "beam": {
+        "dps": 28,
+        "range": 600,
+        "width": 8,
+        "pierce": true,
+        "ghost": true,
+        "energyPerSec": 8
+      },
+      "projectile": {
+        "sprite": {
+          "shape": "orb",
+          "color": "#7fffd0",
+          "accent": "#ffffff"
+        }
+      },
+      "sprite": {
+        "shape": "xray",
+        "color": "#2e4a3a",
+        "accent": "#7fffd0"
+      },
+      "description": "Raio que atravessa inimigos e paredes."
     }
   ]
 }
