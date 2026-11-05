@@ -23,7 +23,7 @@ terminar o jogo exige habilidade.
 - Bug do menu corrigido (e a mesma classe de bug nas outras telas).
 - Revive novo no co-op (seção 5.1).
 - Sistema de armas com mecânicas (modos) reutilizáveis, configuráveis por JSON.
-- Todas as 28 armas revisadas; as que já são boas ficam como estão. Cerca de 45 armas no total.
+- Todas as 28 armas revisadas; as que já são boas ficam como estão. Cerca de 50 armas no total: as 28 atuais, as 8 iniciais novas dos professores bloqueados e cerca de 15 novas.
 - Arma inicial de cada um dos 14 professores com mecânica própria (os 6 atuais podem mudar).
 - Inimigos com mecânicas distintas: os 6 atuais refeitos e cerca de 7 novos; elites com modificadores.
 - Os 8 professores bloqueados jogáveis, com habilidade e passivo funcionando, em solo, co-op local e online.
@@ -147,7 +147,7 @@ escudo levantado, projéteis em órbita, objetos colocados (minas/torretas) e a 
 | Vinícius | Raios Elétricos | `chain` |
 | William | Globo Terrestre Bumerangue | `shot` com bumerangue que perfura e cresce na volta |
 
-**Revisão das 24 armas que não são iniciais** (intenção; números ficam com o construtor):
+**Revisão das 22 armas que não são iniciais** (intenção; números ficam com o construtor):
 
 | Arma | Decisão |
 |---|---|
@@ -174,7 +174,7 @@ escudo levantado, projéteis em órbita, objetos colocados (minas/torretas) e a 
 | Projetor de Slides | `beam` largo que atravessa inimigos. |
 | Ímã Gigante | `singularity`. |
 
-**Armas novas (cerca de 17).** Nomes e raridades são sugestão; o construtor pode ajustar, mantendo um modo por arma e
+**Armas novas (cerca de 15).** Nomes e raridades são sugestão; o construtor pode cortar ou ajustar, mantendo um modo por arma e
 o tema escolar.
 
 | Arma | Modo | Raridade |
@@ -294,3 +294,12 @@ O teste definitivo é o dono e o amigo jogarem. Depois da etapa 5, ajustar os n�
 - Lista final de modificadores de elite.
 - Como dividir cada etapa em tarefas e commits.
 - Atualizar `README.md` e `docs/ARMAS.md`.
+
+**Decisões já tomadas por mim (o dono pode mudar):**
+- Poças e explosões dos jogadores **não** ferem colegas.
+- Inimigos atacam aliados invocados (soldados, personagens, torretas, planta), que funcionam como isca.
+- Passivos e efeitos que dependem de "acerto" (crítico, choque, Equação x5) valem por tique nos modos contínuos
+  (`beam`, `flame`), com chance reduzida para não ficarem fortes demais.
+- No online, avanço (`thrust`), lentidão do escudo e Linha do Tempo são previstos no cliente quando for simples;
+  se não, o cliente aceita a correção do servidor.
+- A calibração com bots roda com 1 e com 2 jogadores, mirando a mesma taxa de vitória.
