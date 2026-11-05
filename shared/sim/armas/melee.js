@@ -35,7 +35,7 @@ export function updateDash(world, p, dt) {
   p.moving = true;
   const angle = Math.atan2(d.vy, d.vx);
   for (const e of world.enemies) {
-    if (e.dead || e.spawning > 0 || d.hit.has(e.id)) continue;
+    if (e.dead || e.spawning > 0 || e.burrowed || d.hit.has(e.id)) continue;
     if (Math.hypot(e.x - p.x, e.y - p.y) > p.r + e.r + 12) continue;
     d.hit.add(e.id);
     damageEnemy(world, e, w.damage, { crit: world.rng.chance(critChanceOf(p, w)), source: p, effect: w.effect, knockback: w.melee.knockback, angle });
@@ -99,7 +99,7 @@ export function meleeSwing(world, p, w, critChance, { damageMul = 1, arcBonus = 
   const m = { ...w.melee, arc: w.melee.arc + arcBonus, knockback };
   const reach = m.range;
   for (const e of world.enemies) {
-    if (e.dead || e.spawning > 0) continue;
+    if (e.dead || e.spawning > 0 || e.burrowed) continue;
     const d = Math.hypot(e.x - p.x, e.y - p.y);
     if (d > reach + e.r) continue;
     const a = Math.atan2(e.y - p.y, e.x - p.x);

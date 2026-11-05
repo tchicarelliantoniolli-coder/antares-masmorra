@@ -320,7 +320,7 @@ export class WorldRenderer {
     });
     const flying = !!e.def.flying;
     const bob = flying ? Math.sin(time / 180 + e.id) * 3 - 6 : 0;
-    const scale = keys.scale * (e.elite ? 1.2 : 1);
+    const scale = keys.scale * (e.r / e.def.radius); // elite e filhos da borracha mudam de tamanho
     const lift = e.def.boss ? (keys.character ? 22 : 18) : e.type === 'diva' ? 6 : 6;
     const by = e.y - lift + bob;
     v.shadow.setPosition(e.x, e.y + e.r * 0.8).setDepth(e.y - 1).setAlpha(flying ? 0.6 : 1);
@@ -334,6 +334,10 @@ export class WorldRenderer {
       return;
     }
     v.spawn.setVisible(false);
+    if (e.burrowed && e.def.behavior === 'blinker') { // fantasma sumido: nada a desenhar
+      v.body.setVisible(false); v.shadow.setAlpha(0);
+      return;
+    }
     if (e.burrowed) {
       // enterrado: some o corpo e fica só um monte de terra que se mexe
       v.body.setVisible(false); v.shadow.setAlpha(0);
@@ -377,8 +381,12 @@ export class WorldRenderer {
     if (e.type === 'caderno_preto') {
       this.groundFx.fillStyle(0x000000, 0.35).fillCircle(e.x, e.y + 10, 22);
     }
-    // Divã curando a Katia
-    if (e.type === 'diva' && e.healTarget) {
+    // escudo de 1 golpe (grêmio): anel azul
+    if (e.shielded && e.type !== 'estojo') {
+      this.groundFx.lineStyle(2, 0x7fd0ff, 0.6 + Math.sin(time / 90) * 0.3).strokeCircle(e.x, by, e.r + 5);
+    }
+    // quem cura/protege outro inimigo (divã, grêmio): linha verde até o alvo
+    if (e.healTarget) {
       const boss = this.world.enemies.find((b) => b.id === e.healTarget);
       if (boss) {
         this.fx.lineStyle(3, 0x5ee05e, 0.35 + Math.sin(time / 80) * 0.25).lineBetween(e.x, e.y - 10, boss.x, boss.y - 20);

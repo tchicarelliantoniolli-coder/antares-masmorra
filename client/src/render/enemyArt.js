@@ -157,6 +157,153 @@ export function drawXerox() {
 }
 
 // ---------- Projéteis ----------
+// ---------- Inimigos do andar 1-3 (Etapa 3) ----------
+/** Borracha Divisora: bloco rosa com cantos azuis e carinha. */
+export function drawBorracha() {
+  return strip(32, 32, 2, (ctx, f) => {
+    const up = f;
+    px(ctx, 9, 28 - f, 5, 2, '#a83a52');
+    px(ctx, 18, 28 - (1 - f), 5, 2, '#a83a52');
+    px(ctx, 6, 10 + up, 20, 18 - up, '#f08aa0');
+    px(ctx, 7, 10 + up, 18, 2, '#ffb7c5');
+    px(ctx, 6, 22, 20, 6, '#3d6fd0'); // cinta azul
+    px(ctx, 6, 22, 20, 1, '#6f9bf0');
+    px(ctx, 12, 14 + up, 3, 4, '#1b1424');
+    px(ctx, 18, 14 + up, 3, 4, '#1b1424');
+    px(ctx, 12, 14 + up, 1, 1, '#ffffff');
+    px(ctx, 18, 14 + up, 1, 1, '#ffffff');
+    px(ctx, 14, 19 + up, 5, 1, '#a83a52');
+    // farelos
+    dots(ctx, [[3, 24], [28, 20 - up], [4, 14 + up]], '#d9738a');
+  });
+}
+
+/** Grampeador Touro: corpo de grampeador cinza com chifres de grampo. */
+export function drawGrampeador() {
+  return strip(32, 32, 2, (ctx, f) => {
+    px(ctx, 8, 28, 4, 2, '#2d3138');
+    px(ctx, 20, 28, 4, 2, '#2d3138');
+    px(ctx, 5, 14 + f, 22, 10, '#c0392b'); // corpo vermelho
+    px(ctx, 5, 14 + f, 22, 2, '#e8695a');
+    px(ctx, 4, 22 + f, 24, 6 - f, '#4a505a'); // base
+    px(ctx, 4, 22 + f, 24, 1, '#7d8591');
+    // chifres
+    px(ctx, 3, 9 + f, 3, 6, '#dfe3e8');
+    px(ctx, 26, 9 + f, 3, 6, '#dfe3e8');
+    px(ctx, 3, 8 + f, 5, 2, '#dfe3e8');
+    px(ctx, 24, 8 + f, 5, 2, '#dfe3e8');
+    // olhos bravos
+    px(ctx, 9, 17 + f, 5, 3, '#f6f6e8');
+    px(ctx, 18, 17 + f, 5, 3, '#f6f6e8');
+    px(ctx, 11, 18 + f, 2, 2, '#c0262d');
+    px(ctx, 19, 18 + f, 2, 2, '#c0262d');
+    px(ctx, 9, 16 + f, 5, 1, '#1b1424');
+    px(ctx, 18, 16 + f, 5, 1, '#1b1424');
+    px(ctx, 14, 22 + f, 4, 1, '#1b1424'); // focinho
+  });
+}
+
+/** Régua Mira-Laser: régua amarela comprida com lente vermelha. */
+export function drawReguaMira() {
+  return strip(32, 32, 2, (ctx, f) => {
+    px(ctx, 12, 28, 3, 2, '#7a5a1c');
+    px(ctx, 18, 28, 3, 2, '#7a5a1c');
+    px(ctx, 11, 3 + f, 10, 25 - f, '#f1c232');
+    px(ctx, 12, 3 + f, 8, 1, '#ffe27a');
+    px(ctx, 11, 27, 10, 1, '#b8901a');
+    for (let y = 6 + f; y < 26; y += 3) px(ctx, 11, y, y % 2 ? 4 : 2, 1, '#6b4f10'); // marcas
+    px(ctx, 14, 8 + f, 5, 5, '#1b1424'); // lente
+    px(ctx, 15, 9 + f, 3, 3, f ? '#ff3a3a' : '#c0262d');
+    px(ctx, 15, 9 + f, 1, 1, '#ffffff');
+    px(ctx, 5, 12 + f, 6, 2, '#6b7280'); // luneta
+    px(ctx, 21, 12 + f, 2, 2, '#c0262d');
+  });
+}
+
+/** Apontador Escavador: lápis curto com ponta em broca. */
+export function drawApontador() {
+  return strip(32, 32, 2, (ctx, f) => {
+    px(ctx, 9, 27, 5, 2, '#5a4a3a');
+    px(ctx, 18, 27, 5, 2, '#5a4a3a');
+    px(ctx, 7, 12 + f, 18, 15 - f, '#6b7280'); // corpo de apontador metálico
+    px(ctx, 8, 12 + f, 16, 2, '#aab2bd');
+    px(ctx, 7, 25, 18, 1, '#454b55');
+    px(ctx, 12, 17 + f, 8, 5, '#1b1424'); // buraco
+    px(ctx, 14, 18 + f, 4, 1, '#f6f6e8');
+    // broca no topo
+    px(ctx, 13, 4 + f, 6, 8, '#f3c46b');
+    px(ctx, 14, 2 + f, 4, 3, '#2d2d2d');
+    for (let y = 5 + f; y < 12; y += 2) px(ctx, 13 + ((y + f) % 2), y, 4, 1, '#c88f2a');
+    dots(ctx, [[5, 26], [26, 24 - f], [3, 22]], '#7a5a3a'); // terra
+  });
+}
+
+/** Monitor de Turma: aluno de faixa e prancheta, com apito. */
+export function drawMonitor() {
+  return strip(32, 32, 2, (ctx, f) => {
+    const sk = '#e8b890';
+    px(ctx, 11, 27, 4, 3, '#2d3550');
+    px(ctx, 17, 27, 4, 3, '#2d3550');
+    px(ctx, 9, 13 + f, 14, 14 - f, '#3a5fb0'); // colete azul
+    px(ctx, 9, 13 + f, 14, 2, '#6f8fd8');
+    px(ctx, 14, 13 + f, 4, 14 - f, '#f6f2e4');
+    px(ctx, 10, 6 + f, 12, 8, sk);   // cabeça
+    px(ctx, 10, 5 + f, 12, 3, '#3b2a1e');
+    px(ctx, 12, 9 + f, 2, 2, '#1b1424');
+    px(ctx, 18, 9 + f, 2, 2, '#1b1424');
+    px(ctx, 14, 12 + f, 4, 1, '#a0522d');
+    // faixa de monitor no braço e prancheta
+    px(ctx, 6, 15 + f, 3, 6, '#e0b030');
+    px(ctx, 23, 14 + f, 6, 8, '#b8b0a0');
+    px(ctx, 24, 15 + f, 4, 6, '#f6f2e4');
+    px(ctx, 25, 17 + f, 2, 1, '#9aa0a6');
+    px(ctx, 14, 12 + f, 1, 3, '#c9d1d9'); // cordão do apito
+  });
+}
+
+/** Grêmio Estudantil: aluno com boné, estrela e escudo/cruz de cura. */
+export function drawGremio() {
+  return strip(32, 32, 2, (ctx, f) => {
+    const sk = '#d9a47c';
+    px(ctx, 11, 27, 4, 3, '#2d3550');
+    px(ctx, 17, 27, 4, 3, '#2d3550');
+    px(ctx, 9, 13 + f, 14, 14 - f, '#7a3fb0'); // jaqueta roxa
+    px(ctx, 9, 13 + f, 14, 2, '#a870d8');
+    px(ctx, 10, 7 + f, 12, 7, sk);
+    px(ctx, 9, 4 + f, 14, 4, '#e0b030'); // boné
+    px(ctx, 9, 8 + f, 17, 1, '#b8901a');
+    px(ctx, 12, 10 + f, 2, 2, '#1b1424');
+    px(ctx, 18, 10 + f, 2, 2, '#1b1424');
+    px(ctx, 14, 13 + f, 4, 1, '#a0522d');
+    // cruz verde no peito
+    px(ctx, 14, 17 + f, 4, 8, '#5ee05e');
+    px(ctx, 12, 19 + f, 8, 4, '#5ee05e');
+    px(ctx, 15, 18 + f, 2, 6, '#ffffff');
+    px(ctx, 13, 20 + f, 6, 2, '#ffffff');
+  });
+}
+
+/** Chamada Fantasma: fantasminha de lençol com lista de chamada. */
+export function drawChamada() {
+  return strip(32, 32, 2, (ctx, f) => {
+    const w = '#e9eef8', wd = '#b9c4dc';
+    px(ctx, 8, 6 + f, 16, 18, w);
+    px(ctx, 9, 5 + f, 14, 1, w);
+    px(ctx, 10, 4 + f, 12, 1, w);
+    px(ctx, 8, 6 + f, 2, 18, wd);
+    // barra ondulada
+    for (let x = 8; x < 24; x += 4) { px(ctx, x, 24 + f, 4, 3 - ((x / 4 + f) % 2), w); }
+    px(ctx, 11, 11 + f, 3, 4, '#1b1424');
+    px(ctx, 18, 11 + f, 3, 4, '#1b1424');
+    px(ctx, 14, 17 + f, 4, 3, '#1b1424');
+    // lista de chamada
+    px(ctx, 22, 14 + f, 7, 9, '#f6f2e4');
+    px(ctx, 22, 14 + f, 7, 1, '#9aa0a6');
+    for (let y = 16 + f; y < 22; y += 2) px(ctx, 23, y, 5, 1, '#6b7280');
+    px(ctx, 5, 14 + f, 4, 2, wd); // braço
+  });
+}
+
 function canvasFrom(w, h, draw, doOutline = true) {
   const [c, ctx] = makeCanvas(w, h);
   draw(ctx);

@@ -1,6 +1,7 @@
 import { INVULN_TIME, TILE } from './constants.js';
 import { dropEnergy, dropCoins, dropWeapon, createPickup } from './salas/Pickups.js';
 import { damagePropsInRadius } from './salas/Props.js';
+import { BEHAVIOR_HOOKS } from './inimigos/behaviors.js';
 
 /**
  * Dano em inimigo. opts: { crit, source (jogador), effect, knockback, angle, noMul }
@@ -9,6 +10,7 @@ import { damagePropsInRadius } from './salas/Props.js';
 export function damageEnemy(world, e, amount, opts = {}) {
   if (e.dead || e.spawning > 0 || e.burrowed) return 0;
   if (e.def.invulnerable || e.shielded > 0) {
+    if (e.shieldHit) { e.shielded = 0; e.shieldHit = false; } // escudo do grêmio: vale por 1 golpe
     world.emit('immune', { x: e.x, y: e.y - e.r });
     return 0;
   }
@@ -21,6 +23,7 @@ export function damageEnemy(world, e, amount, opts = {}) {
     src.buffs.nextHitTimer = 0;
   }
   if (opts.crit) dmg *= 2;
+  if (e.state === 'stunned') dmg *= 2; // tonto (grampeador depois da batida)
   if (src) dmg *= src.mods.damageMul;
   if (opts.carry) {
     // dano contínuo (laser, poça, campo): guarda a fração para o próximo tique em vez de arredondar
@@ -89,7 +92,7 @@ export function chainFrom(world, first, { chains = 2, radius = 130, damage = 3, 
   for (let i = 0; i < chains; i++) {
     let next = null, bd = radius;
     for (const e of world.enemies) {
-      if (e.dead || e.spawning > 0 || hit.has(e.id) || e.def.invulnerable) continue;
+      if (e.dead || e.spawning > 0 || e.burrowed || hit.has(e.id) || e.def.invulnerable) continue;
       const d = Math.hypot(e.x - cur.x, e.y - cur.y);
       if (d < bd) { bd = d; next = e; }
     }
@@ -108,7 +111,7 @@ export function explode(world, x, y, radius, damage, { source = null, effect = n
   world.emit('explosion', { x, y, radius, style });
   damagePropsInRadius(world, x, y, radius * 0.8, damage);
   for (const e of world.enemies) {
-    if (e.dead || e.spawning > 0) continue;
+    if (e.dead || e.spawning > 0 || e.burrowed) continue;
     const d = Math.hypot(e.x - x, e.y - y);
     if (d < radius + e.r) {
       damageEnemy(world, e, damage, { source, effect, knockback: 160, angle: Math.atan2(e.y - y, e.x - x), noMul: true });
@@ -133,6 +136,7 @@ export function killEnemy(world, e, src) {
     e.exploded = true;
     explode(world, e.x, e.y, e.def.onDeathExplode.radius, e.def.onDeathExplode.damage, { style: 'barrel' });
   }
+  if (!e.minion) BEHAVIOR_HOOKS[e.def.behavior]?.onDeath?.(world, e);
   if (e.minion) return; // invocações do chefe não dão drop
   const mul = e.elite ? 2 : 1;
   if (drops.energy) dropEnergy(world, e.x, e.y, world.rng.int(drops.energy[0], drops.energy[1]) * mul);

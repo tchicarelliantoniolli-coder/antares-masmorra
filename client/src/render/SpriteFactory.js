@@ -1,5 +1,5 @@
 import { drawCharacterSheet, CHAR_FRAMES } from './characterArt.js';
-import { drawCadernoZumbi, drawProvaVoadora, drawEstojo, drawXerox, drawProjectile, drawGlyph, drawNotaMil, drawEnemyBullet } from './enemyArt.js';
+import { drawCadernoZumbi, drawProvaVoadora, drawEstojo, drawXerox, drawBorracha, drawGrampeador, drawReguaMira, drawApontador, drawMonitor, drawGremio, drawChamada, drawProjectile, drawGlyph, drawNotaMil, drawEnemyBullet } from './enemyArt.js';
 import {
   drawWeapon, drawChest, drawHealStation, drawPortalFrames, drawEnergyOrb, drawCoin, drawApple, drawShadow,
   drawSpawnCircle, drawCrosshair, drawDoorBar, drawPixel, drawSoftCircle, drawIcon
@@ -38,6 +38,13 @@ export function generateTextures(scene, data, overrideKeys = new Set()) {
   add('enemy_prova_voadora', drawProvaVoadora(), 32, 32);
   add('enemy_estojo', drawEstojo(), 32, 32);
   add('enemy_maquina_xerox', drawXerox(), 64, 64);
+  add('enemy_borracha', drawBorracha(), 32, 32);
+  add('enemy_grampeador', drawGrampeador(), 32, 32);
+  add('enemy_regua_mira', drawReguaMira(), 32, 32);
+  add('enemy_apontador', drawApontador(), 32, 32);
+  add('enemy_monitor', drawMonitor(), 32, 32);
+  add('enemy_gremio', drawGremio(), 32, 32);
+  add('enemy_chamada', drawChamada(), 32, 32);
   add('enemy_lousa', drawLousaEnemy(), 32, 32);
   add('enemy_sinal_recreio', drawSinal(), 32, 32);
   add('enemy_mochila', drawMochila(), 32, 32);
@@ -108,7 +115,11 @@ function createAnimations(scene, data) {
     mk(tex + '_idle', tex, [0, 1], 3);
     mk(tex + '_walk', tex, CHAR_FRAMES >= 6 ? [2, 3, 4, 5] : [0, 1], 10);
   }
-  for (const e of ['caderno_zumbi', 'prova_voadora', 'estojo', 'lousa', 'sinal_recreio', 'mochila', 'diva', 'caderno_preto']) mk('enemy_' + e + '_move', 'enemy_' + e, [0, 1], 6);
+  // todo inimigo com textura de 2 quadros ganha a animação "_move" (chefes têm a sua)
+  for (const id of Object.keys(data.enemies)) {
+    const tex = 'enemy_' + id;
+    if (scene.textures.exists(tex) && !id.startsWith('maquina_')) mk(tex + '_move', tex, [0, 1], 6);
+  }
   for (let i = 0; i < 4; i++) mk('aluno_' + i + '_walk', 'aluno_' + i, [2, 3, 4, 5], 10);
   mk('enemy_estojo_closed', 'enemy_estojo', [2, 3], 4);
   mk('char_cantineira_idle', 'char_cantineira', [0, 1], 3);

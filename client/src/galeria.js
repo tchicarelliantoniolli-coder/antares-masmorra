@@ -1,6 +1,6 @@
 // Página de conferência dos sprites provisórios (abra /galeria.html).
 import { drawCharacterSheet } from './render/characterArt.js';
-import { drawCadernoZumbi, drawProvaVoadora, drawEstojo, drawXerox, drawProjectile, drawGlyph, drawNotaMil, drawEnemyBullet } from './render/enemyArt.js';
+import { drawCadernoZumbi, drawProvaVoadora, drawEstojo, drawXerox, drawBorracha, drawGrampeador, drawReguaMira, drawApontador, drawMonitor, drawGremio, drawChamada, drawProjectile, drawGlyph, drawNotaMil, drawEnemyBullet } from './render/enemyArt.js';
 import { drawWeapon, drawChest, drawHealStation, drawPortalFrames, drawApple, drawCoin, drawEnergyOrb, drawDoorBar } from './render/itemArt.js';
 import { buildTileset } from './render/tileArt.js';
 
@@ -33,6 +33,13 @@ show(r, drawCadernoZumbi(), 'enemy_caderno_zumbi', 3);
 show(r, drawProvaVoadora(), 'enemy_prova_voadora', 3);
 show(r, drawEstojo(), 'enemy_estojo', 3);
 show(r, drawXerox(), 'enemy_maquina_xerox', 3);
+show(r, drawBorracha(), 'enemy_borracha', 3);
+show(r, drawGrampeador(), 'enemy_grampeador', 3);
+show(r, drawReguaMira(), 'enemy_regua_mira', 3);
+show(r, drawApontador(), 'enemy_apontador', 3);
+show(r, drawMonitor(), 'enemy_monitor', 3);
+show(r, drawGremio(), 'enemy_gremio', 3);
+show(r, drawChamada(), 'enemy_chamada', 3);
 r = section('Armas (wpn_<id>) e projéteis (proj_<id>)');
 for (const w of weapons.weapons) {
   show(r, drawWeapon(w.sprite.shape, w.sprite.color, w.sprite.accent), w.name, 3);

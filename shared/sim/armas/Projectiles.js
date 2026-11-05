@@ -123,7 +123,7 @@ function updateLob(world, p, dt) {
 function land(world, p) {
   if (!p.explodeDef && p.team === 'player') {
     for (const e of world.enemies) {
-      if (e.dead || e.spawning > 0 || e.def.invulnerable) continue;
+      if (e.dead || e.spawning > 0 || e.burrowed || e.def.invulnerable) continue;
       if (Math.hypot(e.x - p.x, e.y - p.y) > e.r + p.r + 8) continue;
       damageEnemy(world, e, p.damage, { crit: p.crit, source: p.owner, effect: p.effect, knockback: p.knockback, angle: Math.atan2(p.vy, p.vx) });
     }
@@ -141,7 +141,7 @@ function updateOrbit(world, p, dt) {
   p.vx = (nx - p.x) / Math.max(dt, 1e-6); p.vy = (ny - p.y) / Math.max(dt, 1e-6);
   p.x = nx; p.y = ny;
   for (const e of world.enemies) {
-    if (e.dead || e.spawning > 0 || e.def.invulnerable) continue;
+    if (e.dead || e.spawning > 0 || e.burrowed || e.def.invulnerable) continue;
     if (Math.hypot(e.x - p.x, e.y - p.y) > e.r + p.r) continue;
     const last = p.hitTimes.get(e.id);
     if (last !== undefined && world.time - last < 0.5) continue;
@@ -184,7 +184,7 @@ export function updateProjectiles(world, dt) {
     if (p.homing && p.team === 'player') {
       let best = null, bd = 260;
       for (const e of world.enemies) {
-        if (e.dead || e.spawning > 0) continue;
+        if (e.dead || e.spawning > 0 || e.burrowed) continue;
         const d = Math.hypot(e.x - p.x, e.y - p.y);
         if (d < bd) { bd = d; best = e; }
       }
@@ -235,7 +235,7 @@ export function updateProjectiles(world, dt) {
 
     if (p.team === 'player') {
       for (const e of world.enemies) {
-        if (e.dead || e.spawning > 0 || p.hit.has(e.id) || e.def.invulnerable) continue;
+        if (e.dead || e.spawning > 0 || e.burrowed || p.hit.has(e.id) || e.def.invulnerable) continue;
         if (Math.hypot(e.x - p.x, e.y - p.y) > e.r + p.r) continue;
         p.hit.add(e.id);
         if (p.explodeDef) { impact(world, p); break; }

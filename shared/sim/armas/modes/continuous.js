@@ -31,7 +31,7 @@ export const beam = {
     const half = b.width / 2;
     const hits = [];
     for (const e of world.enemies) {
-      if (e.dead || e.spawning > 0 || e.def.invulnerable) continue;
+      if (e.dead || e.spawning > 0 || e.burrowed || e.def.invulnerable) continue;
       const t = (e.x - x1) * cx + (e.y - y1) * cy;
       if (t < 0 || t > len + e.r) continue;
       const perp = Math.abs((e.x - x1) * -cy + (e.y - y1) * cx);

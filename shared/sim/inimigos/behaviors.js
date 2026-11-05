@@ -1,4 +1,4 @@
-import { moveToward, enemySpeed, enemyShoot, nearestPlayer, predictAim } from './Enemy.js';
+import { moveToward, enemySpeed, enemyShoot, nearestPlayer, predictAim, createEnemy } from './Enemy.js';
 import { bossXerox } from './chefes/xerox.js';
 import { bossKatia } from './chefes/katia.js';
 import { bossSamara } from './chefes/samara.js';
@@ -217,6 +217,245 @@ function kamikaze(world, e, dt, target) {
   if (d < 46) { e.state = 'fuse'; e.t = 0.65; world.emit('fuse', { x: e.x, y: e.y }); }
 }
 
+/** Anda em direção ao alvo com um leve balanço (usado por quem só persegue). */
+function approach(world, e, dt, target, speedMul = 1) {
+  const a = Math.atan2(target.y - e.y, target.x - e.x) + Math.sin(world.time * 3 + e.id) * 0.4;
+  const s = enemySpeed(e) * speedMul;
+  const r = world.map.moveBox(e, Math.cos(a) * s * dt, Math.sin(a) * s * dt);
+  e.facing = target.x > e.x ? 1 : -1;
+  return r;
+}
+
+/** Borracha Divisora: persegue; ao morrer se divide (veja splitterDeath). */
+function splitter(world, e, dt, target) {
+  if (!target) return wander(world, e, dt);
+  approach(world, e, dt, target);
+}
+
+function splitterDeath(world, e) {
+  const S = e.def.split;
+  const gen = e.gen || 0;
+  if (!S || gen >= S.maxGen) return;
+  for (let i = 0; i < S.count; i++) {
+    const a = world.rng.range(0, Math.PI * 2);
+    const f = createEnemy(world, e.type, e.x + Math.cos(a) * 8, e.y + Math.sin(a) * 8, e.roomId, { spawnTime: 0.3, gen: gen + 1 });
+    f.r = e.r * S.size;
+    f.maxHp = f.hp = Math.max(1, Math.round(e.maxHp / 2));
+    f.kx = Math.cos(a) * 140; f.ky = Math.sin(a) * 140; // pulam para os lados
+  }
+}
+
+/** Distância até a parede na direção `angle` (andando de 8 em 8 px). */
+function wallDistance(world, e, angle, max) {
+  let d = 0;
+  while (d < max && !world.map.solidAt(e.x + Math.cos(angle) * d, e.y + Math.sin(angle) * d)) d += 8;
+  return d;
+}
+
+/** Grampeador Touro: aviso de faixa, investe em linha reta; ao bater na parede fica tonto (dano dobrado). */
+function charger(world, e, dt, target) {
+  const C = e.def.charge;
+  if (e.state === 'windup') {
+    e.t -= dt;
+    if (target && e.t > C.lockTime) e.aim = Math.atan2(target.y - e.y, target.x - e.x);
+    e.telegraph = { type: 'line', angle: e.aim, length: Math.min(C.maxDistance, wallDistance(world, e, e.aim, C.maxDistance)), width: e.r * 2 };
+    e.facing = Math.cos(e.aim) >= 0 ? 1 : -1;
+    if (e.t <= 0) { e.state = 'charge'; e.traveled = 0; e.telegraph = null; e.contactOverride = C.damage; }
+    return;
+  }
+  if (e.state === 'charge') {
+    const step = C.speed * dt;
+    const r = world.map.moveBox(e, Math.cos(e.aim) * step, Math.sin(e.aim) * step);
+    e.traveled += step;
+    const wall = r.hitX || r.hitY;
+    if (wall || e.traveled >= C.maxDistance) {
+      e.contactOverride = undefined;
+      e.cd = C.cooldown * e.atkMul;
+      if (wall) { e.state = 'stunned'; e.t = C.stun; world.emit('charger_crash', { x: e.x, y: e.y }); } else e.state = 'move';
+    }
+    return;
+  }
+  if (e.state === 'stunned') {
+    e.t -= dt;
+    if (e.t <= 0) e.state = 'move';
+    return;
+  }
+  if (!target) return wander(world, e, dt);
+  approach(world, e, dt, target);
+  e.cd -= dt;
+  if (e.cd <= 0 && Math.hypot(target.x - e.x, target.y - e.y) < C.range && world.map.lineOfSight(e.x, e.y, target.x, target.y)) {
+    e.state = 'windup';
+    e.t = C.windup;
+    e.aim = Math.atan2(target.y - e.y, target.x - e.x);
+  }
+}
+
+/** Régua Mira-Laser: fica longe; aviso fino que segue o alvo e trava no fim; tiro rápido. */
+function sniper(world, e, dt, target) {
+  if (!target) return wander(world, e, dt);
+  const atk = e.def.attack;
+  e.facing = target.x > e.x ? 1 : -1;
+  if (e.state === 'windup') {
+    e.t -= dt;
+    if (e.t > atk.lockTime) e.aim = Math.atan2(target.y - e.y, target.x - e.x);
+    e.telegraph = { type: 'line', angle: e.aim, length: atk.range, width: 2 };
+    if (e.t <= 0) {
+      e.telegraph = null;
+      enemyShoot(world, e, e.aim, { ...atk, noExtra: true });
+      e.state = 'move';
+      e.cd = atk.interval * e.atkMul * world.rng.range(0.9, 1.1);
+    }
+    return;
+  }
+  keepDistance(world, e, dt, target);
+  e.cd -= dt;
+  if (e.cd <= 0 && world.map.lineOfSight(e.x, e.y, target.x, target.y)) {
+    e.state = 'windup';
+    e.t = atk.aimTime;
+    e.aim = Math.atan2(target.y - e.y, target.x - e.x);
+  }
+}
+
+/** Apontador Escavador: enterra, segue o alvo por baixo, avisa com um círculo, emerge e fica exposto. */
+function burrower(world, e, dt, target) {
+  const B = e.def.burrow;
+  if (e.state === 'dig') {
+    e.t -= dt;
+    if (!target) return;
+    moveToward(world, e, target.x, target.y, enemySpeed(e) * B.speedMul, dt);
+    if (e.t <= 0 || Math.hypot(target.x - e.x, target.y - e.y) < 20) {
+      e.state = 'warn'; e.t = B.warn;
+      e.warnX = target.x; e.warnY = target.y;
+    }
+    return;
+  }
+  if (e.state === 'warn') {
+    e.t -= dt;
+    e.telegraph = { type: 'circle', x: e.warnX, y: e.warnY, r: B.radius };
+    if (e.t <= 0) {
+      e.telegraph = null;
+      if (!world.map.solidAt(e.warnX, e.warnY)) { e.x = e.warnX; e.y = e.warnY; }
+      e.burrowed = false;
+      e.state = 'exposed'; e.t = B.exposed;
+      for (const p of world.players) {
+        if (p.dead || p.downed || p.jailTimer > 0) continue;
+        if (Math.hypot(p.x - e.x, p.y - e.y) < B.radius + p.r * 0.5) hurtPlayer(world, p, B.damage);
+      }
+      world.emit('explosion', { x: e.x, y: e.y, radius: B.radius, style: 'barrel' });
+    }
+    return;
+  }
+  if (e.state === 'exposed') {
+    e.t -= dt;
+    if (e.t <= 0) { e.state = 'move'; e.cd = 0.8; }
+    return;
+  }
+  if (!target) return wander(world, e, dt);
+  approach(world, e, dt, target);
+  e.cd -= dt;
+  if (e.cd <= 0) { e.state = 'dig'; e.burrowed = true; e.t = world.rng.range(B.travel[0], B.travel[1]); }
+}
+
+/** Monitor de Turma: fica longe e, a cada `interval`, brilha e chama cadernos zumbis (máx. vivos). */
+function summoner(world, e, dt, target) {
+  const S = e.def.summon;
+  if (e.state === 'windup') {
+    e.t -= dt;
+    e.telegraph = { type: 'circle', x: e.x, y: e.y, r: e.r + 16 };
+    if (e.t <= 0) {
+      e.telegraph = null;
+      const vivos = world.enemies.filter((m) => m.summonerId === e.id && !m.dead).length;
+      const n = Math.min(world.rng.int(S.count[0], S.count[1]), S.max - vivos);
+      for (let i = 0; i < n; i++) {
+        const a = (i / Math.max(1, n)) * Math.PI * 2 + world.rng.range(0, 1);
+        const x = e.x + Math.cos(a) * 28, y = e.y + Math.sin(a) * 28;
+        createEnemy(world, S.type, world.map.solidAt(x, y) ? e.x : x, world.map.solidAt(x, y) ? e.y : y, e.roomId, { minion: true, summonerId: e.id });
+      }
+      e.state = 'move';
+      e.cd = S.interval * e.atkMul;
+    }
+    return;
+  }
+  if (!target) return wander(world, e, dt);
+  e.facing = target.x > e.x ? 1 : -1;
+  keepDistance(world, e, dt, target);
+  e.cd -= dt;
+  if (e.cd <= 0) { e.state = 'windup'; e.t = S.warn; }
+}
+
+/** Grêmio Estudantil: foge do jogador e, a cada `interval`, cura (20%) um aliado ferido ou dá escudo de 1 golpe. */
+function buffer(world, e, dt, target) {
+  const B = e.def.buff;
+  if (e.linkT > 0) { e.linkT -= dt; if (e.linkT <= 0) e.healTarget = 0; }
+  if (target) {
+    e.facing = target.x > e.x ? 1 : -1;
+    const r = moveToward(world, e, target.x, target.y, enemySpeed(e), dt, -1);
+    if (r.hitX || r.hitY) { // encurralado: escorrega pela parede
+      const a = Math.atan2(target.y - e.y, target.x - e.x) + (Math.PI / 2) * e.strafeDir;
+      const r2 = world.map.moveBox(e, Math.cos(a) * enemySpeed(e) * dt, Math.sin(a) * enemySpeed(e) * dt);
+      if (r2.hitX || r2.hitY) e.strafeDir *= -1;
+    }
+  } else wander(world, e, dt);
+  e.cd -= dt;
+  if (e.cd > 0) return;
+  let hurt = null, bare = null, hd = Infinity, bd = Infinity;
+  for (const o of world.enemies) {
+    if (o === e || o.dead || o.spawning > 0 || o.def.boss || o.def.invulnerable) continue;
+    const d = Math.hypot(o.x - e.x, o.y - e.y);
+    if (d > B.range) continue;
+    if (o.hp < o.maxHp * 0.9 && d < hd) { hd = d; hurt = o; }
+    if (!o.shielded && d < bd) { bd = d; bare = o; }
+  }
+  const alvo = hurt || bare;
+  if (!alvo) return; // ninguém por perto: tenta de novo no próximo passo
+  if (hurt) alvo.hp = Math.min(alvo.maxHp, alvo.hp + Math.ceil(alvo.maxHp * B.heal));
+  else { alvo.shielded = 1; alvo.shieldHit = true; }
+  e.healTarget = alvo.id;
+  e.linkT = B.linkTime;
+  e.cd = B.interval * e.atkMul;
+  world.emit('gremio_buff', { x: alvo.x, y: alvo.y, heal: !!hurt });
+}
+
+/** Chamada Fantasma: some; avisa um ponto perto do alvo, aparece, solta o leque e some de novo. */
+function blinker(world, e, dt, target) {
+  const B = e.def.blink;
+  if (e.state === 'move') { e.state = 'hidden'; e.burrowed = true; e.t = e.cd; e.cd = 0; }
+  if (e.state === 'hidden') {
+    if (!target) return;
+    e.t -= dt;
+    if (e.t > 0) return;
+    for (let i = 0; i < 10; i++) {
+      const a = world.rng.range(0, Math.PI * 2), d = world.rng.range(B.minR, B.maxR);
+      const x = target.x + Math.cos(a) * d, y = target.y + Math.sin(a) * d;
+      if (world.map.boxSolid(x - e.r, y - e.r, x + e.r, y + e.r)) continue;
+      e.warnX = x; e.warnY = y; e.state = 'warn'; e.t = B.warn;
+      return;
+    }
+    return; // sem ponto livre: tenta de novo no próximo passo
+  }
+  if (e.state === 'warn') {
+    e.t -= dt;
+    e.telegraph = { type: 'circle', x: e.warnX, y: e.warnY, r: e.r + 14 };
+    if (e.t <= 0) {
+      e.telegraph = null;
+      e.x = e.warnX; e.y = e.warnY;
+      e.burrowed = false;
+      e.state = 'appear'; e.t = B.visible; e.fanFired = false;
+      world.emit('teleport', { id: e.id, x: e.x, y: e.y });
+    }
+    return;
+  }
+  if (e.state === 'appear') {
+    e.t -= dt;
+    if (target) e.facing = target.x > e.x ? 1 : -1;
+    if (!e.fanFired && e.t <= B.visible - B.fireDelay) {
+      e.fanFired = true;
+      if (target) enemyShoot(world, e, predictAim(e, target, e.def.attack.speed), e.def.attack);
+    }
+    if (e.t <= 0) { e.state = 'hidden'; e.burrowed = true; e.t = B.interval * e.atkMul; world.emit('enemy_vanish', { x: e.x, y: e.y, id: e.id, enemyType: e.type, blink: true }); }
+  }
+}
+
 /** Aluno da Assembleia (Katia): anda devagar para o centro da roda, empurrando quem estiver na frente. */
 function assembly(world, e, dt) {
   const s = enemySpeed(e);
@@ -265,7 +504,19 @@ export const BEHAVIORS = {
   assembly,
   healer,
   capturer,
+  splitter,
+  charger,
+  sniper,
+  burrower,
+  summoner,
+  buffer,
+  blinker,
   boss_xerox: bossXerox,
   boss_katia: bossKatia,
   boss_samara: bossSamara
+};
+
+/** Ganchos de comportamento chamados por killEnemy (ao morrer). */
+export const BEHAVIOR_HOOKS = {
+  splitter: { onDeath: splitterDeath }
 };

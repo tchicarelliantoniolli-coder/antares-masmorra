@@ -20,7 +20,7 @@ export function countAllies(world, ownerId, kind) {
 function nearestEnemy(world, a, range) {
   let best = null, bd = range;
   for (const e of world.enemies) {
-    if (e.dead || e.spawning > 0 || e.def.invulnerable) continue;
+    if (e.dead || e.spawning > 0 || e.burrowed || e.def.invulnerable) continue;
     const d = Math.hypot(e.x - a.x, e.y - a.y);
     if (d < bd && world.map.lineOfSight(a.x, a.y, e.x, e.y)) { bd = d; best = e; }
   }

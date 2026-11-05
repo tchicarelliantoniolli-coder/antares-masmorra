@@ -62,7 +62,7 @@ export const chain = {
     const mx = p.x + Math.cos(p.aim) * 18, my = p.y + Math.sin(p.aim) * 18 - 4;
     let best = null, bestA = Infinity;
     for (const e of world.enemies) {
-      if (e.dead || e.spawning > 0 || e.def.invulnerable) continue;
+      if (e.dead || e.spawning > 0 || e.burrowed || e.def.invulnerable) continue;
       const d = Math.hypot(e.x - p.x, e.y - p.y);
       if (d > C.range) continue;
       const da = Math.abs(angleDiff(p.aim, Math.atan2(e.y - p.y, e.x - p.x)));
