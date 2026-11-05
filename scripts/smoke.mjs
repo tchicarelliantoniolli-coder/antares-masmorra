@@ -127,6 +127,56 @@ SCENARIOS['armas'] = async (browser) => {
   return errors;
 };
 
+/** Online com dois navegadores: o segundo vê o laser do Jean Paulo e a carga da Marina do primeiro. */
+SCENARIOS['online'] = async (browser) => {
+  const ctxA = await browser.newContext(), ctxB = await browser.newContext();
+  const open = async (ctx) => {
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+    page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto(URL_);
+    await waitScene(page, 'Menu', 15000);
+    await page.waitForTimeout(300);
+    await clickGame(page, GAME_W / 2, 332); // ONLINE (SALAS)
+    await waitScene(page, 'OnlineMenu');
+    return { page, errors };
+  };
+  const A = await open(ctxA), B = await open(ctxB);
+  await A.page.fill('#nome', 'Ana');
+  await A.page.click('#criar');
+  await waitScene(A.page, 'Lobby', 5000);
+  await A.page.waitForFunction(() => window.__game.scene.getScene('Lobby').client.code, null, { timeout: 5000 });
+  const code = await A.page.evaluate(() => window.__game.scene.getScene('Lobby').client.code);
+  await B.page.fill('#nome', 'Beto');
+  await B.page.fill('#code', code);
+  await B.page.click('#entrar');
+  await waitScene(B.page, 'Lobby', 5000);
+  await A.page.evaluate(() => window.__game.scene.getScene('Lobby').client.setCharacter('jean_paulo'));
+  await B.page.evaluate(() => window.__game.scene.getScene('Lobby').client.setCharacter('marina'));
+  await A.page.waitForTimeout(300);
+  for (const P of [A, B]) await P.page.evaluate(() => window.__game.scene.getScene('Lobby').client.setReady(true));
+  await waitScene(A.page, 'Game', 8000);
+  await waitScene(B.page, 'Game', 8000);
+  await A.page.waitForTimeout(800);
+  // A segura o laser; B segura a carga
+  for (const P of [A, B]) { await clickGame(P.page, GAME_W / 2 + 160, GAME_H / 2); await P.page.mouse.down(); }
+  await A.page.waitForTimeout(700);
+  const seen = await B.page.evaluate(() => {
+    const w = window.__game.scene.getScene('Game').world;
+    const me = w.players.find((p) => p.name === 'Beto');
+    return { beams: w.beams.length, charge: me?.wstate?.charge || 0 };
+  });
+  if (SHOTS) { await A.page.screenshot({ path: join(SHOTS, 'online-A.png') }); await B.page.screenshot({ path: join(SHOTS, 'online-B.png') }); }
+  for (const P of [A, B]) await P.page.mouse.up();
+  const errors = [...A.errors, ...B.errors];
+  if (!(seen.beams > 0)) errors.push('o segundo navegador não recebeu o laser do primeiro');
+  if (!(seen.charge > 0)) errors.push('a carga da Marina não chegou pelo snapshot');
+  await ctxA.close(); await ctxB.close();
+  return errors;
+};
+
 const browser = await launch();
 let failed = 0;
 for (const [name, fn] of Object.entries(SCENARIOS)) {
