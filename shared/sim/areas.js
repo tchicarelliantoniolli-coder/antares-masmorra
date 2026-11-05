@@ -1,4 +1,5 @@
 import { hurtPlayer, damageEnemy } from './combat.js';
+import { damagePropsInRadius } from './salas/Props.js';
 
 /** Áreas no chão: avisos de ataque, poças de toner, campo gravitacional, círculo da conversa, cela... */
 export function createArea(world, kind, x, y, opts = {}) {
@@ -51,11 +52,35 @@ export function updateAreas(world, dt) {
         }
         break;
       }
+      case 'pool': {
+        // poça das armas (tinta, ácido, fogo...): machuca e aplica efeito a cada 0,5 s; pode deixar lento
+        a.tick += dt;
+        const owner = world.players.find((p) => p.id === a.ownerId) || null;
+        const pulse = a.tick >= 0.5;
+        for (const e of world.enemies) {
+          if (e.dead || e.spawning > 0 || e.def.invulnerable) continue;
+          if (Math.hypot(e.x - a.x, e.y - a.y) > a.r + e.r * 0.5) continue;
+          if (a.slowMul < 1) { e.status.slow = Math.max(e.status.slow || 0, 0.3); e.status.slowMul = Math.min(e.status.slowMul ?? 1, a.slowMul); }
+          if (pulse && a.dps > 0) damageEnemy(world, e, a.dps * 0.5, { source: owner, noMul: true, effect: a.effect });
+        }
+        if (pulse) a.tick = 0;
+        break;
+      }
       default:
         break;
     }
     if (a.t >= a.life) {
       a.dead = true;
+      if (a.kind === 'rain_mark') {
+        const owner = world.players.find((p) => p.id === a.ownerId) || null;
+        for (const e of world.enemies) {
+          if (e.dead || e.spawning > 0 || e.def.invulnerable) continue;
+          if (Math.hypot(e.x - a.x, e.y - a.y) > a.r + e.r) continue;
+          damageEnemy(world, e, a.damage, { crit: a.crit, source: owner, effect: a.effect });
+        }
+        damagePropsInRadius(world, a.x, a.y, a.r, a.damage);
+        world.emit('proj_hit', { x: a.x, y: a.y, team: 'player', style: a.sprite });
+      }
       if (a.kind === 'toner_warning') {
         world.emit('toner_splash', { x: a.x, y: a.y, r: a.r });
         for (const p of world.players) {

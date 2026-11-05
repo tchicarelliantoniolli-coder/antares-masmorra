@@ -35,7 +35,7 @@ export const MODE_DEFAULTS = {
   chain: { range: 300, chains: 3, radius: 130, falloff: 0.8, aimCone: 35 },
   deploy: { kind: 'mine', max: 3, life: 12, radius: 60, damage: 12, fireRate: 2, range: 220, triggerRadius: 28 },
   singularity: { pullRadius: 110, life: 2.5, dps: 8, pull: 170 },
-  rain: { count: 5, radius: 70, delay: 0.5, hitRadius: 26 },
+  rain: { count: 5, radius: 70, delay: 0.5, hitRadius: 26, maxRange: 380 },
   orbit: { max: 4, radius: 34, spin: 4, launchSpeed: 480 },
   variants: { list: [] }
 };

@@ -67,24 +67,33 @@ export function applyEffect(world, e, eff, src) {
 }
 
 function chainShock(world, first, eff, src) {
+  const points = chainFrom(world, first, { chains: eff.chains ?? 2, radius: eff.radius ?? 130, damage: eff.power ?? 3, source: src });
+  if (points.length > 1) world.emit('chain', { points });
+}
+
+/**
+ * Raio que pula de "first" para os vizinhos mais próximos (sem repetir), causando dano em cada salto.
+ * O dano do salto i é damage * falloff^i. Devolve os pontos do raio (começando em first).
+ */
+export function chainFrom(world, first, { chains = 2, radius = 130, damage = 3, falloff = 1, source = null, effect = null } = {}) {
   const hit = new Set([first.id]);
   const points = [[first.x, first.y]];
-  let cur = first;
-  const chains = eff.chains ?? 2, radius = eff.radius ?? 130;
+  let cur = first, dmg = damage;
   for (let i = 0; i < chains; i++) {
     let next = null, bd = radius;
     for (const e of world.enemies) {
-      if (e.dead || e.spawning > 0 || hit.has(e.id)) continue;
+      if (e.dead || e.spawning > 0 || hit.has(e.id) || e.def.invulnerable) continue;
       const d = Math.hypot(e.x - cur.x, e.y - cur.y);
       if (d < bd) { bd = d; next = e; }
     }
     if (!next) break;
     hit.add(next.id);
     points.push([next.x, next.y]);
-    damageEnemy(world, next, eff.power ?? 3, { source: src, noMul: true });
+    dmg *= falloff;
+    damageEnemy(world, next, dmg, { source, noMul: true, effect: effect && effect.type !== 'choque' ? effect : null });
     cur = next;
   }
-  if (points.length > 1) world.emit('chain', { points });
+  return points;
 }
 
 /** Explosão em área (dano em inimigos; opcionalmente nos jogadores). */

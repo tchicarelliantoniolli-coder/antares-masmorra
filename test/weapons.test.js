@@ -207,3 +207,74 @@ test('flame acerta vários inimigos no cone e não passa da parede', () => {
   run(w2, 1, { p1: { fire: true, aim: 0 } });
   assert.equal(hidden.hp, 9999);
 });
+
+// ---------------------------------------------------------------- modos no chão
+test('lob cai no ponto mirado e passa por cima de inimigo no caminho', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'lob', damage: 1, fireRate: 1, projectile: { explode: { radius: 40, damage: 10 } }, lob: { maxRange: 400, flightTime: 0.5 } });
+  const mid = dummy(w, p.x + 80, p.y, 9999);
+  const far = dummy(w, p.x + 200, p.y, 9999);
+  run(w, 1 / 60, { p1: { fire: true, aim: 0, aimDist: 200 } });
+  run(w, 0.3);
+  assert.equal(far.hp, 9999, 'ainda no ar');
+  assert.ok(w.projectiles.some((q) => q.z > 0), 'tem altura');
+  run(w, 0.4);
+  assert.equal(mid.hp, 9999, 'passou por cima');
+  assert.ok(far.hp < 9999, 'explodiu no alvo');
+});
+
+test('lob mirando dentro da parede cai antes da parede', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'lob', fireRate: 1, projectile: { explode: { radius: 30, damage: 5 } }, lob: { maxRange: 500, flightTime: 0.4 } });
+  const wx = p.x + 150;
+  for (let dy = -2; dy <= 2; dy++) w.map.set(Math.floor(wx / TILE), Math.floor(p.y / TILE) + dy, T.WALL);
+  run(w, 1 / 60, { p1: { fire: true, aim: 0, aimDist: 300 } });
+  run(w, 0.6);
+  const ex = w.events.find((e) => e.type === 'explosion');
+  assert.ok(ex, 'explodiu');
+  assert.ok(ex.x < Math.floor(wx / TILE) * TILE, `x ${ex.x}`);
+  assert.ok(!w.map.solidAt(ex.x, ex.y));
+});
+
+test('pool envenena inimigo parado nela', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'lob', fireRate: 1, lob: { maxRange: 400, flightTime: 0.3, pool: { r: 50, life: 3, dps: 4, effect: { type: 'veneno', chance: 1, duration: 2, power: 2 } } } });
+  const e = dummy(w, p.x + 150, p.y, 9999);
+  run(w, 1 / 60, { p1: { fire: true, aim: 0, aimDist: 150 } });
+  run(w, 1.2);
+  assert.ok(w.areas.some((a) => a.kind === 'pool'));
+  assert.ok(e.status.poison, 'envenenado');
+  assert.ok(e.hp < 9999);
+});
+
+test('rain marca o chão antes de causar dano', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'rain', damage: 5, fireRate: 1, rain: { count: 5, radius: 20, delay: 0.5, hitRadius: 40 } });
+  const e = dummy(w, p.x + 150, p.y, 9999);
+  run(w, 1 / 60, { p1: { fire: true, aim: 0, aimDist: 150 } });
+  assert.ok(w.areas.filter((a) => a.kind === 'rain_mark').length >= 5);
+  assert.equal(e.hp, 9999);
+  run(w, 1);
+  assert.ok(e.hp < 9999);
+});
+
+test('chain acerta o mais próximo da mira e pula para 2 vizinhos com dano menor', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'chain', damage: 10, fireRate: 1, chain: { range: 300, chains: 2, radius: 130, falloff: 0.8, aimCone: 35 } });
+  const a = dummy(w, p.x + 150, p.y, 9999);
+  const b = dummy(w, p.x + 150, p.y + 90, 9999);
+  const c = dummy(w, p.x + 150, p.y + 180, 9999);
+  run(w, 1 / 60, { p1: { fire: true, aim: 0 } });
+  for (const e of [a, b, c]) assert.ok(e.hp < 9999);
+  assert.ok(9999 - c.hp < 9999 - a.hp, 'o último salto bate menos');
+  assert.equal(countEvents(w, 'chain'), 1);
+});
+
+test('chain sem alvo não gasta energia', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'chain', energyCost: 3, fireRate: 2 });
+  const e0 = p.energy;
+  run(w, 0.5, { p1: { fire: true, aim: 0 } });
+  assert.equal(p.energy, e0);
+  assert.ok(countEvents(w, 'chain') >= 1, 'mostra a faísca curta');
+});

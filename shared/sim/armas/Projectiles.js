@@ -42,6 +42,8 @@ export function spawnProjectile(world, o) {
     singularity: o.singularity || null, // vira buraco negro ao bater
     pool: o.pool || null,          // deixa poça ao bater
     growOnReturn: o.growOnReturn ?? 1,  // bumerangue cresce na volta
+    lob: null,                     // arremesso em arco (modo lob): { sx, sy, tx, ty, t, flight, peak, ... }
+    z: 0,                          // altura do arremesso (só visual)
     hit: new Set(),
     dead: false,
     age: 0
@@ -76,6 +78,7 @@ function impact(world, p, angle = Math.atan2(p.vy, p.vx)) {
     const s = p.singularity;
     createArea(world, 'singularity', p.x, p.y, { r: s.pullRadius, life: s.life, dps: s.dps, pull: s.pull, ownerId: p.owner?.id });
   }
+  if (p.pool) createArea(world, 'pool', p.x, p.y, { ...p.pool, ownerId: p.owner?.id });
   if (p.explodeDef) {
     explode(world, p.x, p.y, p.explodeDef.radius, p.explodeDef.damage, {
       source: p.owner, effect: p.effect, style: p.effect?.type === 'veneno' ? 'acid' : (p.explodeDef.style || 'chalk'),
@@ -84,6 +87,46 @@ function impact(world, p, angle = Math.atan2(p.vy, p.vx)) {
   } else {
     world.emit('proj_hit', { x: p.x, y: p.y, team: p.team, style: p.style || p.sprite });
   }
+}
+
+/** Arremesso em arco: anda do ponto de saída até o alvo por cima de tudo; quica, espera o pavio e cai. */
+function updateLob(world, p, dt) {
+  const L = p.lob;
+  if (L.waiting > 0) {
+    L.waiting -= dt;
+    if (L.waiting <= 0) land(world, p);
+    return;
+  }
+  L.t += dt;
+  const k = Math.min(1, L.t / L.flight);
+  p.x = L.sx + (L.tx - L.sx) * k;
+  p.y = L.sy + (L.ty - L.sy) * k;
+  p.z = 4 * L.peak * k * (1 - k);
+  if (k < 1) return;
+  if (L.bounces > 0) {
+    L.bounces--;
+    const a = Math.atan2(L.ty - L.sy, L.tx - L.sx);
+    const d = Math.hypot(L.tx - L.sx, L.ty - L.sy) * 0.4;
+    const t = world.map.raycast(L.tx, L.ty, a, d);
+    Object.assign(L, { sx: L.tx, sy: L.ty, tx: t.x, ty: t.y, t: 0, flight: L.flight * 0.6, peak: L.peak * 0.5 });
+    world.emit('bounce', { x: p.x, y: p.y });
+    return;
+  }
+  p.z = 0;
+  if (L.fuse > 0) { L.waiting = L.fuse; L.fuse = 0; return; }
+  land(world, p);
+}
+
+/** O arremesso chega ao chão: sem explosão, acerta quem estiver embaixo. */
+function land(world, p) {
+  if (!p.explodeDef && p.team === 'player') {
+    for (const e of world.enemies) {
+      if (e.dead || e.spawning > 0 || e.def.invulnerable) continue;
+      if (Math.hypot(e.x - p.x, e.y - p.y) > e.r + p.r + 8) continue;
+      damageEnemy(world, e, p.damage, { crit: p.crit, source: p.owner, effect: p.effect, knockback: p.knockback, angle: Math.atan2(p.vy, p.vx) });
+    }
+  }
+  impact(world, p);
 }
 
 /** Direção refletida ao bater numa parede em (nx, ny). */
@@ -100,6 +143,7 @@ export function updateProjectiles(world, dt) {
   for (const p of world.projectiles) {
     if (p.dead) continue;
     p.age += dt;
+    if (p.lob) { updateLob(world, p, dt); continue; }
 
     // Teleguiado
     if (p.homing && p.team === 'player') {
