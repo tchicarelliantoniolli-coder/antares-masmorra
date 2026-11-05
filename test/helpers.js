@@ -1,6 +1,6 @@
 import { loadGameDataNode } from '../shared/sim/loadDataNode.js';
 import { World } from '../shared/sim/World.js';
-import { TILE } from '../shared/sim/constants.js';
+import { TILE, T } from '../shared/sim/constants.js';
 import { createEnemy } from '../shared/sim/inimigos/Enemy.js';
 import { normalizeWeapon } from '../shared/sim/data.js';
 
@@ -49,14 +49,34 @@ export function withWeapon(w, def, p = w.players[0]) {
   return data.weapon(full.id);
 }
 
-/** Mundo de teste com o jogador no centro de uma sala de combate vazia (sem ondas). */
+/** Mundo de teste com o jogador no centro de uma sala de combate vazia (sem ondas, sem obstáculos). */
 export function arena() {
   const w = makeWorld();
   const p = w.players[0];
   const room = w.rooms.find((r) => r.type === 'combat');
-  putInRoom(w, p, room);
+  const map = w.map;
+  for (let ty = room.y0; ty < room.y0 + room.h; ty++) {
+    for (let tx = room.x0; tx < room.x0 + room.w; tx++) {
+      const t = map.get(tx, ty);
+      if (t === T.OBSTACLE || t === T.PROP) { map.set(tx, ty, T.FLOOR); map.props.delete(map.idx(tx, ty)); }
+    }
+  }
+  map.traps = map.traps.filter((tr) => !(tr.tx >= room.x0 && tr.tx < room.x0 + room.w && tr.ty >= room.y0 && tr.ty < room.y0 + room.h));
+  p.x = (room.cx + 0.5) * TILE;
+  p.y = (room.cy + 0.5) * TILE;
   room.state = 'cleared';
+  room.visited = true;
   p.energy = p.maxEnergy = 9999;
   return { w, p, room };
 }
 
+/** Distância (px) do jogador até a parede da sala, olhando para a direita. */
+export function wallDistRight(w, p) {
+  let d = 0;
+  while (!w.map.solidAt(p.x + d, p.y) && d < 4000) d += 4;
+  return d;
+}
+
+export function countEvents(w, type) {
+  return w.events.filter((e) => e.type === type).length;
+}

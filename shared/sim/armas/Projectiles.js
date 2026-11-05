@@ -1,6 +1,7 @@
 import { damageEnemy, explode, hurtPlayer } from '../combat.js';
 import { angleDiff } from '../math.js';
 import { propAt, damageProp } from '../salas/Props.js';
+import { createArea } from '../areas.js';
 
 /**
  * Cria um projétil.
@@ -49,9 +50,32 @@ export function spawnProjectile(world, o) {
   return p;
 }
 
-function impact(world, p) {
+/** Divide o projétil em filhos menores, saindo na direção "angle". */
+function splitInto(world, p, angle) {
+  const sp = p.split;
+  const n = sp.into;
+  const x = p.x + Math.cos(angle) * 6, y = p.y + Math.sin(angle) * 6; // um pouco para fora da parede/inimigo
+  for (let i = 0; i < n; i++) {
+    const a = angle + (n > 1 ? (-sp.spread / 2 + (sp.spread * i) / (n - 1)) * (Math.PI / 180) : 0);
+    const c = spawnProjectile(world, {
+      team: p.team, owner: p.owner, x, y, angle: a, speed: p.speed, radius: Math.max(3, p.r * 0.7),
+      damage: p.damage * sp.childDamageMul, crit: p.crit, range: Math.max(120, (p.range - p.traveled) * 0.6),
+      effect: p.effect, knockback: p.knockback, sprite: p.sprite, glyph: p.glyph, child: true
+    });
+    c.hit = new Set(p.hit);
+  }
+  world.emit('split', { x: p.x, y: p.y });
+}
+
+/** Fim do projétil: explode, divide, vira buraco negro ou só some com faísca. angle = direção de saída dos filhos. */
+function impact(world, p, angle = Math.atan2(p.vy, p.vx)) {
   if (p.dead) return;
   p.dead = true;
+  if (p.split && !p.child) splitInto(world, p, angle);
+  if (p.singularity) {
+    const s = p.singularity;
+    createArea(world, 'singularity', p.x, p.y, { r: s.pullRadius, life: s.life, dps: s.dps, pull: s.pull, ownerId: p.owner?.id });
+  }
   if (p.explodeDef) {
     explode(world, p.x, p.y, p.explodeDef.radius, p.explodeDef.damage, {
       source: p.owner, effect: p.effect, style: p.effect?.type === 'veneno' ? 'acid' : (p.explodeDef.style || 'chalk'),
@@ -60,6 +84,15 @@ function impact(world, p) {
   } else {
     world.emit('proj_hit', { x: p.x, y: p.y, team: p.team, style: p.style || p.sprite });
   }
+}
+
+/** Direção refletida ao bater numa parede em (nx, ny). */
+function reflectAngle(map, p, nx, ny) {
+  let vx = p.vx, vy = p.vy;
+  if (map.solidAt(nx, p.y)) vx = -vx;
+  if (map.solidAt(p.x, ny)) vy = -vy;
+  if (vx === p.vx && vy === p.vy) { vx = -vx; vy = -vy; }
+  return Math.atan2(vy, vx);
 }
 
 export function updateProjectiles(world, dt) {
@@ -102,7 +135,7 @@ export function updateProjectiles(world, dt) {
       const prop = propAt(world, nx, ny);
       if (prop) {
         damageProp(world, prop.tx, prop.ty, p.team === 'player' ? p.damage : 1);
-        if (p.boomerang) { p.returning = true; } else { p.x = nx; p.y = ny; impact(world, p); continue; }
+        if (p.boomerang) { p.returning = true; } else { const ra = reflectAngle(map, p, nx, ny); impact(world, p, ra); continue; }
       }
       if (p.boomerang) {
         p.returning = true;
@@ -114,7 +147,7 @@ export function updateProjectiles(world, dt) {
         world.emit('bounce', { x: p.x, y: p.y });
         continue;
       } else {
-        impact(world, p);
+        impact(world, p, reflectAngle(map, p, nx, ny));
         continue;
       }
     }
@@ -164,7 +197,7 @@ export function updateProjectiles(world, dt) {
     }
 
     if (!p.dead && !p.boomerang && p.traveled >= p.range) {
-      if (p.explodeOnExpire) impact(world, p);
+      if (p.explodeOnExpire || p.singularity) impact(world, p);
       else { p.dead = true; world.emit('proj_fade', { x: p.x, y: p.y, style: p.style || p.sprite }); }
     }
     if (p.boomerang && p.traveled > p.range * 4) p.dead = true;

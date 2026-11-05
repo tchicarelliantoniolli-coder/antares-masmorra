@@ -121,9 +121,10 @@ export function normalizeWeapon(w) {
     out[mode] = { ...(MODE_DEFAULTS[mode] || {}), ...(w[mode] || {}) };
     if (mode === 'variants') {
       // cada variante é um projétil completo, herdando o projétil base da arma
-      out.variants.list = (w.variants?.list || []).map((v) => {
+      out.variants.list = (w.variants?.list || []).map((v, i) => {
         const { damageMul = 1, ...rest } = v;
-        return { ...normalizeProjectile({ ...(w.projectile || {}), ...rest, sprite: { ...(w.projectile?.sprite || {}), ...(rest.sprite || {}) } }), damageMul };
+        const pr = normalizeProjectile({ ...(w.projectile || {}), ...rest, sprite: { ...(w.projectile?.sprite || {}), ...(rest.sprite || {}) } });
+        return { ...pr, damageMul, spriteKey: `proj_${w.id}_v${i}` };
       });
     }
     if (mode === 'lob' && out.lob.pool) out.lob.pool = { ...POOL_DEFAULTS, ...out.lob.pool };

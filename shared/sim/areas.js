@@ -18,17 +18,20 @@ export function updateAreas(world, dt) {
           if (Math.hypot(p.x - a.x, p.y - a.y) < a.r) p.slowTimer = Math.max(p.slowTimer, 0.15);
         }
         break;
-      case 'gravity': {
-        // Campo Gravitacional (Jean Paulo): puxa inimigos para o centro e causa dano
+      case 'gravity':
+      case 'singularity': {
+        // Campo Gravitacional (Jean Paulo) e buraco negro das armas: puxa inimigos para o centro e causa dano
         a.tick += dt;
         const owner = world.players.find((p) => p.id === a.ownerId);
+        const pullBase = a.pull ?? 190, dps = a.dps ?? 6;
         for (const e of world.enemies) {
           if (e.dead || e.spawning > 0 || e.def.invulnerable) continue;
           const d = Math.hypot(e.x - a.x, e.y - a.y);
-          if (d > a.r || d < 4) continue;
-          const pull = (e.def.boss ? 30 : 190) * dt;
+          if (d > a.r) continue;
+          if (a.tick >= 0.5) damageEnemy(world, e, dps * 0.5, { source: owner, noMul: true });
+          if (d < 4) continue;
+          const pull = (e.def.boss ? pullBase * 0.16 : pullBase) * dt;
           world.map.moveBox(e, ((a.x - e.x) / d) * Math.min(pull, d), ((a.y - e.y) / d) * Math.min(pull, d));
-          if (a.tick >= 0.5) damageEnemy(world, e, 3, { source: owner, noMul: true });
         }
         if (a.tick >= 0.5) a.tick = 0;
         break;
