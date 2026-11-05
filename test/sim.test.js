@@ -100,7 +100,7 @@ test('Equação (Harilson): próximo acerto causa dano x5', () => {
   const room = w.rooms.find((r) => r.type === 'combat');
   const e = w.enemies[0] || null;
   const { createEnemy } = awaitImport;
-  const en = createEnemy(w, 'estojo', p.x + 40, p.y, room.id, { spawnTime: 0 });
+  const en = createEnemy(w, 'caderno_zumbi', p.x + 40, p.y, room.id, { spawnTime: 0 });
   en.hp = en.maxHp = 100;
   const dealt = damageEnemy(w, en, 3, { source: p });
   assert.equal(dealt, 15);

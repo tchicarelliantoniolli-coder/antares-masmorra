@@ -110,6 +110,7 @@ function createAnimations(scene, data) {
   }
   for (const e of ['caderno_zumbi', 'prova_voadora', 'estojo', 'lousa', 'sinal_recreio', 'mochila', 'diva', 'caderno_preto']) mk('enemy_' + e + '_move', 'enemy_' + e, [0, 1], 6);
   for (let i = 0; i < 4; i++) mk('aluno_' + i + '_walk', 'aluno_' + i, [2, 3, 4, 5], 10);
+  mk('enemy_estojo_closed', 'enemy_estojo', [2, 3], 4);
   mk('char_cantineira_idle', 'char_cantineira', [0, 1], 3);
   mk('ally_planta_bite', 'ally_planta', [0, 1], 5);
   mk('enemy_maquina_xerox_move', 'enemy_maquina_xerox', [0, 1], 4);

@@ -93,7 +93,7 @@ test('caixas quebram; barril explode e machuca inimigos por perto', async () => 
   const tx = room.cx + 2, ty = room.cy + 2;
   w.map.set(tx, ty, T.PROP);
   w.map.props.set(w.map.idx(tx, ty), { kind: 'barril', hp: 2, maxHp: 2 });
-  const e = createEnemy(w, 'estojo', (tx + 1.5) * TILE, (ty + 0.5) * TILE, room.id, { spawnTime: 0 });
+  const e = createEnemy(w, 'caderno_zumbi', (tx + 1.5) * TILE, (ty + 0.5) * TILE, room.id, { spawnTime: 0 });
   const hp = e.hp;
   damageProp(w, tx, ty, 5);
   assert.equal(w.map.get(tx, ty), T.FLOOR);

@@ -75,8 +75,21 @@ export function drawProvaVoadora() {
 
 // ---------- Estojo Raivoso ----------
 export function drawEstojo() {
-  return strip(32, 32, 2, (ctx, f) => {
+  // quadros 0-1: aberto (bravo); 2-3: fechado (tampa baixada, invulnerável)
+  return strip(32, 32, 4, (ctx, f0) => {
+    const closed = f0 >= 2, f = f0 % 2;
     const b = '#3a6fd8', bd = '#2c56ad', bl = '#5a8ff0';
+    if (closed) {
+      // tampa fechada: corpo metálico azul, sem lápis, zíper trancado e dois olhinhos fechados
+      const m = '#7a8aa8', md = '#56637d';
+      px(ctx, 4, 12, 24, 14, m); px(ctx, 3, 14, 26, 10, m);
+      px(ctx, 5, 12, 22, 1, '#a9b8d4'); px(ctx, 4, 24, 24, 2, md);
+      px(ctx, 4, 17, 24, 2, md); // fresta da tampa
+      for (let x = 6; x < 26; x += 3) px(ctx, x, 17, 1, 2, '#f2c94c');
+      px(ctx, 8, 21, 5, 1, '#1b1424'); px(ctx, 19, 21, 5, 1, '#1b1424');
+      px(ctx, 8, 26, 3, 2 - f, md); px(ctx, 21, 26, 3, 1 + f, md);
+      return;
+    }
     // lápis saindo por cima
     px(ctx, 8, 4 + f, 2, 8, '#ffd23f'); px(ctx, 8, 3 + f, 2, 1, '#ff8fa3');
     px(ctx, 13, 6, 2, 6, '#e03a3a'); px(ctx, 13, 5, 2, 1, '#f6f6f6');

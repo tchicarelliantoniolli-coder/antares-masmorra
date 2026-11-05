@@ -300,6 +300,7 @@ export class WorldRenderer {
     const sp = e.def.sprite;
     if (sp?.texture) return { tex: sp.texture, anim: sp.texture + '_walk', scale: sp.scale || 1, character: true };
     const k = 'enemy_' + e.type;
+    if (e.type === 'estojo' && e.shielded) return { tex: k, anim: k + '_closed', scale: 1 };
     return { tex: k, anim: k + '_move', scale: 1 };
   }
 
@@ -348,6 +349,7 @@ export class WorldRenderer {
       v.angry = true;
       v.body.play('enemy_maquina_xerox_angry');
     }
+    if (e.type === 'estojo' && v.body.anims.currentAnim?.key !== keys.anim) v.body.play(keys.anim);
     if (keys.character) {
       const moving = e.state === 'idle' || e.state === 'advertencia' || e.state === 'combo';
       const want = moving ? keys.anim : keys.tex + '_idle';
@@ -361,7 +363,7 @@ export class WorldRenderer {
     else if (e.status.slow > 0) v.body.setTint(0xb0e8ff);
     else if (e.status.burn) v.body.setTint(Math.floor(time / 100) % 2 ? 0xff9a5a : 0xffd0a0);
     else if (e.status.poison) v.body.setTint(0xa8f080);
-    else if (e.state === 'windup' || e.state === 'jam_windup' || e.state === 'fuse') v.body.setTint(Math.floor(time / 70) % 2 ? 0xff7070 : 0xffffff);
+    else if (e.state === 'windup' || e.state === 'jam_windup' || e.state === 'fuse' || (e.state === 'open' && e.telegraph)) v.body.setTint(Math.floor(time / 70) % 2 ? 0xff7070 : 0xffffff);
     else if (e.state === 'stunned') v.body.setTint(0xb0b0c0);
     else if (e.elite) v.body.setTint(Math.floor(time / 200) % 2 ? 0xffe08a : 0xfff4d0);
     else if (e.def.boss && e.phase >= 3) v.body.setTint(Math.floor(time / 150) % 2 ? 0xff9a9a : 0xffffff);

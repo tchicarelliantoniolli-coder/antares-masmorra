@@ -27,6 +27,7 @@ export function createEnemy(world, type, x, y, roomId, { spawnTime = 0.9, minion
     dead: false,
     ...extra
   };
+  if (def.behavior === 'fan_shooter') { e.state = 'closed'; e.shielded = 1; }
   world.enemies.push(e);
   world.emit('enemy_spawn', { id: e.id, x, y, enemyType: type, boss: !!def.boss });
   return e;

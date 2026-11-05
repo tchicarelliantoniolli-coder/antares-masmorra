@@ -9,28 +9,29 @@
     "prova_voadora": {
       "name": "Prova Voadora", "behavior": "shooter", "hp": 7, "speed": 86, "radius": 10, "flying": true, "contactDamage": 0,
       "preferredRange": [150, 260],
-      "attack": { "interval": 1.6, "windup": 0.4, "bullets": 1, "spread": 0, "speed": 180, "damage": 1, "style": "paper" },
+      "attack": { "interval": 2.2, "windup": 0.4, "burst": 3, "bullets": 1, "spread": 0, "speed": 180, "damage": 1, "style": "paper" },
       "drops": { "energy": [1, 3], "coins": [0, 2] }
     },
     "estojo": {
       "name": "Estojo Raivoso", "behavior": "fan_shooter", "hp": 16, "speed": 46, "radius": 12, "contactDamage": 1,
-      "preferredRange": [120, 220],
-      "attack": { "interval": 2.2, "windup": 0.55, "bullets": 4, "spread": 48, "speed": 185, "damage": 1, "style": "pencil" },
+      "preferredRange": [120, 220], "openTime": 1.2,
+      "attack": { "interval": 2.6, "windup": 0.55, "bullets": 4, "spread": 48, "speed": 185, "damage": 1, "style": "pencil" },
       "drops": { "energy": [2, 3], "coins": [1, 3] }
     },
     "lousa": {
       "name": "Lousa Assombrada", "behavior": "turret", "hp": 24, "speed": 0, "radius": 13, "contactDamage": 1,
-      "attack": { "interval": 2.4, "windup": 0.5, "bullets": 8, "speed": 150, "damage": 1, "style": "chalk" },
+      "attack": { "interval": 3.2, "windup": 0.6, "arms": 3, "turnRate": 1.6, "duration": 1.8, "speed": 140, "damage": 1, "style": "chalk" },
       "drops": { "energy": [2, 4], "coins": [1, 3] }
     },
     "sinal_recreio": {
       "name": "Sinal do Recreio", "behavior": "ringer", "hp": 14, "speed": 64, "radius": 11, "flying": true, "contactDamage": 0,
-      "attack": { "interval": 3, "windup": 0.6, "bullets": 18, "speed": 120, "damage": 1, "style": "wave" },
+      "attack": { "interval": 3, "windup": 0.6, "bullets": 18, "speed": 120, "ringSpeeds": [170, 85], "damage": 1, "style": "wave" },
       "drops": { "energy": [2, 3], "coins": [1, 2] }
     },
     "mochila": {
       "name": "Mochila-Bomba", "behavior": "kamikaze", "hp": 9, "speed": 118, "radius": 11, "contactDamage": 0,
       "onDeathExplode": { "radius": 52, "damage": 6 },
+      "explosion": { "radius": 60, "damage": 6, "fireTime": 3 },
       "drops": { "energy": [1, 2], "coins": [0, 2] }
     },
     "aluno": {
