@@ -1,4 +1,5 @@
 import { DEFAULT_AIM_DIST } from '/shared/sim/constants.js';
+import { autoAim } from './aim.js';
 
 /**
  * Controles por dispositivo. Cada jogador local tem um "controller" que produz o input da simulação:
@@ -53,30 +54,6 @@ function getPads(scene) {
   return gp.getAll().filter((p) => p && p.connected);
 }
 
-/** Mira automática: inimigo vivo mais próximo com linha de visão. */
-export function autoAim(world, p) {
-  if (!world) return null;
-  let best = null, bd = 420;
-  for (const e of world.enemies) {
-    if (e.dead || e.spawning > 0 || e.def?.invulnerable) continue;
-    const d = Math.hypot(e.x - p.x, e.y - p.y);
-    if (d < bd && world.map.lineOfSight(p.x, p.y, e.x, e.y)) { bd = d; best = e; }
-  }
-  return best ? Math.atan2(best.y - p.y, best.x - p.x) : null;
-}
-
-/** Distância até o inimigo que a mira automática escolheria (ou null). */
-export function autoAimDist(world, p) {
-  if (!world) return null;
-  let bd = 420, found = false;
-  for (const e of world.enemies) {
-    if (e.dead || e.spawning > 0 || e.def?.invulnerable) continue;
-    const d = Math.hypot(e.x - p.x, e.y - p.y);
-    if (d < bd && world.map.lineOfSight(p.x, p.y, e.x, e.y)) { bd = d; found = true; }
-  }
-  return found ? bd : null;
-}
-
 export class Controller {
   constructor(scene, keys, device) {
     this.scene = scene;
@@ -128,6 +105,7 @@ export class Controller {
     let mx = 0, my = 0, fire = false, skill = false, interact = false, swap = false;
     let aim = this.lastAim;
     let aimDist = null;
+    let autoDist = null;   // só vale quando a mira automática escolheu a direção
     const usesLeft = d === 'auto' || d === 'kbm';
     const usesArrows = d === 'auto' || d === 'kb2';
 
@@ -171,23 +149,23 @@ export class Controller {
       if (pad.left) mx = -1; else if (pad.right) mx = 1;
       if (pad.up) my = -1; else if (pad.down) my = 1;
       if (this.mode === 'pad' && Math.hypot(rx, ry) > 0.35) aim = Math.atan2(ry, rx);
-      else if (this.mode === 'pad') this.autoAimFor(world, player, mx, my, (a) => { aim = a; });
+      else if (this.mode === 'pad') this.autoAimFor(world, player, mx, my, (a, dist) => { aim = a; if (dist !== undefined) autoDist = dist; });
       fire = fire || this.padDown(pad, 7) || this.padDown(pad, 5);
       skill = this.padPressed(pad, 6) || this.padPressed(pad, 4) || skill;
       interact = this.padPressed(pad, 0) || interact;
       swap = this.padPressed(pad, 3) || swap;
     }
-    if (this.mode === 'keys') this.autoAimFor(world, player, mx, my, (a) => { aim = a; });
+    if (this.mode === 'keys') this.autoAimFor(world, player, mx, my, (a, dist) => { aim = a; if (dist !== undefined) autoDist = dist; });
 
     this.lastAim = aim;
-    if (aimDist === null) aimDist = (player && autoAimDist(world, player)) ?? DEFAULT_AIM_DIST;
+    if (aimDist === null) aimDist = autoDist ?? DEFAULT_AIM_DIST;
     return { moveX: mx, moveY: my, aim, aimDist, fire, skill, interact, swap };
   }
 
   autoAimFor(world, player, mx, my, set) {
     if (!player) return;
-    const a = autoAim(world, player);
-    if (a !== null) set(a);
+    const auto = autoAim(world, player);
+    if (auto) set(auto.angle, auto.dist);
     else if (Math.hypot(mx, my) > 0.2) set(Math.atan2(my, mx));
   }
 
