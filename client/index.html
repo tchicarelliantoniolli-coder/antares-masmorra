@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antares: A Masmorra Escolar</title>
+<link rel="stylesheet" href="/fonts.css">
+<style>
+  html, body { margin: 0; height: 100%; background: #0d0b14; overflow: hidden; }
+  #game { width: 100vw; height: 100vh; }
+  #game canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+  #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+             color: #ffd23f; font: 14px 'Press Start 2P', monospace; }
+</style>
+</head>
+<body>
+<div id="loading">Carregando...</div>
+<div id="game"></div>
+<script src="/vendor/phaser.min.js"></script>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
