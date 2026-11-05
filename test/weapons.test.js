@@ -578,3 +578,20 @@ for (const [nome, tile] of [['obstáculo', T.OBSTACLE], ['caixa', T.PROP]]) {
     assert.ok(e.hp < 9999, 'choveu atrás do ' + nome);
   });
 }
+
+// ---------------------------------------------------------------- órbitas param quando o jogador não pode atacar
+for (const [nome, set] of [['assinando', (p) => { p.signing = 2; }], ['preso', (p) => { p.jailTimer = 2; }], ['caído', (p) => { p.downed = true; }]]) {
+  test(`órbitas somem e não causam dano com o jogador ${nome}`, () => {
+    const { w, p } = arena();
+    withWeapon(w, { mode: 'orbit', fireRate: 20, damage: 5, orbit: { max: 4, radius: 34, spin: 4 } });
+    const orbs = w.projectiles.filter((q) => q.orbit && !q.dead);
+    for (let i = 0; i < 120 && orbs.length < 4; i++) { run(w, 1 / 60, { p1: { fire: true, aim: 0 } }); orbs.splice(0, orbs.length, ...w.projectiles.filter((q) => q.orbit && !q.dead)); }
+    assert.equal(orbs.length, 4);
+    const e = dummy(w, orbs[0].x, orbs[0].y, 9999);
+    const hp0 = e.hp;
+    set(p);
+    run(w, 1, { p1: { fire: false, aim: 0 } });
+    assert.equal(e.hp, hp0, 'sem dano');
+    assert.equal(w.projectiles.filter((q) => q.orbit && !q.dead && q.orbit.ownerId === p.id).length, 0);
+  });
+}

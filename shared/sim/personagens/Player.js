@@ -169,10 +169,13 @@ function updatePlayer(world, p, inp, dt) {
   }
 }
 
-/** Caiu, foi preso, puxado ou está assinando: para a estocada e solta carga/escudo/rajada. */
+/** Caiu, foi preso, puxado ou está assinando: para a estocada, solta carga/escudo/rajada e apaga as órbitas. */
 function clearAction(world, p) {
   const ws = p.wstate;
-  if (!p.dash && !(ws && (ws.shielding || ws.charge > 0 || ws.burstLeft > 0 || ws.spin > 0))) return;
+  const orbitas = world.projectiles.filter((q) => q.orbit && !q.dead && q.orbit.ownerId === p.id);
+  if (!p.dash && !orbitas.length && !(ws && (ws.shielding || ws.charge > 0 || ws.burstLeft > 0 || ws.spin > 0))) return;
+  // órbitas somem (como quando o dono cai) para não girar e causar dano com o jogador fora de combate
+  for (const q of orbitas) { q.dead = true; world.emit('proj_fade', { x: q.x, y: q.y, style: q.sprite }); }
   p.dash = null;
   p.prevFire = false;
   resetWeaponState(p, world);
