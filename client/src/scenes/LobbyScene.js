@@ -22,6 +22,7 @@ export class LobbyScene extends Phaser.Scene {
   }
 
   create() {
+    this.started = false; // a cena é reaproveitada ao voltar para o lobby
     this.data_ = this.registry.get('data');
     this.playable = this.data_.characterList.filter((c) => c.playable);
     this.cameras.main.fadeIn(200);

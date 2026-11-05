@@ -6,6 +6,9 @@ export class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
 
   create() {
+    // o Phaser reaproveita a instância da cena: zera o estado de cada visita
+    this.leaving = false;
+    this.controls = null;
     const data = this.registry.get('data');
     this.cameras.main.fadeIn(300);
     this.drawBackground();
