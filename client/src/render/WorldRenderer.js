@@ -214,6 +214,7 @@ export class WorldRenderer {
     if (p.jailTimer > 0) v.status.setText('SUSPENSO ' + Math.ceil(p.jailTimer) + 's').setColor('#ff9a9a');
     else if (p.signing > 0) v.status.setText('assinando... (sem atacar)').setColor('#ffd0d0');
     else if (p.downed) v.status.setText(this.world.players.length > 1 ? 'CAÍDO! fique parado perto' : '').setColor('#ff8a8a');
+    else if (p.buffs?.chainReaction > 0) v.status.setText('REAÇÃO ' + Math.ceil(p.buffs.chainReaction) + 's').setColor('#ffb02e');
     else v.status.setText('');
     v.status.setPosition(p.x, by - (v.label ? 40 : 28)).setDepth(depth + 4);
 

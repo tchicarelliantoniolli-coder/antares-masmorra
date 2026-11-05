@@ -111,7 +111,8 @@ sem acesso: a primeira visita demora cerca de 1 minuto e as salas abertas se per
   | Marina | Inglês | Grammar Shield (bolha que apaga balas no time todo) | Vogais dão crítico |
   | Vivian | Biologia | Planta Carnívora (torreta) | Regenera vida |
 
-  Os outros 8 aparecem na seleção como "Em breve".
+  Os outros 8 também estão liberados: no total são 14 professores jogáveis,
+  cada um com arma inicial, habilidade e passivo próprios (detalhe na tela de seleção).
 - **53 armas** em `shared/data/weapons.json`, com 5 raridades. Cada arma tem uma mecânica (`mode`):
   - tiro normal, rajada, carregar (segure e solte), aquecimento (acelera enquanto segura);
   - laser contínuo, lança-chamas, raio em cadeia;
@@ -159,8 +160,8 @@ docs/ARMAS.md           como criar armas novas pelo JSON
 - **Armas novas:** `shared/data/weapons.json`. O guia completo está em [docs/ARMAS.md](docs/ARMAS.md).
 - **Inimigos, andares e chefes:** `shared/data/enemies.json`. Lá ficam vida, velocidade, ataques, ondas, chance de
   elite, espinhos e a raridade dos baús.
-- **Professores:** `shared/data/characters.json`. Para liberar um professor, mude `playable` para `true`
-  e crie a habilidade dele em `shared/sim/personagens/skills.js`.
+- **Professores:** `shared/data/characters.json`. Todos os 14 estão com `playable: true` (`false` bloqueia na seleção).
+  Para um professor novo, crie a habilidade dele em `shared/sim/personagens/skills.js`.
 - **Arte própria:** `client/assets/sprites/LEIA-ME.md`.
 
 ## O que falta

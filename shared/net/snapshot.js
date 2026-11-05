@@ -32,7 +32,7 @@ function serializePlayer(p, ack) {
     mods: { skillCdMul: p.mods.skillCdMul, energyCostMul: p.mods.energyCostMul, speedMul: p.mods.speedMul, revealMap: !!p.mods.revealMap },
     invuln: r1(p.invuln), downed: p.downed, dead: p.dead, reviveProgress: r1(p.reviveProgress),
     coins: p.coins, kills: p.kills, damageDealt: p.damageDealt, roomId: p.roomId,
-    buffs: { nextHitMul: p.buffs.nextHitMul, hasteTimer: r1(p.buffs.hasteTimer), bubbleTimer: r1(p.buffs.bubbleTimer) },
+    buffs: { nextHitMul: p.buffs.nextHitMul, hasteTimer: r1(p.buffs.hasteTimer), bubbleTimer: r1(p.buffs.bubbleTimer), quakeNext: p.buffs.quakeNext, chainReaction: r1(p.buffs.chainReaction) },
     slowTimer: r1(p.slowTimer), jailTimer: r1(p.jailTimer), signing: r1(p.signing), signFree: r1(p.signFree),
     pulling: !!p.pull, interactId: p.interactTarget ? p.interactTarget.id : 0, blessings: p.blessings,
     ws: p.wstate ? [r1(p.wstate.charge), r1(p.wstate.spin), p.wstate.shielding ? 1 : 0, p.wstate.combo] : [0, 0, 0, 0],

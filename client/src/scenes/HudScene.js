@@ -8,7 +8,8 @@ import { drawMinimap } from '../ui/Minimap.js';
 
 const SKILL_ICON = {
   nota_mil: '1000', equacao: '×5', pique: 'PIQ', campo_gravitacional: 'G', planta_carnivora: 'PLT', grammar_shield: 'ABC',
-  translate: '?', circuito: 'ON', terremoto: 'TER', obra_prima: 'ART'
+  translate: '?', circuito: 'ON', terremoto: 'TER', obra_prima: 'ART',
+  exercito_historico: 'EXÉ', linha_do_tempo: 'REW', reacao_em_cadeia: 'BOOM', classicos_vivos: 'LIV'
 };
 const QUAKE_LABEL = { terremoto: 'TER', vulcao: 'VUL' }; // William alterna a cada uso
 const DEVICE_KEYS = {

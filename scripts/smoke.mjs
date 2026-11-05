@@ -66,9 +66,10 @@ export const SCENARIOS = {
 
 /** Começa uma partida solo direto (sem clicar nos menus). */
 async function startSolo(page, characterId = 'harilson') {
+  await page.evaluate(() => window.__game.scene.getScenes(true).forEach((sc) => sc.scene.stop()));
+  await page.waitForTimeout(250);
   await page.evaluate((c) => {
     const g = window.__game;
-    g.scene.getScenes(true).forEach((sc) => sc.scene.stop());
     g.scene.start('Game', { mode: 'solo', players: [{ id: 'p1', characterId: c, name: 'Jogador 1', device: 'auto' }] });
   }, characterId);
   await waitScene(page, 'Game', 5000);
@@ -123,6 +124,25 @@ SCENARIOS['armas'] = async (browser) => {
     await page.waitForTimeout(350);
     if (SHOTS && ['catapulta_mini', 'livro_magico', 'mini_buraco_negro', 'pincel_tinta'].includes(id)) await page.screenshot({ path: join(SHOTS, 'arma-' + id + '-depois.png') });
   }
+  await page.close();
+  return errors;
+};
+
+/** Os 14 professores: começa solo, usa a habilidade e atira 1 s; qualquer erro no console falha. */
+SCENARIOS['professores'] = async (browser) => {
+  const { page, errors } = await openGame(browser);
+  const lista = await page.evaluate(() => window.__game.registry.get('data').characterList.map((c) => c.id));
+  for (const id of lista) {
+    try { await startSolo(page, id); } catch (e) { errors.push(id + ': ' + e.message.split('\n')[0] + ' | ' + (await page.evaluate(() => window.__game.scene.getScenes(true).map((x) => x.scene.key).join(','))).toString()); break; }
+    await clickGame(page, GAME_W / 2 + 200, GAME_H / 2);
+    await page.keyboard.press('Space');
+    await page.mouse.down();
+    await page.waitForTimeout(1000);
+    await page.mouse.up();
+    const r = await page.evaluate(() => { const w = window.__game.scene.getScene('Game').world; return { cd: w.players[0].skillCd }; });
+    if (!(r.cd > 0)) errors.push(id + ': habilidade não entrou em recarga');
+  }
+  if (lista.length !== 14) errors.push('esperava 14 professores, achei ' + lista.length);
   await page.close();
   return errors;
 };

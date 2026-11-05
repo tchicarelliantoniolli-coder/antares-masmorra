@@ -25,7 +25,7 @@ test('sala online: criar, entrar com código, professor único, prontos = começ
   // não pode pegar o professor do outro
   const taken = room.get(r1.playerId).characterId;
   assert.equal(room.setCharacter(r2.playerId, taken).ok, false);
-  assert.equal(room.setCharacter(r2.playerId, 'andreia').ok, false, 'bloqueado');
+  assert.equal(room.setCharacter(r2.playerId, 'andreia').ok, true, 'liberado');
   assert.equal(room.setCharacter(r2.playerId, 'vivian').ok, true);
   assert.equal(mgr.join('ZZZZ', fakeConn(), 'x').ok, false);
   room.setReady(r1.playerId, true);
@@ -137,4 +137,20 @@ test('raio do projétil sobrevive ao snapshot (globo bumerangue cresce na volta)
   pr.r = 12.5;
   const dec = decodeSnapshot(data, JSON.parse(JSON.stringify(serializeWorld(w))));
   assert.equal(dec.projectiles.find((q) => q.id === pr.id).r, 12.5);
+});
+
+test('online: dois jogadores escolhem Andréia e William e a partida começa', () => {
+  const mgr = new RoomManager(data, { autoTick: false });
+  const a = fakeConn(), b = fakeConn();
+  const r1 = mgr.create(a, 'A');
+  const r2 = mgr.join(r1.code, b, 'B');
+  const room = r1.room;
+  const william = data.characterList.find((c) => c.skill.id === 'terremoto').id;
+  assert.ok(room.setCharacter(r2.playerId, william).ok);
+  assert.ok(room.setCharacter(r1.playerId, 'andreia').ok);
+  room.setReady(r1.playerId, true);
+  room.setReady(r2.playerId, true);
+  assert.equal(room.state, 'playing');
+  for (let i = 0; i < 20; i++) room.tick();
+  assert.equal(a.last('game:snap').players.length, 2);
 });

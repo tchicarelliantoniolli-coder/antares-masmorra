@@ -379,3 +379,26 @@ test('Bilíngue: Andréia com Balões de Fala dispara mais que sem o passivo', (
   };
   assert.ok(contar(false) > contar(true) * 1.05);
 });
+
+test('todos os 14 são jogáveis e têm habilidade implementada', () => {
+  const lista = data.characterList;
+  assert.equal(lista.length, 14);
+  for (const c of lista) {
+    assert.ok(c.playable, c.id + ' jogável');
+    assert.equal(typeof SKILLS[c.skill.id], 'function', c.id + ' habilidade');
+    const { w, p } = arenaDe(c.id);
+    dummy(w, p.x + 120, p.y, 200);
+    dummy(w, p.x - 90, p.y + 40, 200);
+    run(w, 0.1, { p1: { aim: 0, fire: true, skill: true } });
+    run(w, 1, { p1: { aim: 0, fire: true } });
+  }
+});
+
+test('snapshot leva quakeNext e chainReaction', () => {
+  const { w, p } = arenaDe('william');
+  p.buffs.quakeNext = 'vulcao';
+  p.buffs.chainReaction = 4;
+  const sp = decodeSnapshot(w.data, JSON.parse(JSON.stringify(serializeWorld(w)))).players[0];
+  assert.equal(sp.buffs.quakeNext, 'vulcao');
+  assert.equal(sp.buffs.chainReaction, 4);
+});

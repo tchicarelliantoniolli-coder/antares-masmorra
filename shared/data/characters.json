@@ -1,5 +1,5 @@
 {
-  "_doc": "Personagens jogáveis. 'visual' define o sprite provisório gerado por código (inspirado nas fotos do site do colégio). Para usar arte própria, veja client/assets/sprites/LEIA-ME.md. 'playable: false' = ainda bloqueado nesta etapa.",
+  "_doc": "Personagens jogáveis. 'visual' define o sprite provisório gerado por código (inspirado nas fotos do site do colégio). Para usar arte própria, veja client/assets/sprites/LEIA-ME.md. 'playable: false' bloquearia o professor na seleção.",
   "characters": [
     {
       "id": "ana_claudia",
@@ -45,7 +45,7 @@
       "name": "Andréia Aparecida dos S. Vieira",
       "shortName": "Andréia",
       "subject": "Inglês",
-      "playable": false,
+      "playable": true,
       "color": "#f5c400",
       "stats": {
         "hp": 6,
@@ -84,7 +84,7 @@
       "name": "Felipe G. G. Cardoso",
       "shortName": "Felipe",
       "subject": "História",
-      "playable": false,
+      "playable": true,
       "color": "#b5743c",
       "stats": {
         "hp": 7,
@@ -163,7 +163,7 @@
       "name": "Gabriela Pyles Barcellos",
       "shortName": "Gabriela P.",
       "subject": "Artes",
-      "playable": false,
+      "playable": true,
       "color": "#e04ad0",
       "stats": {
         "hp": 6,
@@ -202,7 +202,7 @@
       "name": "Gabriela Simonetti Trevisan",
       "shortName": "Gabriela S.",
       "subject": "História",
-      "playable": false,
+      "playable": true,
       "color": "#c9a227",
       "stats": {
         "hp": 6,
@@ -359,7 +359,7 @@
       "name": "Rosana Cabral Fellipe",
       "shortName": "Rosana",
       "subject": "Ciências",
-      "playable": false,
+      "playable": true,
       "color": "#7be04a",
       "stats": {
         "hp": 6,
@@ -398,7 +398,7 @@
       "shortName": "Tatiane",
       "subject": "Gramática e Literatura",
       "subjectShort": "Gramática e Lit.",
-      "playable": false,
+      "playable": true,
       "color": "#c0392b",
       "stats": {
         "hp": 6,
@@ -438,7 +438,7 @@
       "name": "Vinícius Colombo de Oliveira",
       "shortName": "Vinícius",
       "subject": "Física",
-      "playable": false,
+      "playable": true,
       "color": "#5ef2ff",
       "stats": {
         "hp": 7,
@@ -517,7 +517,7 @@
       "name": "William de Paula Ferreira",
       "shortName": "William",
       "subject": "Geografia",
-      "playable": false,
+      "playable": true,
       "color": "#2a8fd8",
       "stats": {
         "hp": 7,

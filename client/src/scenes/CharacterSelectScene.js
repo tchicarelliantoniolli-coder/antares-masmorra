@@ -60,13 +60,6 @@ export class CharacterSelectScene extends Phaser.Scene {
     const name = this.add.text(CARD_W / 2, 86, c.shortName, textStyle(20)).setOrigin(0.5);
     const subj = this.add.text(CARD_W / 2, 104, c.subjectShort || c.subject, textStyle(16, c.color)).setOrigin(0.5);
     cont.add([bg, sprite, name, subj]);
-    if (!c.playable) {
-      const lock = this.add.container(0, 0);
-      lock.add(this.add.rectangle(0, 0, CARD_W, CARD_H, 0x0d0b14, 0.55).setOrigin(0));
-      lock.add(this.add.image(CARD_W - 16, 16, 'icon_lock').setScale(1.2));
-      lock.add(this.add.text(6, 9, 'Em breve', titleStyle(7, '#ffd23f')));
-      cont.add(lock);
-    }
     const zone = this.add.zone(0, 0, CARD_W, CARD_H).setOrigin(0).setInteractive({ useHandCursor: true });
     zone.on('pointerdown', () => {
       sound.unlock();
@@ -99,7 +92,6 @@ export class CharacterSelectScene extends Phaser.Scene {
     card.sprite.play('char_' + card.c.id + '_walk');
     this.tweens.add({ targets: card.cont, y: card.baseY - 4, duration: 220, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
     if (!silent) sound.play('click');
-    this.ready.setEnabled(!!card.c.playable);
     this.showDetail(card.c);
   }
 
@@ -135,12 +127,10 @@ export class CharacterSelectScene extends Phaser.Scene {
     d.add(this.add.text(right, 398, c.skill.description, textStyle(18, '#e0dcf5', { wordWrap: { width: 450 } })));
     d.add(this.add.text(right, 440, `Passivo: ${c.passive.name}`, textStyle(20, '#7be04a')));
     d.add(this.add.text(right, 460, c.passive.description, textStyle(18, '#e0dcf5', { wordWrap: { width: 280 } })));
-    if (!c.playable) d.add(this.add.text(176, 486, 'Este professor chega numa próxima atualização.', textStyle(20, '#ff9a1f')));
   }
 
   confirm() {
     const c = this.chars[this.index];
-    if (!c.playable) { sound.play('no_energy'); this.cameras.main.shake(120, 0.004); return; }
     sound.play('select');
     this.cameras.main.fadeOut(250);
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Game', {

@@ -130,9 +130,9 @@ test('habilidades dos professores novos funcionam', () => {
   assert.equal(w.allies.length, 1, 'Planta Carnívora');
 });
 
-test('há pelo menos 6 professores jogáveis com armas iniciais válidas', () => {
+test('os 14 professores são jogáveis com armas iniciais válidas', () => {
   const playable = data.characterList.filter((c) => c.playable);
-  assert.ok(playable.length >= 6);
+  assert.equal(playable.length, 14);
   for (const c of playable) assert.ok(data.hasWeapon(c.starterWeapon), c.id);
   assert.ok(data.weapons.size >= 28);
 });
