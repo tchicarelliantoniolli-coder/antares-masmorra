@@ -1,7 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { RoomManager } from '../server/RoomManager.js';
-import { decodeSnapshot, buildMirrorMap } from '../shared/net/snapshot.js';
+import { decodeSnapshot, buildMirrorMap, serializeWorld } from '../shared/net/snapshot.js';
+import { arena } from './helpers.js';
+import { createArea } from '../shared/sim/areas.js';
 import { data } from './helpers.js';
 
 function fakeConn() {
@@ -117,4 +119,13 @@ test('snapshot leva raio, carga, arremesso e mina', () => {
   assert.ok(mine);
   assert.equal(mine.ownerId, r.playerId);
   assert.equal(mine.armed, true);
+});
+
+test('estilo da poça sobrevive ao snapshot', () => {
+  const { w, p } = arena();
+  createArea(w, 'pool', p.x + 40, p.y, { r: 30, life: 3, dps: 1, style: 'acid' });
+  const dec = decodeSnapshot(data, JSON.parse(JSON.stringify(serializeWorld(w))));
+  const a = dec.areas.find((x) => x.kind === 'pool');
+  assert.ok(a);
+  assert.equal(a.style, 'acid');
 });

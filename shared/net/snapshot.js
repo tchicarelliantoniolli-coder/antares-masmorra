@@ -60,7 +60,7 @@ export function serializeWorld(world, acks = {}) {
       r1(p.z || 0), p.lob ? [r1(p.lob.tx), r1(p.lob.ty)] : 0]),
     beams: (world.beams || []).map((b) => [b.ownerId, r1(b.x1), r1(b.y1), r1(b.x2), r1(b.y2), b.width, b.color]),
     pickups: world.pickups.filter((k) => !k.dead).map((k) => [k.id, k.kind, r1(k.x), r1(k.y), pickupExtra(k)]),
-    areas: world.areas.filter((a) => !a.dead).map((a) => [a.id, a.kind, r1(a.x), r1(a.y), a.r, r1(a.t), a.life, a.targetId || 0]),
+    areas: world.areas.filter((a) => !a.dead).map((a) => [a.id, a.kind, r1(a.x), r1(a.y), a.r, r1(a.t), a.life, a.targetId || 0, a.style || 0]),
     allies: world.allies.filter((a) => !a.dead).map((a) => [a.id, a.kind, r1(a.x), r1(a.y), r1(a.aim || 0), r1(a.life), a.maxLife, a.ownerId || 0, a.armed ? 1 : 0])
   };
 }
@@ -105,7 +105,7 @@ export function decodeSnapshot(data, s) {
     dash: p.dash ? {} : null
   }));
   const pickups = s.pickups.map(([id, kind, x, y, extra]) => ({ id, kind, x, y, r: RADIUS[kind] ?? 6, vx: 0, vy: 0, ...(extra || {}) }));
-  const areas = s.areas.map(([id, kind, x, y, r, t, life, targetId]) => ({ id, kind, x, y, r, t, life, targetId }));
+  const areas = s.areas.map(([id, kind, x, y, r, t, life, targetId, style]) => ({ id, kind, x, y, r, t, life, targetId, style: style || undefined }));
   const allies = s.allies.map(([id, kind, x, y, aim, life, maxLife, ownerId, armed]) => ({ id, kind, x, y, aim, life, maxLife, ownerId, armed: !!armed }));
   return { ...s, players, enemies, projectiles, pickups, areas, allies, beams };
 }
