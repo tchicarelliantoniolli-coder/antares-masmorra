@@ -44,6 +44,7 @@ export function spawnProjectile(world, o) {
     growOnReturn: o.growOnReturn ?? 1,  // bumerangue cresce na volta
     lob: null,                     // arremesso em arco (modo lob): { sx, sy, tx, ty, t, flight, peak, ... }
     z: 0,                          // altura do arremesso (só visual)
+    orbit: null,                   // girando em volta do dono (modo orbit)
     hit: new Set(),
     dead: false,
     age: 0
@@ -129,6 +130,31 @@ function land(world, p) {
   impact(world, p);
 }
 
+/** Projétil em órbita: gira em volta do dono, bate em quem encostar (no máximo a cada 0,5 s) e apaga balas. */
+function updateOrbit(world, p, dt) {
+  const o = p.orbit;
+  const owner = world.players.find((q) => q.id === o.ownerId);
+  if (!owner || owner.dead || owner.downed) { p.dead = true; world.emit('proj_fade', { x: p.x, y: p.y, style: p.sprite }); return; }
+  o.angle += o.spin * dt;
+  const nx = owner.x + Math.cos(o.angle) * o.radius, ny = owner.y - 4 + Math.sin(o.angle) * o.radius;
+  p.vx = (nx - p.x) / Math.max(dt, 1e-6); p.vy = (ny - p.y) / Math.max(dt, 1e-6);
+  p.x = nx; p.y = ny;
+  for (const e of world.enemies) {
+    if (e.dead || e.spawning > 0 || e.def.invulnerable) continue;
+    if (Math.hypot(e.x - p.x, e.y - p.y) > e.r + p.r) continue;
+    const last = p.hitTimes.get(e.id);
+    if (last !== undefined && world.time - last < 0.5) continue;
+    p.hitTimes.set(e.id, world.time);
+    damageEnemy(world, e, p.damage, { crit: p.crit, source: p.owner, effect: p.effect, knockback: 80 + p.knockback, angle: o.angle });
+  }
+  for (const q of world.projectiles) {
+    if (q.team === 'enemy' && !q.dead && Math.hypot(q.x - p.x, q.y - p.y) < p.r + q.r + 2) {
+      q.dead = true;
+      world.emit('deflect', { x: q.x, y: q.y });
+    }
+  }
+}
+
 /** Direção refletida ao bater numa parede em (nx, ny). */
 function reflectAngle(map, p, nx, ny) {
   let vx = p.vx, vy = p.vy;
@@ -144,6 +170,7 @@ export function updateProjectiles(world, dt) {
     if (p.dead) continue;
     p.age += dt;
     if (p.lob) { updateLob(world, p, dt); continue; }
+    if (p.orbit) { updateOrbit(world, p, dt); continue; }
 
     // Teleguiado
     if (p.homing && p.team === 'player') {

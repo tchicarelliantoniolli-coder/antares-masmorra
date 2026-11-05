@@ -1,12 +1,14 @@
 import { MODES } from './modes/index.js';
 import { MELEE_STYLES } from './melee.js';
 import { newWeaponState } from './common.js';
+import { launchOrbiters } from './modes/summon.js';
 
 export { energyCost, tryPay, startCooldown } from './common.js';
 
-/** Zera o estado da arma na mão (troca de arma, cair, ser preso...). */
-export function resetWeaponState(p) {
+/** Zera o estado da arma na mão (troca de arma, cair, ser preso...). Projéteis em órbita são lançados. */
+export function resetWeaponState(p, world = null) {
   p.wstate = newWeaponState(p.weapons[p.cur]);
+  if (world) launchOrbiters(world, p);
 }
 
 function handlerFor(w) {
@@ -19,7 +21,7 @@ function handlerFor(w) {
  */
 export function updateWeapon(world, p, inp, dt) {
   const id = p.weapons[p.cur];
-  if (!p.wstate || p.wstate.weaponId !== id) resetWeaponState(p);
+  if (!p.wstate || p.wstate.weaponId !== id) resetWeaponState(p, world);
   p.fireCd -= dt;
   const w = world.data.weapon(id);
   const h = handlerFor(w);

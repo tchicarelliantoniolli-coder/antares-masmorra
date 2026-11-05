@@ -278,3 +278,101 @@ test('chain sem alvo não gasta energia', () => {
   assert.equal(p.energy, e0);
   assert.ok(countEvents(w, 'chain') >= 1, 'mostra a faísca curta');
 });
+
+// ---------------------------------------------------------------- deploy e órbita
+import { spawnProjectile } from '../shared/sim/armas/Projectiles.js';
+
+const mines = (w) => w.allies.filter((a) => a.kind === 'mine' && !a.dead);
+
+test('mina explode quando inimigo passa', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'deploy', fireRate: 1, deploy: { kind: 'mine', max: 3, radius: 60, damage: 12, triggerRadius: 28 } });
+  run(w, 1 / 60, { p1: { fire: true, aim: 0, aimDist: 60 } });
+  assert.equal(mines(w).length, 1);
+  const m = mines(w)[0];
+  run(w, 0.6);
+  const e = dummy(w, m.x + 10, m.y, 9999);
+  run(w, 2 / 60);
+  assert.ok(e.hp < 9999, 'explodiu');
+  assert.equal(mines(w).length, 0);
+});
+
+test('deploy respeita o máximo: a 4ª mina remove a 1ª', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'deploy', fireRate: 10, deploy: { kind: 'mine', max: 3 } });
+  const placed = [];
+  for (let i = 0; i < 4; i++) {
+    p.fireCd = 0;
+    run(w, 1 / 60, { p1: { fire: true, aim: (i * Math.PI) / 2, aimDist: 60 } });
+    run(w, 1 / 60, { p1: { fire: false } });
+    placed.push(Math.max(...mines(w).map((a) => a.id)));
+  }
+  const ids = mines(w).map((a) => a.id);
+  assert.equal(ids.length, 3);
+  assert.ok(!ids.includes(placed[0]));
+});
+
+test('torreta atira sozinha e some ao fim da vida', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'deploy', fireRate: 1, deploy: { kind: 'turret', max: 1, life: 2, fireRate: 3, damage: 3, range: 300 } });
+  const e = dummy(w, p.x + 150, p.y + 60, 9999);
+  run(w, 1 / 60, { p1: { fire: true, aim: Math.PI, aimDist: 40 } });
+  run(w, 1.5);
+  assert.ok(e.hp < 9999, 'torreta acertou');
+  run(w, 1);
+  assert.equal(w.allies.filter((a) => a.kind === 'turret').length, 0);
+});
+
+test('órbita protege: bala inimiga que encosta some', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'orbit', fireRate: 5, orbit: { max: 4, radius: 34, spin: 4 } });
+  run(w, 1 / 60, { p1: { fire: true, aim: 0 } });
+  const o = w.projectiles.find((q) => q.orbit);
+  assert.ok(o, 'em órbita');
+  run(w, 1 / 60);
+  const b = spawnProjectile(w, { team: 'enemy', x: o.x, y: o.y, angle: 0, speed: 1, damage: 1, range: 900, sprite: 'ebullet_paper' });
+  run(w, 2 / 60);
+  assert.ok(b.dead);
+  assert.ok(!o.dead, 'continua girando');
+});
+
+test('com 4 em órbita, o próximo disparo lança todos', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'orbit', fireRate: 10, orbit: { max: 4, launchSpeed: 480 } });
+  const orbiting = () => w.projectiles.filter((q) => q.orbit && !q.dead).length;
+  for (let i = 0; i < 60 && orbiting() < 4; i++) run(w, 1 / 60, { p1: { fire: true, aim: 0 } });
+  assert.equal(orbiting(), 4);
+  for (let i = 0; i < 60 && orbiting() === 4; i++) run(w, 1 / 60, { p1: { fire: true, aim: 0 } });
+  const flying = w.projectiles.filter((q) => !q.orbit && !q.dead && q.team === 'player');
+  assert.equal(flying.length, 4);
+  for (const q of flying) assert.ok(q.vx > 300, 'na direção da mira');
+});
+
+test('trocar de arma com projéteis em órbita lança eles', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'orbit', fireRate: 10 });
+  p.weapons.push('pistola_grampos');
+  run(w, 0.3, { p1: { fire: true, aim: 0 } });
+  assert.ok(w.projectiles.some((q) => q.orbit));
+  run(w, 1 / 60, { p1: { swap: true, aim: 0 } });
+  assert.ok(!w.projectiles.some((q) => q.orbit && !q.dead));
+});
+
+test('trocar de andar com minas, órbitas, raio e arremesso no ar não dá erro', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'deploy', fireRate: 10, deploy: { kind: 'turret' } });
+  run(w, 0.1, { p1: { fire: true, aim: 0, aimDist: 60 } });
+  withWeapon(w, { mode: 'orbit', fireRate: 10 });
+  run(w, 0.3, { p1: { fire: true, aim: 0 } });
+  withWeapon(w, { mode: 'lob', fireRate: 10, lob: { flightTime: 2 } });
+  run(w, 0.1, { p1: { fire: true, aim: 0, aimDist: 300 } });
+  withWeapon(w, { mode: 'beam', beam: { energyPerSec: 0 } });
+  run(w, 0.1, { p1: { fire: true, aim: 0 } });
+  assert.ok(w.allies.length && w.projectiles.length && w.beams.length);
+  w.completeFloor();
+  assert.equal(w.allies.length, 0);
+  assert.equal(w.projectiles.length, 0);
+  assert.equal(w.beams.length, 0);
+  run(w, 1, { p1: { fire: true, aim: 0 } });
+  assert.equal(w.floorNum, 2);
+});

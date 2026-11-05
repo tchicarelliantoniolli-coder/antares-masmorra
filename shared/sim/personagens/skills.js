@@ -1,5 +1,6 @@
 import { spawnProjectile } from '../armas/Projectiles.js';
 import { createArea } from '../areas.js';
+import { createAlly } from './Allies.js';
 
 
 /**
@@ -50,7 +51,7 @@ export const SKILLS = {
   planta_carnivora(world, p) {
     let x = p.x + Math.cos(p.aim) * 30, y = p.y + Math.sin(p.aim) * 30;
     if (world.map.solidAt(x, y)) { x = p.x; y = p.y; }
-    world.allies.push({ id: world.newId(), kind: 'planta', x, y, r: 12, life: 12, maxLife: 12, cd: 0.3, biteCd: 0, ownerId: p.id, dead: false });
+    createAlly(world, 'planta', x, y, { life: 12, ownerId: p.id });
     world.emit('skill', { playerId: p.id, skill: 'planta_carnivora', x, y });
     return true;
   },
