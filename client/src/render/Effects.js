@@ -168,6 +168,7 @@ export class Effects {
         case 'room_clear': sound.play('door_open'); hud?.toast('Sala liberada!'); break;
         case 'wave_start': if (ev.wave > 1) hud?.toast(`Onda ${ev.wave}/${ev.total}`); break;
         case 'no_energy': if (this.local.has(ev.playerId)) { sound.play('no_energy', 0.3); this.floatText(ev.x, ev.y - 30, 'Sem energia!', '#7fb8ff', 20); } break;
+        case 'quake': this.shake(600, 0.01); this.ring(ev.x, ev.y, 260, 0xc9a24a, 600); break;
         case 'skill_not_ready': if (this.local.has(ev.playerId)) sound.play('not_ready', 0.2); break;
         case 'skill':
           sound.play('skill');
@@ -177,6 +178,11 @@ export class Effects {
           if (ev.skill === 'campo_gravitacional') { this.ring(ev.x, ev.y, 125, 0xb08aff, 600); this.floatText(ev.x, ev.y - 30, 'F = G·m·M / d²', '#d0c0ff', 22, 1000); }
           if (ev.skill === 'planta_carnivora') { this.burst(ev.x, ev.y, 0x3ac46a, 16); this.floatText(ev.x, ev.y - 30, 'Planta Carnívora!', '#7be04a', 22, 900); }
           if (ev.skill === 'exercito_historico') { this.ring(ev.x, ev.y, 70, 0xc9a24a, 500); this.floatText(ev.x, ev.y - 34, 'EXÉRCITO HISTÓRICO!', '#e8c24a', 24, 900); }
+          if (ev.skill === 'translate') { this.ring(ev.x, ev.y, 180, 0xffe45e, 600); this.floatText(ev.x, ev.y - 34, 'TRANSLATE!', '#ffe45e', 26, 900); }
+          if (ev.skill === 'circuito') { this.ring(ev.x, ev.y, 220, 0x7fd8ff, 500); this.floatText(ev.x, ev.y - 34, 'CIRCUITO!', '#7fd8ff', 26, 900); }
+          if (ev.skill === 'terremoto') this.floatText(ev.x, ev.y - 34, 'TERREMOTO!', '#c9a24a', 28, 900);
+          if (ev.skill === 'vulcao') { this.ring(ev.x, ev.y, 90, 0xff7a2a, 600); this.floatText(ev.x, ev.y - 34, 'VULCÃO!', '#ff7a2a', 28, 900); }
+          if (ev.skill === 'obra_prima') { this.ring(ev.x, ev.y, 140, 0xe04ad0, 600); this.floatText(ev.x, ev.y - 34, 'OBRA-PRIMA!', '#ff9ae8', 26, 900); }
           if (ev.skill === 'classicos_vivos') { this.ring(ev.x, ev.y, 70, 0xb08aff, 500); this.floatText(ev.x, ev.y - 34, 'CLÁSSICOS VIVOS!', '#d0c0ff', 24, 900); }
           if (ev.skill === 'grammar_shield') { this.ring(ev.x, ev.y, 100, 0xff8fa3, 500); this.floatText(ev.x, ev.y - 34, 'GRAMMAR SHIELD!', '#ff8fa3', 26, 900); }
           break;

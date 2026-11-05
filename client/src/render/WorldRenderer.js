@@ -134,6 +134,7 @@ export class WorldRenderer {
     for (const a of w.areas) this.drawArea(a, time);
     for (const p of w.players) { seen.add(p.id); this.syncPlayer(p, time); }
     for (const e of w.enemies) { seen.add(e.id); this.syncEnemy(e, time); }
+    this.drawCircuits(w.enemies, time);
     for (const pr of w.projectiles) { seen.add(pr.id); this.syncProjectile(pr, dt); }
     for (const pk of w.pickups) { seen.add(pk.id); this.syncPickup(pk, time); }
     for (const al of w.allies || []) { seen.add(al.id); this.syncAlly(al, time); }
@@ -314,10 +315,11 @@ export class WorldRenderer {
         body: s.add.sprite(e.x, e.y, keys.tex).play(keys.anim),
         spawn: s.add.image(e.x, e.y, 'spawn_circle').setScale(e.def.boss ? 2.4 : 1),
         affix: e.affix && AFFIXES[e.affix] ? s.add.text(e.x, e.y, AFFIXES[e.affix].label.toUpperCase(), textStyle(11, '#' + AFFIXES[e.affix].color.toString(16).padStart(6, '0'), { stroke: '#000', strokeThickness: 3 })).setOrigin(0.5).setVisible(false) : null,
+        confused: null,
         angry: false
       };
       objs.body.anims.setProgress(Math.random());
-      objs.destroy = () => { objs.shadow.destroy(); objs.body.destroy(); objs.spawn.destroy(); objs.affix?.destroy(); };
+      objs.destroy = () => { objs.shadow.destroy(); objs.body.destroy(); objs.spawn.destroy(); objs.affix?.destroy(); objs.confused?.destroy(); };
       return objs;
     });
     const flying = !!e.def.flying;
@@ -328,6 +330,11 @@ export class WorldRenderer {
     v.shadow.setPosition(e.x, e.y + e.r * 0.8).setDepth(e.y - 1).setAlpha(flying ? 0.6 : 1);
     v.body.setPosition(e.x, by).setDepth(e.y).setFlipX(e.facing < 0 && e.type !== 'maquina_xerox');
     v.affix?.setVisible(false);
+    // Translate: "?" girando sobre o inimigo confuso
+    if (e.status.confused > 0 && !e.dead) {
+      if (!v.confused) v.confused = s.add.text(e.x, e.y, '?', textStyle(18, '#ffe45e', { stroke: '#000', strokeThickness: 4 })).setOrigin(0.5);
+      v.confused.setVisible(true).setPosition(e.x + Math.sin(time / 120) * 4, by - e.r - 16).setDepth(e.y + 6);
+    } else v.confused?.setVisible(false);
 
     if (e.spawning > 0) {
       const k = 1 - e.spawning / 0.9;
@@ -660,6 +667,25 @@ export class WorldRenderer {
         g.fillStyle(0xffb030, (0.4 + Math.sin(time / 70 + a.id) * 0.15) * fade).fillEllipse(a.x, a.y - 2, a.r * 1.1, a.r * 0.7);
         break;
       }
+      case 'painting': {
+        // Obra-Prima: tela gigante colorida no chão
+        const fade = a.life - a.t < 0.6 ? (a.life - a.t) / 0.6 : 1;
+        const cols = [0xe04ad0, 0x4ab0ff, 0xffd23f, 0x5ee05e];
+        g.fillStyle(0xfff4e0, 0.35 * fade).fillEllipse(a.x, a.y, a.r * 2, a.r * 1.5);
+        for (let i = 0; i < 6; i++) {
+          const ang = i * 1.05 + a.id, d = a.r * 0.5;
+          g.fillStyle(cols[i % 4], 0.45 * fade).fillEllipse(a.x + Math.cos(ang) * d, a.y + Math.sin(ang) * d * 0.7, a.r * 0.8, a.r * 0.5);
+        }
+        g.lineStyle(3, 0xffffff, 0.6 * fade).strokeEllipse(a.x, a.y, a.r * 2, a.r * 1.5);
+        break;
+      }
+      case 'volcano': {
+        const fade = a.life - a.t < 0.6 ? (a.life - a.t) / 0.6 : 1;
+        g.fillStyle(0x3a1a10, 0.6 * fade).fillCircle(a.x, a.y, a.r);
+        g.fillStyle(0xd0401a, (0.5 + Math.sin(time / 90) * 0.15) * fade).fillCircle(a.x, a.y, a.r * 0.45);
+        g.lineStyle(3, 0xffb030, 0.8 * fade).strokeCircle(a.x, a.y, a.r);
+        break;
+      }
       case 'warn_circle':
         g.fillStyle(0xff3d3d, 0.1 + 0.2 * k).fillCircle(a.x, a.y, a.r * k);
         g.lineStyle(2, 0xff3d3d, 0.85).strokeCircle(a.x, a.y, a.r);
@@ -673,6 +699,32 @@ export class WorldRenderer {
         break;
       default:
         break;
+    }
+  }
+
+  /** Circuito (Vinícius): linhas elétricas entre inimigos ligados (mesmo id; online só há o aviso, então liga todos). */
+  drawCircuits(enemies, time) {
+    const groups = new Map();
+    for (const e of enemies) {
+      if (e.dead || !e.linked) continue;
+      const k = e.linked.id ?? 0;
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(e);
+    }
+    const g = this.fx;
+    for (const list of groups.values()) {
+      for (let i = 0; i < list.length; i++) {
+        for (let j = i + 1; j < list.length; j++) {
+          const a = list[i], b = list[j];
+          const n = 5, seed = Math.floor(time / 70);
+          g.lineStyle(3, 0x7fd8ff, 0.9).beginPath().moveTo(a.x, a.y - 6);
+          for (let k = 1; k < n; k++) {
+            const t = k / n, off = ((seed * 31 + k * 17 + i * 7 + j * 3) % 11 - 5);
+            g.lineTo(a.x + (b.x - a.x) * t - (b.y - a.y) / 40 * off, b.y * t + a.y * (1 - t) - 6 + (b.x - a.x) / 40 * off);
+          }
+          g.lineTo(b.x, b.y - 6).strokePath();
+        }
+      }
     }
   }
 

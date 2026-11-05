@@ -7,8 +7,10 @@ import { WeaponCard } from '../ui/WeaponCard.js';
 import { drawMinimap } from '../ui/Minimap.js';
 
 const SKILL_ICON = {
-  nota_mil: '1000', equacao: '×5', pique: 'PIQ', campo_gravitacional: 'G', planta_carnivora: 'PLT', grammar_shield: 'ABC'
+  nota_mil: '1000', equacao: '×5', pique: 'PIQ', campo_gravitacional: 'G', planta_carnivora: 'PLT', grammar_shield: 'ABC',
+  translate: '?', circuito: 'ON', terremoto: 'TER', obra_prima: 'ART'
 };
+const QUAKE_LABEL = { terremoto: 'TER', vulcao: 'VUL' }; // William alterna a cada uso
 const DEVICE_KEYS = {
   auto: { interact: 'E' }, kbm: { interact: 'E' }, kb2: { interact: '.' },
   pad0: { interact: 'A' }, pad1: { interact: 'A' }, pad2: { interact: 'A' }, pad3: { interact: 'A' }
@@ -327,6 +329,8 @@ export class HudScene extends Phaser.Scene {
       this.wp2Key.setVisible(false);
     }
 
+    // William: o ícone mostra qual é o próximo (online usa o padrão até o snapshot trazer buffs.quakeNext)
+    if (p.skillId === 'terremoto') this.skillIcon.setText(QUAKE_LABEL[p.buffs?.quakeNext] || 'TER');
     const sx = GAME_W - 334, sy = GAME_H - 36;
     const ready = p.skillCd <= 0;
     g.fillStyle(0x000000, 0.4).fillCircle(sx + 2, sy + 3, 24);

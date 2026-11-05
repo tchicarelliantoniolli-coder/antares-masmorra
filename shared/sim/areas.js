@@ -1,9 +1,18 @@
-import { hurtPlayer, damageEnemy, explode } from './combat.js';
+import { hurtPlayer, damageEnemy, explode, applyEffect } from './combat.js';
 import { damagePropsInRadius } from './salas/Props.js';
+import { PALETA_EFFECTS } from './personagens/passives.js';
 
 /** Áreas no chão: avisos de ataque, poças de toner, campo gravitacional, círculo da conversa, cela... */
 export function createArea(world, kind, x, y, opts = {}) {
   const a = { id: world.newId(), kind, x, y, r: opts.r ?? 40, t: 0, life: opts.life ?? 1, dead: false, tick: 0, ...opts };
+  // Paleta Viva (Gabriela P.): poças e pinturas dela ganham um efeito sorteado
+  if ((kind === 'pool' || kind === 'painting') && opts.ownerId) {
+    const owner = world.players.find((p) => p.id === opts.ownerId);
+    if (owner?.mods.paletaViva) {
+      a.effect = world.rng.pick(PALETA_EFFECTS);
+      if (kind === 'painting') a.style = a.effect.type;
+    }
+  }
   world.areas.push(a);
   return a;
 }
@@ -42,6 +51,37 @@ export function updateAreas(world, dt) {
       }
       case 'warn_circle':
         break; // só visual
+      case 'painting': {
+        // Obra-Prima (Gabriela P.): inimigos em cima andam a 30%; com a Paleta Viva também levam o efeito sorteado
+        const owner = world.players.find((p) => p.id === a.ownerId) || null;
+        a.tick += dt;
+        const pulse = a.tick >= 0.5;
+        for (const e of world.enemies) {
+          if (e.dead || e.spawning > 0) continue;
+          if (Math.hypot(e.x - a.x, e.y - a.y) > a.r + e.r * 0.5) continue;
+          if (pulse && a.effect) applyEffect(world, e, a.effect, owner);
+          e.status.slow = Math.max(e.status.slow || 0, 0.3);
+          e.status.slowMul = Math.min(e.status.slowMul ?? 1, a.slowMul ?? 0.3);
+        }
+        if (pulse) a.tick = 0;
+        break;
+      }
+      case 'volcano': {
+        // Vulcão (William): 3 bolas de lava por segundo, cada uma avisada por um círculo de 0,4 s
+        a.tick += dt;
+        const owner = world.players.find((p) => p.id === a.ownerId) || null;
+        while (a.tick >= 1 / 3) {
+          a.tick -= 1 / 3;
+          for (let tries = 0; tries < 8; tries++) {
+            const ang = world.rng.range(0, Math.PI * 2), d = Math.sqrt(world.rng.next()) * a.r;
+            const x = a.x + Math.cos(ang) * d, y = a.y + Math.sin(ang) * d;
+            if (world.map.solidAt(x, y)) continue;
+            createArea(world, 'warn_circle', x, y, { r: 26, life: 0.4, lava: { damage: 6, ownerId: a.ownerId } });
+            break;
+          }
+        }
+        break;
+      }
       case 'gravity':
       case 'singularity': {
         // Campo Gravitacional (Jean Paulo) e buraco negro das armas: puxa inimigos para o centro e causa dano
@@ -109,6 +149,10 @@ export function updateAreas(world, dt) {
         }
         damagePropsInRadius(world, a.x, a.y, a.r, a.damage);
         world.emit('proj_hit', { x: a.x, y: a.y, team: 'player', style: a.sprite });
+      }
+      if (a.kind === 'warn_circle' && a.lava) {
+        const owner = world.players.find((p) => p.id === a.lava.ownerId) || null;
+        explode(world, a.x, a.y, a.r, a.lava.damage, { source: owner, style: 'barrel' });
       }
       if (a.kind === 'warn_circle' && a.blast) {
         explode(world, a.x, a.y, a.r, a.blast.damage, { hurtsPlayers: true, playerDamage: a.blast.damage, style: 'barrel' });

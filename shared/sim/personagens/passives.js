@@ -14,8 +14,16 @@ export const PASSIVES = {
   bilingue: (p) => { p.mods.doubleShot = 0.2; },                     // Andréia
   imunidade: (p) => { p.mods.tonerImmune = true; },                  // Rosana
   estrategista: (p) => { p.mods.allyLifeMul = 1.5; },                // Felipe: aliados duram +50%
-  cartografo: (p) => { p.mods.revealMap = true; }                    // William
+  cartografo: (p) => { p.mods.revealMap = true; },                   // William
+  paleta_viva: (p) => { p.mods.paletaViva = true; }                  // Gabriela P.: poças e Obra-Prima ganham efeito
 };
+
+/** Efeitos sorteados pela Paleta Viva (mesmo formato dos efeitos das armas). */
+export const PALETA_EFFECTS = [
+  { type: 'fogo', chance: 1, duration: 3, power: 3 },
+  { type: 'gelo', chance: 1, duration: 2, power: 0.5 },
+  { type: 'veneno', chance: 1, duration: 4, power: 2 }
+];
 
 export function applyPassive(p, id) {
   if (id && PASSIVES[id]) PASSIVES[id](p);

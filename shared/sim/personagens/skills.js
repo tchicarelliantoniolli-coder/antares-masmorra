@@ -1,6 +1,8 @@
 import { spawnProjectile } from '../armas/Projectiles.js';
 import { createArea } from '../areas.js';
 import { createAlly } from './Allies.js';
+import { aimPoint } from '../armas/modes/ground.js';
+import { damageEnemy, applyEffect } from '../combat.js';
 
 
 /**
@@ -83,6 +85,57 @@ export const SKILLS = {
   grammar_shield(world, p) {
     for (const q of world.players) if (!q.dead && !q.downed) q.buffs.bubbleTimer = 4;
     world.emit('skill', { playerId: p.id, skill: 'grammar_shield', x: p.x, y: p.y });
+    return true;
+  },
+
+  // Andréia — inimigos a até 180 px ficam confusos por 4 s (atacam os colegas); chefes só ficam lentos.
+  translate(world, p) {
+    for (const e of world.enemies) {
+      if (e.dead || e.def.invulnerable || Math.hypot(e.x - p.x, e.y - p.y) > 180) continue;
+      if (e.def.boss) { e.status.slow = Math.max(e.status.slow || 0, 2); e.status.slowMul = 0.6; }
+      else e.status.confused = 4;
+    }
+    world.emit('skill', { playerId: p.id, skill: 'translate', x: p.x, y: p.y });
+    return true;
+  },
+
+  // Vinícius — liga até 6 inimigos a até 220 px: o dano em um vai pela metade para os outros.
+  circuito(world, p) {
+    const id = world.newId();
+    const alvos = world.enemies
+      .filter((e) => !e.dead && !e.def.invulnerable && Math.hypot(e.x - p.x, e.y - p.y) <= 220)
+      .sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))
+      .slice(0, 6);
+    for (const e of alvos) e.linked = { until: world.time + 6, id };
+    world.emit('skill', { playerId: p.id, skill: 'circuito', x: p.x, y: p.y });
+    return true;
+  },
+
+  // William — alterna a cada uso: Terremoto (atordoa a sala) e Vulcão (área de lava no ponto mirado).
+  terremoto(world, p) {
+    const modo = p.buffs.quakeNext === 'vulcao' ? 'vulcao' : 'terremoto';
+    p.buffs.quakeNext = modo === 'vulcao' ? 'terremoto' : 'vulcao';
+    if (modo === 'terremoto') {
+      for (const e of world.enemies) {
+        if (e.dead || e.spawning > 0 || e.roomId !== p.roomId) continue;
+        applyEffect(world, e, { type: 'atordoar', duration: 1.5 }, p);
+        damageEnemy(world, e, 8, { source: p, noMul: true });
+      }
+      world.emit('quake', { x: p.x, y: p.y });
+      world.emit('skill', { playerId: p.id, skill: 'terremoto', x: p.x, y: p.y });
+    } else {
+      const c = aimPoint(world, p, 260);
+      createArea(world, 'volcano', c.x, c.y, { r: 90, life: 4, ownerId: p.id });
+      world.emit('skill', { playerId: p.id, skill: 'vulcao', x: c.x, y: c.y });
+    }
+    return true;
+  },
+
+  // Gabriela P. — pinta no chão (raio 140, 6 s): inimigos em cima andam a 30%.
+  obra_prima(world, p) {
+    const c = aimPoint(world, p, 200);
+    createArea(world, 'painting', c.x, c.y, { r: 140, life: 6, slowMul: 0.3, ownerId: p.id });
+    world.emit('skill', { playerId: p.id, skill: 'obra_prima', x: c.x, y: c.y });
     return true;
   }
 };

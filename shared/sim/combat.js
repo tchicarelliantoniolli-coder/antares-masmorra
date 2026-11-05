@@ -40,6 +40,14 @@ export function damageEnemy(world, e, amount, opts = {}) {
   world.stats.damage += dmg;
   if (src) src.damageDealt += dmg;
   world.emit('dmg', { x: e.x, y: e.y - e.r, amount: dmg, crit: !!opts.crit, target: 'enemy', id: e.id });
+  // Circuito (Vinícius): metade do dano vai para cada outro inimigo ligado (secundário: não recircula)
+  if (e.linked && !opts.noChain && e.linked.until > world.time) {
+    const share = (dmg * 0.5) / (src ? src.mods.damageMul : 1); // damageEnemy multiplica pelo damageMul de novo
+    for (const o of world.enemies) {
+      if (o === e || o.dead || o.linked?.id !== e.linked.id) continue;
+      damageEnemy(world, o, share, { source: src, noMul: true, noChain: true });
+    }
+  }
 
   if (opts.knockback && !e.def.boss) {
     const kb = opts.knockback / (e.def.flying ? 1 : 1.3);

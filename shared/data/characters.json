@@ -452,7 +452,7 @@
         "id": "circuito",
         "name": "Circuito",
         "cooldown": 14,
-        "description": "Liga os inimigos num circuito: o dano causado em um é dividido entre todos."
+        "description": "Liga até 6 inimigos: cada um que leva dano repassa metade para os outros ligados."
       },
       "passive": {
         "id": "alta_voltagem",

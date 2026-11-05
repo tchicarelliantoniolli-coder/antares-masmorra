@@ -47,8 +47,20 @@ export function nearestPlayer(world, e) {
   return best;
 }
 
+/** Inimigo vivo mais próximo (que não seja o próprio): alvo de quem está confuso. */
+function nearestOtherEnemy(world, e) {
+  let best = null, bd = Infinity;
+  for (const o of world.enemies) {
+    if (o === e || o.dead || o.spawning > 0 || o.burrowed) continue;
+    const d = Math.hypot(o.x - e.x, o.y - e.y);
+    if (d < bd) { bd = d; best = o; }
+  }
+  return best;
+}
+
 /** Alvo mais próximo do inimigo: jogador vivo ou aliado com provocação (taunt) e hp > 0. */
 export function nearestTarget(world, e) {
+  if (e.status.confused > 0) return nearestOtherEnemy(world, e); // Translate: ataca os próprios colegas
   let best = nearestPlayer(world, e);
   let bd = best ? Math.hypot(best.x - e.x, best.y - e.y) : Infinity;
   for (const a of world.allies) {
@@ -82,14 +94,16 @@ export function moveToward(world, e, tx, ty, speed, dt, sign = 1) {
 
 export function enemyShoot(world, e, angle, atk) {
   const n = (atk.bullets || 1) + (atk.noExtra ? 0 : e.extraBullets || 0);
+  const confused = e.status.confused > 0; // balas de confuso ferem inimigos (time do jogador, sem dono)
   for (let i = 0; i < n; i++) {
     const a = n > 1 ? angle + ((-atk.spread / 2 + (atk.spread * i) / (n - 1)) * Math.PI) / 180 : angle;
-    spawnProjectile(world, {
-      team: 'enemy', x: e.x, y: e.y - 4, angle: a,
+    const pr = spawnProjectile(world, {
+      team: confused ? 'player' : 'enemy', owner: null, x: e.x, y: e.y - 4, angle: a,
       speed: atk.speed, radius: atk.radius || 5, damage: atk.damage || 1,
       range: atk.range || 900, sprite: 'ebullet_' + (atk.style || 'paper'), style: atk.style || 'paper',
-      slow: atk.slow || 0, shooter: e.id, explode: atk.explode || null, explodeOnExpire: !!atk.explode
+      slow: atk.slow || 0, shooter: confused ? null : e.id, explode: atk.explode || null, explodeOnExpire: !!atk.explode
     });
+    if (confused) pr.hit.add(e.id);
   }
   world.emit('enemy_shoot', { x: e.x, y: e.y, style: atk.style, boss: !!e.def.boss });
 }
@@ -109,6 +123,8 @@ function tickStatus(world, e, dt) {
   }
   if (s.slow > 0) s.slow -= dt;
   if (s.frozen > 0) s.frozen -= dt;
+  if (s.confused > 0) s.confused -= dt;
+  if (e.linked && e.linked.until <= world.time) e.linked = null;
 }
 
 export function updateEnemies(world, dt) {
@@ -137,7 +153,17 @@ export function updateEnemies(world, dt) {
     }
     // dano de contato
     const cdmg = e.contactOverride ?? e.def.contactDamage;
-    if (cdmg && e.contactCd <= 0 && !e.burrowed) {
+    if (cdmg && e.contactCd <= 0 && !e.burrowed && e.status.confused > 0) {
+      // confuso: o contato fere outros inimigos, nunca jogadores nem aliados
+      for (const o of world.enemies) {
+        if (o === e || o.dead || o.spawning > 0) continue;
+        if (Math.hypot(o.x - e.x, o.y - e.y) < o.r + e.r - 2) {
+          damageEnemy(world, o, cdmg, { noMul: true, noChain: true });
+          e.contactCd = 0.8;
+          break;
+        }
+      }
+    } else if (cdmg && e.contactCd <= 0 && !e.burrowed) {
       for (const p of world.players) {
         if (p.dead || p.downed || p.jailTimer > 0) continue;
         if (Math.hypot(p.x - e.x, p.y - e.y) < p.r + e.r - 2) {
@@ -148,7 +174,7 @@ export function updateEnemies(world, dt) {
         }
       }
     }
-    if (cdmg && e.contactCd <= 0 && !e.burrowed) {
+    if (cdmg && e.contactCd <= 0 && !e.burrowed && !(e.status.confused > 0)) {
       for (const a of world.allies) {
         if (a.dead || !(a.hp > 0)) continue;
         if (Math.hypot(a.x - e.x, a.y - e.y) < a.r + e.r - 2) {
