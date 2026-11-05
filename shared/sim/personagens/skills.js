@@ -7,6 +7,17 @@ import { createAlly } from './Allies.js';
  * Habilidades especiais (tecla Espaço). Cada função recebe (world, player) e devolve true se foi usada.
  * Etapa 1: Nota Mil (Ana Cláudia) e Equação (Harilson). As outras entram na Etapa 3.
  */
+/** Cria os aliados em arco à frente do jogador (ou em cima dele, se for parede). */
+function summon(world, p, skill, kinds) {
+  kinds.forEach((kind, i) => {
+    const ang = p.aim + (i - (kinds.length - 1) / 2) * 0.9;
+    let x = p.x + Math.cos(ang) * 44, y = p.y + Math.sin(ang) * 44;
+    if (world.map.solidAt(x, y)) { x = p.x; y = p.y; }
+    createAlly(world, kind, x, y, { life: 10 * p.mods.allyLifeMul, ownerId: p.id });
+  });
+  world.emit('skill', { playerId: p.id, skill, x: p.x, y: p.y });
+}
+
 export const SKILLS = {
   // Ana Cláudia — um texto gigante "1000" que atravessa a tela, paredes e inimigos, apagando balas.
   nota_mil(world, p) {
@@ -51,8 +62,20 @@ export const SKILLS = {
   planta_carnivora(world, p) {
     let x = p.x + Math.cos(p.aim) * 30, y = p.y + Math.sin(p.aim) * 30;
     if (world.map.solidAt(x, y)) { x = p.x; y = p.y; }
-    createAlly(world, 'planta', x, y, { life: 12, ownerId: p.id });
+    createAlly(world, 'planta', x, y, { life: 12 * p.mods.allyLifeMul, ownerId: p.id });
     world.emit('skill', { playerId: p.id, skill: 'planta_carnivora', x, y });
+    return true;
+  },
+
+  // Felipe — legionário, cavaleiro e bandeirante por 10 s (×allyLifeMul).
+  exercito_historico(world, p) {
+    summon(world, p, 'exercito_historico', ['legionario', 'cavaleiro', 'bandeirante']);
+    return true;
+  },
+
+  // Tatiane — Capitu, Macunaíma e Policarpo por 10 s (×allyLifeMul).
+  classicos_vivos(world, p) {
+    summon(world, p, 'classicos_vivos', ['capitu', 'macunaima', 'policarpo']);
     return true;
   },
 

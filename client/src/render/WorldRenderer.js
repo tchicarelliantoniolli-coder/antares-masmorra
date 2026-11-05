@@ -415,6 +415,7 @@ export class WorldRenderer {
       const tex = s.textures.exists('ally_' + a.kind) ? 'ally_' + a.kind : 'ally_planta';
       const body = s.add.sprite(a.x, a.y, tex);
       if (a.kind === 'planta') body.play('ally_planta_bite');
+      else if (s.anims.exists('ally_' + a.kind + '_walk')) body.play('ally_' + a.kind + '_walk');
       const o = { shadow: s.add.image(a.x, a.y, 'shadow').setScale(a.kind === 'mine' ? 0.6 : 1), body };
       o.destroy = () => { o.shadow.destroy(); o.body.destroy(); };
       return o;

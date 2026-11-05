@@ -13,6 +13,7 @@ export const PASSIVES = {
   spelling_bee: (p) => { p.mods.vowelCrit = true; },                 // Marina: vogais = crítico
   bilingue: (p) => { p.mods.doubleShot = 0.2; },                     // Andréia
   imunidade: (p) => { p.mods.tonerImmune = true; },                  // Rosana
+  estrategista: (p) => { p.mods.allyLifeMul = 1.5; },                // Felipe: aliados duram +50%
   cartografo: (p) => { p.mods.revealMap = true; }                    // William
 };
 

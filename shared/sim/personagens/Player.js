@@ -33,7 +33,7 @@ export function createPlayer(world, { id, characterId, name, slot = 0 }) {
     downed: false, dead: false, reviveProgress: 0,
     roomId: -1,
     coins: 0, kills: 0, damageDealt: 0, damageTaken: 0,
-    mods: { critBonus: 0, energyCostMul: 1, damageMul: 1, fireRateMul: 1, speedMul: 1, knockback: 0, skillCdMul: 1, regen: 0 },
+    mods: { critBonus: 0, energyCostMul: 1, damageMul: 1, fireRateMul: 1, speedMul: 1, knockback: 0, skillCdMul: 1, regen: 0, allyLifeMul: 1 },
     buffs: { nextHitMul: 1, nextHitTimer: 0, hasteTimer: 0, bubbleTimer: 0 },
     regenTimer: 0,
     interactTarget: null,

@@ -176,6 +176,8 @@ export class Effects {
           if (ev.skill === 'pique') { sound.play('whistle'); this.floatText(ev.x, ev.y - 34, 'PIQUE!', '#5ee05e', 28, 900); this.ring(ev.x, ev.y, 120, 0x5ee05e, 500); }
           if (ev.skill === 'campo_gravitacional') { this.ring(ev.x, ev.y, 125, 0xb08aff, 600); this.floatText(ev.x, ev.y - 30, 'F = G·m·M / d²', '#d0c0ff', 22, 1000); }
           if (ev.skill === 'planta_carnivora') { this.burst(ev.x, ev.y, 0x3ac46a, 16); this.floatText(ev.x, ev.y - 30, 'Planta Carnívora!', '#7be04a', 22, 900); }
+          if (ev.skill === 'exercito_historico') { this.ring(ev.x, ev.y, 70, 0xc9a24a, 500); this.floatText(ev.x, ev.y - 34, 'EXÉRCITO HISTÓRICO!', '#e8c24a', 24, 900); }
+          if (ev.skill === 'classicos_vivos') { this.ring(ev.x, ev.y, 70, 0xb08aff, 500); this.floatText(ev.x, ev.y - 34, 'CLÁSSICOS VIVOS!', '#d0c0ff', 24, 900); }
           if (ev.skill === 'grammar_shield') { this.ring(ev.x, ev.y, 100, 0xff8fa3, 500); this.floatText(ev.x, ev.y - 34, 'GRAMMAR SHIELD!', '#ff8fa3', 26, 900); }
           break;
         case 'equation_hit':

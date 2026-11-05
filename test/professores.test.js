@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { arena, dummy, run } from './helpers.js';
+import { arena, dummy, run, makeWorld, putInRoom } from './helpers.js';
+import { SKILLS } from '../shared/sim/personagens/skills.js';
 import { createEnemy, nearestTarget } from '../shared/sim/inimigos/Enemy.js';
 import { createAlly } from '../shared/sim/personagens/Allies.js';
 import { spawnProjectile } from '../shared/sim/armas/Projectiles.js';
@@ -78,4 +79,55 @@ test('snapshot leva hp e maxHp do aliado', () => {
   const s = decodeSnapshot(w.data, JSON.parse(JSON.stringify(serializeWorld(w))));
   assert.equal(s.allies[0].hp, 26);
   assert.equal(s.allies[0].maxHp, 26);
+});
+
+// ---------------------------------------------------------------- invocações (Felipe e Tatiane)
+function arenaCom(characterId) {
+  const w = makeWorld({ players: [{ id: 'p1', characterId }] });
+  const p = w.players[0];
+  const room = w.rooms.find((r) => r.type === 'combat');
+  putInRoom(w, p, room);
+  room.state = 'cleared';
+  p.energy = p.maxEnergy = 9999;
+  return { w, p };
+}
+const vivos = (w, kind) => w.allies.filter((a) => !a.dead && a.kind === kind);
+
+test('Exército Histórico invoca 3 soldados que duram 15 s com o Felipe', () => {
+  const { w, p } = arenaCom('felipe_cardoso');
+  assert.equal(p.mods.allyLifeMul, 1.5);
+  assert.ok(SKILLS.exercito_historico(w, p));
+  const sol = w.allies.filter((a) => a.ownerId === p.id);
+  assert.deepEqual(sol.map((a) => a.kind).sort(), ['bandeirante', 'cavaleiro', 'legionario']);
+  for (const a of sol) assert.equal(a.life, 15);
+  assert.ok(w.events.some((ev) => ev.type === 'skill' && ev.skill === 'exercito_historico'));
+  run(w, 14);
+  assert.equal(sol.filter((a) => !a.dead).length, 3);
+  run(w, 1.2);
+  assert.equal(sol.filter((a) => !a.dead).length, 0);
+});
+
+test('Clássicos Vivos invoca Capitu, Macunaíma e Policarpo por 10 s', () => {
+  const { w, p } = arenaCom('tatiane');
+  assert.equal(p.mods.allyLifeMul, 1);
+  assert.ok(SKILLS.classicos_vivos(w, p));
+  const cl = w.allies.filter((a) => a.ownerId === p.id);
+  assert.deepEqual(cl.map((a) => a.kind).sort(), ['capitu', 'macunaima', 'policarpo']);
+  for (const a of cl) assert.equal(a.life, 10);
+  assert.ok(w.events.some((ev) => ev.type === 'skill' && ev.skill === 'classicos_vivos'));
+});
+
+test('Planta da Vivian também usa allyLifeMul', () => {
+  const { w, p } = arenaCom('vivian');
+  p.mods.allyLifeMul = 2;
+  SKILLS.planta_carnivora(w, p);
+  assert.equal(vivos(w, 'planta')[0].life, 24);
+});
+
+test('invocações do Felipe atacam inimigos', () => {
+  const { w, p } = arenaCom('felipe_cardoso');
+  const d = dummy(w, p.x + 150, p.y, 500);
+  SKILLS.exercito_historico(w, p);
+  run(w, 4);
+  assert.ok(d.hp < 500);
 });

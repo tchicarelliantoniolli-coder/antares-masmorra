@@ -279,3 +279,88 @@ export function drawLetters() {
 }
 
 export { shade };
+
+// ------------------------------------------------------------------ aliados invocados (2 quadros: passo)
+const ALLY_SKIN = '#e2ae8a';
+
+/** Legionário romano: elmo vermelho com crista, escudo e lança. */
+export function drawLegionario() {
+  return strip(32, 32, 2, (ctx, f) => {
+    px(ctx, 11, 27 + f, 4, 3 - f, '#5a3a22'); px(ctx, 17, 28 - f, 4, 2 + f, '#5a3a22');
+    px(ctx, 11, 15, 10, 12, '#b8bcc4'); px(ctx, 11, 22, 10, 4, '#a8242a'); // couraça e saiote
+    px(ctx, 13, 17, 6, 1, '#8a8f99'); px(ctx, 13, 19, 6, 1, '#8a8f99');
+    circle(ctx, 16, 11, 5, ALLY_SKIN);
+    px(ctx, 10, 5, 12, 5, '#b8bcc4'); px(ctx, 13, 2, 6, 3, '#c0262d'); px(ctx, 10, 10, 2, 4, '#8a8f99');
+    px(ctx, 14, 11, 1, 2, '#2a1e18'); px(ctx, 18, 11, 1, 2, '#2a1e18');
+    px(ctx, 5, 14 + f, 6, 10, '#c0262d'); px(ctx, 5, 14 + f, 6, 1, '#f2c94c'); px(ctx, 7, 18 + f, 2, 2, '#f2c94c'); // escudo
+    px(ctx, 25, 6, 1, 22, '#8a5a2a'); px(ctx, 24, 3, 3, 4, '#dde0e6'); // lança
+  });
+}
+
+/** Cavaleiro medieval: elmo fechado com pluma azul, escudo com cruz e espada. */
+export function drawCavaleiro() {
+  return strip(32, 32, 2, (ctx, f) => {
+    px(ctx, 10, 27 + f, 5, 3 - f, '#6a7280'); px(ctx, 17, 28 - f, 5, 2 + f, '#6a7280');
+    px(ctx, 9, 14, 14, 13, '#aab2bd'); px(ctx, 9, 14, 14, 2, '#dde0e6'); px(ctx, 9, 25, 14, 2, '#6a7280');
+    px(ctx, 11, 8, 10, 8, '#aab2bd'); px(ctx, 11, 8, 10, 1, '#dde0e6');
+    px(ctx, 12, 11, 8, 2, '#2b2b33'); px(ctx, 15, 8, 2, 8, '#8a8f99'); // viseira
+    px(ctx, 14, 3, 4, 5, '#3a6fd8'); px(ctx, 13, 2, 3, 2, '#5a8ff0'); // pluma
+    px(ctx, 3, 14 + f, 7, 10, '#fbfbf3'); px(ctx, 3, 14 + f, 7, 1, '#8a8f99'); px(ctx, 6, 15 + f, 1, 8, '#c0262d'); px(ctx, 4, 18 + f, 5, 1, '#c0262d'); // escudo
+    px(ctx, 25, 8, 2, 16, '#dde0e6'); px(ctx, 23, 23, 6, 2, '#f2c94c'); px(ctx, 25, 25, 2, 3, '#8a5a2a'); // espada
+  });
+}
+
+/** Bandeirante: chapéu de aba larga, colete e mosquete. */
+export function drawBandeirante() {
+  return strip(32, 32, 2, (ctx, f) => {
+    px(ctx, 11, 27 + f, 4, 3 - f, '#3a2412'); px(ctx, 17, 28 - f, 4, 2 + f, '#3a2412');
+    px(ctx, 11, 15, 10, 12, '#8a5a2a'); px(ctx, 14, 15, 4, 12, '#e8d8a8'); px(ctx, 11, 22, 10, 1, '#3a2412');
+    circle(ctx, 16, 11, 5, ALLY_SKIN);
+    px(ctx, 14, 12, 1, 2, '#2a1e18'); px(ctx, 18, 12, 1, 2, '#2a1e18'); px(ctx, 13, 14, 6, 2, '#3a2412'); // bigode/barba
+    px(ctx, 6, 7, 20, 2, '#5a3a22'); px(ctx, 10, 2, 12, 6, '#6a4a2a'); px(ctx, 10, 6, 12, 1, '#2a1e18'); // chapéu
+    px(ctx, 10, 17 + f, 16, 2, '#5a3a22'); px(ctx, 24, 16 + f, 6, 2, '#2b2b33'); px(ctx, 9, 19 + f, 3, 3, ALLY_SKIN); // mosquete
+  });
+}
+
+/** Capitu: vestido azul-escuro, cabelo preto preso e olhos grandes. */
+export function drawCapitu() {
+  return strip(32, 32, 2, (ctx, f) => {
+    px(ctx, 12, 28 + f, 3, 2 - f, '#2a1e18'); px(ctx, 17, 29 - f, 3, 1 + f, '#2a1e18');
+    px(ctx, 12, 15, 8, 6, '#2b3a6a'); px(ctx, 9, 21, 14, 8, '#2b3a6a'); px(ctx, 9, 28, 14, 1, '#5a6fb0');
+    px(ctx, 14, 15, 4, 2, '#fbfbf3'); // gola
+    circle(ctx, 16, 10, 5, ALLY_SKIN);
+    px(ctx, 10, 4, 12, 4, '#15101a'); px(ctx, 10, 6, 2, 8, '#15101a'); px(ctx, 20, 6, 2, 8, '#15101a'); px(ctx, 15, 2, 3, 3, '#15101a'); // cabelo
+    px(ctx, 12, 9, 3, 3, '#fbfbf3'); px(ctx, 18, 9, 3, 3, '#fbfbf3'); px(ctx, 13, 10, 2, 2, '#15101a'); px(ctx, 19, 10, 2, 2, '#15101a'); // olhos marcantes
+    px(ctx, 15, 13, 3, 1, '#c0262d');
+    px(ctx, 7, 17 + f, 3, 6, ALLY_SKIN); px(ctx, 22, 17 + f, 3, 6, ALLY_SKIN);
+  });
+}
+
+/** Macunaíma: herói sem nenhum caráter, magro, de tanga e com cabelo espetado. */
+export function drawMacunaima() {
+  return strip(32, 32, 2, (ctx, f) => {
+    const sk = '#a8683a';
+    px(ctx, 11, 24, 3, 5 + f, sk); px(ctx, 18, 24, 3, 6 - f, sk); // pernas
+    px(ctx, 12, 14, 8, 10, sk); px(ctx, 11, 21, 10, 3, '#e8c24a'); // tronco e tanga
+    px(ctx, 7, 15 - f, 5, 3, sk); px(ctx, 20, 15 + f, 5, 3, sk);
+    circle(ctx, 16, 9, 5, sk);
+    px(ctx, 11, 1, 2, 4, '#15101a'); px(ctx, 15, 0, 2, 4, '#15101a'); px(ctx, 19, 1, 2, 4, '#15101a'); px(ctx, 11, 4, 10, 2, '#15101a'); // cabelo
+    px(ctx, 13, 9, 2, 2, '#fbfbf3'); px(ctx, 18, 9, 2, 2, '#fbfbf3'); px(ctx, 14, 10, 1, 1, '#15101a'); px(ctx, 19, 10, 1, 1, '#15101a');
+    px(ctx, 14, 12, 5, 1, '#fbfbf3'); // sorriso
+    px(ctx, 12, 14, 8, 1, '#3a8a3a'); // colar
+  });
+}
+
+/** Policarpo Quaresma: terno escuro, óculos redondos e um livro. */
+export function drawPolicarpo() {
+  return strip(32, 32, 2, (ctx, f) => {
+    px(ctx, 11, 27 + f, 4, 3 - f, '#15101a'); px(ctx, 17, 28 - f, 4, 2 + f, '#15101a');
+    px(ctx, 10, 14, 12, 14, '#3a3f4a'); px(ctx, 14, 14, 4, 12, '#fbfbf3'); px(ctx, 15, 16, 2, 8, '#c0262d'); // terno, camisa, gravata
+    circle(ctx, 16, 9, 5, ALLY_SKIN);
+    px(ctx, 11, 3, 10, 3, '#8a8f99'); px(ctx, 10, 5, 2, 4, '#8a8f99'); px(ctx, 20, 5, 2, 4, '#8a8f99'); // cabelo grisalho
+    ring(ctx, 13, 9, 2, '#15101a'); ring(ctx, 19, 9, 2, '#15101a'); px(ctx, 15, 9, 2, 1, '#15101a'); // óculos
+    px(ctx, 14, 12, 5, 2, '#8a8f99'); // bigode
+    px(ctx, 6, 18 + f, 8, 6, '#2a6a32'); px(ctx, 6, 18 + f, 8, 1, '#f2c94c'); px(ctx, 7, 24 + f, 6, 1, '#fbfbf3'); // livro
+    px(ctx, 8, 22 + f, 3, 3, ALLY_SKIN);
+  });
+}
