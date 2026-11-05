@@ -95,3 +95,13 @@ test('todo modo e estilo tem nome em português', () => {
   assert.equal(WEAPON_MODES.length, 14);
   assert.deepEqual(MELEE_STYLES, ['swing', 'thrust', 'combo', 'shield']);
 });
+
+test('validador exige deploy.max inteiro >= 1', () => {
+  const json = readJson('weapons.json');
+  const check = (w) => validateWeapons({ ...json, weapons: [{ ...base, ...w }] });
+  for (const max of [0, -1, 1.5]) {
+    assert.ok(check({ type: 'ranged', mode: 'deploy', deploy: { max } }).some((e) => e.endsWith('deploy.max deve ser pelo menos 1')), `max ${max}`);
+  }
+  assert.deepEqual(check({ type: 'ranged', mode: 'deploy', deploy: { max: 1 } }), []);
+  assert.deepEqual(check({ type: 'ranged', mode: 'deploy' }), []);
+});

@@ -87,6 +87,7 @@ export function validateWeapons(json) {
         unknownKeys(tag, w[mode], MODE_DEFAULTS[mode], mode, errors);
         if (mode === 'variants' && !(Array.isArray(w.variants?.list) && w.variants.list.length)) errors.push(`${tag}: variants precisa de "list" com pelo menos 1 variante`);
         if (mode === 'deploy' && w.deploy?.kind !== undefined && !DEPLOY_KINDS.includes(w.deploy.kind)) errors.push(`${tag}: deploy.kind deve ser ${DEPLOY_KINDS.join(' ou ')}`);
+        if (mode === 'deploy' && w.deploy?.max !== undefined && !(Number.isInteger(w.deploy.max) && w.deploy.max >= 1)) errors.push(`${tag}: deploy.max deve ser pelo menos 1`);
         if (mode === 'lob') unknownKeys(tag, w.lob?.pool, POOL_DEFAULTS, 'lob.pool', errors);
       }
       unknownKeys(tag, w.projectile?.pool, POOL_DEFAULTS, 'projectile.pool', errors);
