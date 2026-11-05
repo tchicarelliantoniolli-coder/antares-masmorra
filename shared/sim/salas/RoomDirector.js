@@ -11,10 +11,12 @@ export function setupRoomContents(world) {
     if (r.type === 'shop') setupShop(world, r);
     if (r.type === 'statue') {
       const blessing = world.rng.pick(Object.keys(BLESSINGS));
-      createPickup(world, 'statue', cx, cy, { roomId: r.id, blessing, price: 12 + 6 * world.floorNum, usedBy: [] });
+      createPickup(world, 'statue', cx, cy, { roomId: r.id, blessing, price: Math.round((12 + 6 * world.floorNum) * priceMul(world)), usedBy: [] });
     }
   }
 }
+
+const priceMul = (world) => world.data.difficulty?.priceMul ?? 1;
 
 /** Cantina: a "tia da cantina" vende armas, maçãs, suco e broches. */
 function setupShop(world, r) {
@@ -27,10 +29,10 @@ function setupShop(world, r) {
   for (let i = 0; i < 2; i++) {
     const weaponId = world.data.rollWeapon(world.rng, weights);
     const w = world.data.weapon(weaponId);
-    items.push({ item: 'weapon', weaponId, price: Math.round(SHOP_PRICES[w.rarity] * mult) });
+    items.push({ item: 'weapon', weaponId, price: Math.round(SHOP_PRICES[w.rarity] * mult * priceMul(world)) });
   }
-  items.push({ item: 'apple', price: 8 });
-  items.push({ item: world.rng.chance(0.5) ? 'suco' : 'broche', price: 10 });
+  items.push({ item: 'apple', price: Math.round(8 * priceMul(world)) });
+  items.push({ item: world.rng.chance(0.5) ? 'suco' : 'broche', price: Math.round(10 * priceMul(world)) });
   items.forEach((it, i) => {
     createPickup(world, 'shop_item', (r.cx + 0.5 - 4.5 + i * 3) * TILE, y, { roomId: r.id, ...it });
   });
@@ -140,7 +142,7 @@ export function spawnWave(world, room, index) {
   room.waveIndex = index;
   const types = coverRoles(world, [...room.waves[index]]);
   // Mais jogadores = mais inimigos
-  const extra = Math.max(0, world.players.length - 1);
+  const extra = Math.round(types.length * (world.data.difficulty?.extraEnemies ?? 0.4) * Math.max(0, world.players.length - 1));
   for (let i = 0; i < extra; i++) types.push(world.rng.pick(room.waves[index]));
   const cells = freeCells(world, room, 2);
   const players = world.alivePlayers();
@@ -180,7 +182,7 @@ function clearRoom(world, room) {
   const cx = (ftx + 0.5) * TILE, cy = (fty + 0.5) * TILE;
   if (room.type === 'combat') {
     dropEnergy(world, cx, cy, world.rng.int(3, 6));
-    if (world.rng.chance(0.25)) createPickup(world, 'health', cx + 10, cy, {});
+    if (world.rng.chance(world.data.difficulty?.dropHealthChance ?? 0.25)) createPickup(world, 'health', cx + 10, cy, {});
   }
 }
 

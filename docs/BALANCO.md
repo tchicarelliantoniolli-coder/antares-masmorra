@@ -88,3 +88,60 @@ node scripts/bot/run.mjs --root . --profile dupla --players 2 --runs 30   # v0.3
 ```
 
 Na v0.2 original o `run.mjs` termina com código 1 quando há erro de simulação (esperado: crash da Samara). Para reproduzir a linha "v0.2 + correção Samara", aplique no worktree (sem commitar) a mesma proteção de `choose()` que existe em `shared/sim/inimigos/chefes/samara.js` da v0.3.
+
+## Dificuldade da v0.3 (Tarefa 12)
+
+Alvos (30 partidas por linha): dupla 2j 5-15%, dupla 1j 5-15%, experiente 1j e 2j 25-40%. Bot e perfis NÃO foram alterados. Alavancas ficam em `shared/data/enemies.json` (bloco `difficulty` e campos de cada andar). Cada célula: vitórias/partidas (andar médio).
+
+### Rodadas (sementes 1-30, salvo indicação)
+
+| # | Mudança | dupla 2j | dupla 1j | exp. 1j | exp. 2j |
+|---|---|---|---|---|---|
+| 0 | v0.3 como estava (hpScale 1/1.35/1.7, +1 inimigo por jogador extra) | 9 (30%) 2.33 | 0 (0%) 1.80 | 0 (0%) 2.20 | 14 (47%) 2.83 |
+| 1 | + escudo 5 s, cura mais rara (maçã do chão 12%, maçã da loja +2, enfermaria cura metade, preços x1.3), +40% inimigos e +25% vida por jogador extra | 0 (0%) 2.03 | 0 1.80 | 0 2.13 | 2 (7%) 2.73 |
+| 2 | hpScale 1/1.15/1.3, +50% inimigos, +40% vida por extra | 0 1.90 | 0 1.80 | 3 (10%) 2.47 | 6 (20%) 2.37 |
+| 3 | idem 2 com cura da v0.2 (teste isolado) | 0 1.83 | 0 1.80 | 1 2.50 | 4 2.37 |
+| 4 | cura nerfada de volta; hpScale 1/1.0/1.15, elite 0.06/0.08/0.12, extra vida 0.3, chefe +0.8/jogador | 3 (10%) 2.13 | 0 1.90 | 5 (17%) 2.57 | 14 (47%) 2.73 |
+| 5 | vida base Katia 540->470, Samara 680->580; chefe +1.0/jogador | 2 (7%) 2.07 | 0 1.83 | 2 (7%) 2.30 | 16 (53%) 2.77 |
+| 6 | ondas 3-5 (andar 2) e 4-6 (andar 3); +60% inimigos por extra | 1 (3%) 2.03 | 0 1.87 | 4 (13%) 2.77 | 10 (33%) 2.37 |
+| 7 | Samara 580->480, hpScale andar 3 1.15->1.05 | 2 (7%) 2.03 | 0 1.87 | 9 (30%) 2.77 | 11 (37%) 2.37 |
+| 8 | balas +20% andares 2 e 3 (+10% andar 1) | 1 (3%) 2.00 | 0 1.83 | 4 (13%) 2.27 | 8 (27%) 2.50 |
+| 9 | balas +10% (todos) | 2 (7%) 2.07 | 0 1.87 | 6 (20%) 2.50 | 14 (47%) 2.60 |
+| 10 | extra vida 0.4 | 2 (7%) 2.07 | 0 1.87 | 6 (20%) 2.50 | 6 (20%) 2.40 |
+| 11 | extra vida 0.35, balas andar 1 x1.0 (30 part.) | 0 1.90 | 0 1.83 | 5 (17%) 2.47 | 13 (43%) 2.53 |
+
+Com 30 partidas o ruído é de +-8 pontos (uma mudança minúscula troca todos os caminhos aleatórios), então a partir da rodada 11 as decisões foram tomadas com **60 partidas** (sementes 1-60):
+
+| # | Mudança | dupla 2j | dupla 1j | exp. 1j | exp. 2j |
+|---|---|---|---|---|---|
+| 12 | (estado da 11) | 0/60 (0%) | 1/60 (2%) | 9/60 (15%) | 23/60 (38%) |
+| 13 | extra vida 0.3, balas x1.0 (andar 2) e x1.15 (andar 3) | 5/60 (8%) | 1/60 (2%) | 24/60 (40%) | 24/60 (40%) |
+| 14 | balas andar 3 x1.2 | 3/60 (5%) | 2/60 (3%) | 12/60 (20%) | 23/60 (38%) |
+| **15** | balas andar 3 x1.17 (**final**) | **4/60 (7%)** | 0/60 (0%) | **17/60 (28%)** | **23/60 (38%)** |
+
+O solo do experiente é muito sensível à velocidade das balas do andar 3 (1.15 -> 1.2 derruba de 40% para 20%).
+
+### Resultado final (configuração da rodada 15)
+
+| Linha | Sementes 1-30 | Sementes 31-60 (confirmação) | 60 partidas | Alvo |
+|---|---|---|---|---|
+| dupla 2j | 1/30 (3%), andar 2.03 | 3/30 (10%), andar 2.07 | **4/60 (7%)** | 5-15% ok |
+| dupla 1j | 0/30 (0%), andar 1.87 | 0/30 (0%), andar 2.07 | 0/60 (0%) | 5-15% **não atingido** |
+| experiente 1j | 8/30 (27%), andar 2.77 | 9/30 (30%), andar 2.63 | **17/60 (28%)** | 25-40% ok |
+| experiente 2j | 15/30 (50%), andar 2.37 | 8/30 (27%), andar 2.47 | **23/60 (38%)** | 25-40% ok (50% na primeira série, ruído) |
+
+Motivos de derrota (dupla 2j, 60 partidas): ~39 no andar 2, 8 no andar 1, 8 no andar 3 (chefe), restante travadas. Ou seja morre sobretudo no andar 2, como pedido.
+
+### Conflito: dupla com 1 jogador (0%, alvo 5-15%)
+O perfil dupla já vencia só 3% sozinho na v0.2 (Tarefa 11) e morre no andar 2 em ~70% das partidas. Para chegar a 5% sozinho seria preciso suavizar o andar 2 base, o que também suaviza a dupla de 2 jogadores (alvo prioritário, 5-15%) e leva o experiente acima de 40%. Mantido em ~0-3% (nunca mais fácil que a v0.2 solo). Um jogador fraco sozinho não vence a v0.3; um jogador experiente sozinho vence ~28%.
+
+### Alavancas finais (antes -> depois)
+- Escala por jogador extra (comuns): inimigos +1 -> +60% da onda (`difficulty.extraEnemies`); vida 0 -> +30% (`difficulty.extraHp`). Chefes: vida +60% -> +100% por jogador (`difficulty.bossHpPerPlayer`).
+- Base mais fácil (para o solo): `hpScale` 1/1.35/1.7 -> 1/1/1.05; `eliteChance` 0.06/0.12/0.2 -> 0.06/0.08/0.12; ondas 4-6 e 5-7 -> 3-5 e 4-6 (andares 2 e 3); vida Katia 540 -> 470, Samara 680 -> 480.
+- Balas inimigas: `bulletSpeedMul` por andar 1/1/1.17 (andar 1 e 2 sem aumento: o dupla morria no andar 1 com qualquer aumento).
+- Cura: maçã do chão 25% -> 12% (`dropHealthChance`); maçã da loja 3 -> 2; enfermaria cura metade da vida máxima (soma, não enche); preços da loja e estátua x1.3; `SHIELD_REGEN_DELAY` 4 -> 5.
+- Não alterados: dano dos ataques (régua, apontador, grampeador, mochila já tiram 2 desde a Tarefa 5), telégrafos, armas (`weapon-dps`: 0 fora da faixa).
+- Observação: o bot não compra na loja, então o preço x1.3 não influencia as taxas medidas.
+
+### Correção de bug (afeta só a v0.3)
+`samara.js choose()`: o recurso de emergência (restrições zeraram tudo) podia reabilitar "suspensao" sem jogador livre e quebrar (`v` indefinido). Agora mantém o peso 0 sem jogadores livres.

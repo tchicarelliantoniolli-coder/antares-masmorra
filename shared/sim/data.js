@@ -148,6 +148,7 @@ export class GameData {
     this.bosses = characters.bosses || [];
     this.enemies = enemies.enemies;
     this.floors = enemies.floors;
+    this.difficulty = enemies.difficulty || {};
   }
   weapon(id) {
     const w = this.weapons.get(id);

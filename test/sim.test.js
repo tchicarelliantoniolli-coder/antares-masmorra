@@ -25,7 +25,7 @@ test('escudo regenera depois de alguns segundos sem dano', () => {
   const w = makeWorld();
   const p = w.players[0];
   p.shield = 0;
-  run(w, 6);
+  run(w, 7);
   assert.ok(p.shield >= 2, `escudo ${p.shield}`);
 });
 

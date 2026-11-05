@@ -7,7 +7,9 @@ import { AFFIXES, rollAffix } from './affixes.js';
 export function createEnemy(world, type, x, y, roomId, { spawnTime = 0.9, minion = false, elite = false, ...extra } = {}) {
   const def = world.data.enemy(type);
   const players = Math.max(1, world.players.filter((p) => !p.dead).length);
-  const scaleByPlayers = def.boss || def.scaleWithPlayers ? 1 + 0.6 * (players - 1) : 1;
+  const dif = world.data.difficulty || {};
+  const perPlayer = def.boss || def.scaleWithPlayers ? (dif.bossHpPerPlayer ?? 0.6) : (dif.extraHp ?? 0);
+  const scaleByPlayers = 1 + perPlayer * (players - 1);
   const scale = (def.boss ? 1 : (world.floorDef.hpScale || 1)) * scaleByPlayers * (elite ? 2 : 1);
   const e = {
     id: world.newId(), kind: 'enemy', type, def,
@@ -99,7 +101,7 @@ export function enemyShoot(world, e, angle, atk) {
     const a = n > 1 ? angle + ((-atk.spread / 2 + (atk.spread * i) / (n - 1)) * Math.PI) / 180 : angle;
     const pr = spawnProjectile(world, {
       team: confused ? 'player' : 'enemy', owner: null, x: e.x, y: e.y - 4, angle: a,
-      speed: atk.speed, radius: atk.radius || 5, damage: atk.damage || 1,
+      speed: atk.speed * (world.floorDef.bulletSpeedMul || 1), radius: atk.radius || 5, damage: atk.damage || 1,
       range: atk.range || 900, sprite: 'ebullet_' + (atk.style || 'paper'), style: atk.style || 'paper',
       slow: atk.slow || 0, shooter: confused ? null : e.id, explode: atk.explode || null, explodeOnExpire: !!atk.explode
     });

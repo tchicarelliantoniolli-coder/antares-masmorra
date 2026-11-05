@@ -129,7 +129,7 @@ export function interact(world, p, pk) {
     for (const q of world.players) {
       if (q.dead) continue;
       if (q.downed) { q.downed = false; q.reviveProgress = 0; }
-      q.hp = q.maxHp;
+      q.hp = Math.min(q.maxHp, q.hp + Math.ceil(q.maxHp * (world.data.difficulty?.healStationFraction ?? 1)));
       q.shield = q.maxShield;
     }
     world.emit('heal', { x: pk.x, y: pk.y });
@@ -141,7 +141,7 @@ export function interact(world, p, pk) {
     p.coins -= pk.price;
     pk.dead = true;
     if (pk.item === 'weapon') createPickup(world, 'weapon', pk.x, pk.y, { weaponId: pk.weaponId });
-    else if (pk.item === 'apple') p.hp = Math.min(p.maxHp, p.hp + 3);
+    else if (pk.item === 'apple') p.hp = Math.min(p.maxHp, p.hp + (world.data.difficulty?.appleHeal ?? 3));
     else if (pk.item === 'suco') p.energy = Math.min(p.maxEnergy, p.energy + 90);
     else if (pk.item === 'broche') { p.maxShield += 1; p.shield += 1; }
     world.emit('buy', { playerId: p.id, x: pk.x, y: pk.y, item: pk.item });
@@ -164,7 +164,7 @@ export function interact(world, p, pk) {
     p.coins -= pk.price;
     pk.dead = true;
     if (pk.item === 'weapon') createPickup(world, 'weapon', pk.x, pk.y, { weaponId: pk.weaponId });
-    else if (pk.item === 'apple') p.hp = Math.min(p.maxHp, p.hp + 3);
+    else if (pk.item === 'apple') p.hp = Math.min(p.maxHp, p.hp + (world.data.difficulty?.appleHeal ?? 3));
     else if (pk.item === 'suco') p.energy = Math.min(p.maxEnergy, p.energy + 90);
     else if (pk.item === 'broche') { p.maxShield += 1; p.shield += 1; }
     world.emit('buy', { playerId: p.id, x: pk.x, y: pk.y, item: pk.item });

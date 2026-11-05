@@ -111,7 +111,7 @@ test('loja vende com moedas; estátua dá bênção uma vez', () => {
   p.coins = 50;
   interact(w, p, apple);
   assert.equal(p.coins, 50 - apple.price);
-  assert.equal(p.hp, 5);
+  assert.equal(p.hp, 2 + data.difficulty.appleHeal, 'maçã cura o valor do JSON (difficulty.appleHeal)');
   const statue = { kind: 'statue', blessing: 'sabedoria', price: 10, usedBy: [], x: p.x, y: p.y };
   interact(w, p, statue);
   assert.ok(Math.abs(p.mods.damageMul - 1.2) < 1e-9);
@@ -148,4 +148,15 @@ test('Samara: se as restrições zeram todos os pesos, ainda escolhe um ataque',
   boss.state = 'idle'; boss.phase = 1; boss.t = 0; boss.lastAttack = 'advertencia';
   assert.doesNotThrow(() => bossSamara(w, boss, 1 / 60, a));
   assert.ok(boss.lastAttack, 'escolheu ataque');
+});
+
+test('enfermaria cura só a fração da vida máxima definida em difficulty', () => {
+  const w = new World({ data, seed: 21, players: [{ id: 'p1', characterId: 'harilson' }] });
+  const p = w.players[0];
+  p.hp = 1;
+  const st = { kind: 'heal_station', used: false, x: p.x, y: p.y };
+  interact(w, p, st);
+  const esperado = Math.min(p.maxHp, 1 + Math.ceil(p.maxHp * data.difficulty.healStationFraction));
+  assert.equal(p.hp, esperado);
+  assert.ok(p.hp < p.maxHp || data.difficulty.healStationFraction >= 1);
 });

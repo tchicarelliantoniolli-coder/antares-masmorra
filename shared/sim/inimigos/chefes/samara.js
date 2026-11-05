@@ -70,6 +70,7 @@ function choose(world, b) {
   // Se as restrições zeraram tudo, volta aos pesos da fase (menos o último ataque); sem nada, advertência.
   if (!Object.values(pool).some((w) => w > 0)) {
     for (const k of Object.keys(base)) pool[k] = k === b.lastAttack ? 0 : base[k];
+    if (!free.length) pool.suspensao = 0; // sem jogador livre não dá para prender ninguém
     if (!Object.values(pool).some((w) => w > 0)) pool.advertencia = 1;
   }
   const atk = world.rng.weighted(pool);
