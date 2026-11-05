@@ -703,7 +703,7 @@ export class WorldRenderer {
     }
   }
 
-  /** Circuito (Vinícius): linhas elétricas entre inimigos ligados (mesmo id; online só há o aviso, então liga todos). */
+  /** Circuito (Vinícius): linhas elétricas entre inimigos ligados (mesmo id de grupo, igual offline e online). */
   drawCircuits(enemies, time) {
     const groups = new Map();
     for (const e of enemies) {

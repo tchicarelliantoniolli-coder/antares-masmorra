@@ -58,13 +58,13 @@ test('fire_ground machuca jogador a cada 0,6 s', () => {
 test('snapshot leva flags e affix do inimigo', () => {
   const { w, p } = arena();
   const e = createEnemy(w, 'caderno_zumbi', p.x + 100, p.y, -1, { spawnTime: 0 });
-  e.shielded = true; e.burrowed = true; e.status.confused = 2; e.linked = true; e.affix = 'veloz';
+  e.shielded = true; e.burrowed = true; e.status.confused = 2; e.linked = { until: w.time + 6, id: 7 }; e.affix = 'veloz';
   const s = decodeSnapshot(data, JSON.parse(JSON.stringify(serializeWorld(w))));
   const d = s.enemies.find((x) => x.id === e.id);
   assert.equal(d.shielded, true);
   assert.equal(d.burrowed, true);
   assert.ok(d.status.confused);
-  assert.equal(d.linked, true);
+  assert.deepEqual(d.linked, { id: 7 });
   assert.equal(d.affix, 'veloz');
   const e2 = createEnemy(w, 'caderno_zumbi', p.x - 100, p.y, -1, { spawnTime: 0 });
   const d2 = decodeSnapshot(data, JSON.parse(JSON.stringify(serializeWorld(w)))).enemies.find((x) => x.id === e2.id);

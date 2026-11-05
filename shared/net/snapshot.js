@@ -55,7 +55,7 @@ export function serializeWorld(world, acks = {}) {
       for (const k in STATUS) if (e.status[k] && (typeof e.status[k] !== 'number' || e.status[k] > 0)) st |= STATUS[k];
       return [e.id, e.type, r1(e.x), r1(e.y), Math.ceil(e.hp), e.maxHp, r1(e.spawning), e.facing, e.flash > 0 ? 1 : 0,
         e.state, st, e.phase || (e.phase2 ? 2 : 1), e.telegraph || 0, e.elite ? 1 : 0, e.minion ? 1 : 0, e.healTarget || 0, r1(e.r),
-        (e.shielded ? 1 : 0) | (e.burrowed ? 2 : 0) | (e.status.confused > 0 ? 4 : 0) | (e.linked ? 8 : 0), e.affix || 0];
+        (e.shielded ? 1 : 0) | (e.burrowed ? 2 : 0) | (e.status.confused > 0 ? 4 : 0) | (e.linked ? 8 : 0), e.affix || 0, e.linked ? e.linked.id : 0];
     }),
     proj: world.projectiles.filter((p) => !p.dead).map((p) => [p.id, p.team === 'player' ? 1 : 0, r1(p.x), r1(p.y), r1(p.vx), r1(p.vy), p.sprite, p.glyph || 0, p.spin || 0,
       r1(p.z || 0), p.lob ? [r1(p.lob.tx), r1(p.lob.ty)] : 0, r1(p.r)]),
@@ -91,11 +91,11 @@ const RADIUS = { energy: 4, coin: 4, health: 6, weapon: 10, chest: 14, heal_stat
 
 /** Converte um snapshot em objetos no formato que o renderizador entende. */
 export function decodeSnapshot(data, s) {
-  const enemies = s.enemies.map(([id, type, x, y, hp, maxHp, spawning, facing, flash, state, st, phase, telegraph, elite, minion, healTarget, r, flags, affix]) => ({
+  const enemies = s.enemies.map(([id, type, x, y, hp, maxHp, spawning, facing, flash, state, st, phase, telegraph, elite, minion, healTarget, r, flags, affix, linkId]) => ({
     id, type, def: data.enemy(type), x, y, hp, maxHp, spawning, facing, flash: flash ? 0.1 : 0, state,
     status: { burn: !!(st & 1), poison: !!(st & 2), slow: st & 4 ? 1 : 0, frozen: st & 8 ? 1 : 0, stun: st & 16 ? 1 : 0, confused: flags & 4 ? 1 : 0 },
     phase, phase2: phase >= 2, telegraph: telegraph || null, elite: !!elite, minion: !!minion, healTarget, r, dead: false,
-    shielded: !!(flags & 1), burrowed: !!(flags & 2), linked: !!(flags & 8), affix: affix || null
+    shielded: !!(flags & 1), burrowed: !!(flags & 2), linked: flags & 8 ? { id: linkId } : null, affix: affix || null
   }));
   const projectiles = s.proj.map(([id, team, x, y, vx, vy, sprite, glyph, spin, z, lobTarget, r]) => ({
     id, team: team ? 'player' : 'enemy', x, y, vx, vy, sprite, glyph: glyph || null, spin, age: 0, r: r || 5, z: z || 0, lobTarget: lobTarget || null

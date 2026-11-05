@@ -134,12 +134,21 @@ SCENARIOS['professores'] = async (browser) => {
   const lista = await page.evaluate(() => window.__game.registry.get('data').characterList.map((c) => c.id));
   for (const id of lista) {
     try { await startSolo(page, id); } catch (e) { errors.push(id + ': ' + e.message.split('\n')[0] + ' | ' + (await page.evaluate(() => window.__game.scene.getScenes(true).map((x) => x.scene.key).join(','))).toString()); break; }
+    // um alvo parado perto, para toda arma (inclusive de raio) ter o que atingir
+    await page.evaluate(async () => {
+      const { createEnemy } = await import('/shared/sim/inimigos/Enemy.js');
+      const w = window.__game.scene.getScene('Game').world, p = w.players[0];
+      const e = createEnemy(w, 'caderno_zumbi', p.x + 120, p.y, -1, { spawnTime: 0 });
+      e.hp = e.maxHp = 9999; e.cd = 999;
+      e.def = { ...e.def, behavior: 'none', contactDamage: 0, drops: {} };
+    });
     await clickGame(page, GAME_W / 2 + 200, GAME_H / 2);
     await page.keyboard.press('Space');
     await page.mouse.down();
     await page.waitForTimeout(1000);
     await page.mouse.up();
-    const r = await page.evaluate(() => { const w = window.__game.scene.getScene('Game').world; return { cd: w.players[0].skillCd }; });
+    const r = await page.evaluate(() => { const w = window.__game.scene.getScene('Game').world; return { shots: w.stats.shots, cd: w.players[0].skillCd }; });
+    if (!(r.shots > 0)) errors.push(id + ': nenhum tiro');
     if (!(r.cd > 0)) errors.push(id + ': habilidade não entrou em recarga');
   }
   if (lista.length !== 14) errors.push('esperava 14 professores, achei ' + lista.length);

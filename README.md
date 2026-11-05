@@ -100,19 +100,24 @@ sem acesso: a primeira visita demora cerca de 1 minuto e as salas abertas se per
   - Sinal do Recreio (anéis de som).
   - Mochila-Bomba (corre e explode).
   - **Inimigos de elite** (dourados, com o dobro de vida e mais tiros), mais comuns nos andares 2 e 3.
-- **6 professores jogáveis**, cada um com arma inicial, habilidade e passivo:
+- **14 professores jogáveis**, cada um com arma inicial, habilidade e passivo (detalhes na tela de seleção):
 
   | Professor | Matéria | Habilidade | Passivo |
   |---|---|---|---|
-  | Ana Cláudia | Redação | Nota Mil | +15% de crítico |
-  | Harilson | Matemática | Equação (próximo acerto x5) | Armas gastam −25% de energia |
-  | Filipe | Ed. Física | Pique (o time fica mais rápido e atira mais rápido) | +3 de vida |
-  | Jean Paulo | Física | Campo Gravitacional | Tiros empurram |
-  | Marina | Inglês | Grammar Shield (bolha que apaga balas no time todo) | Vogais dão crítico |
-  | Vivian | Biologia | Planta Carnívora (torreta) | Regenera vida |
-
-  Os outros 8 também estão liberados: no total são 14 professores jogáveis,
-  cada um com arma inicial, habilidade e passivo próprios (detalhe na tela de seleção).
+  | Ana Cláudia | Redação | Nota Mil | Caneta Vermelha |
+  | Andréia | Inglês | Translate | Bilíngue |
+  | Felipe | História | Exército Histórico | Estrategista |
+  | Filipe | Educação Física | Pique | Condicionamento Físico |
+  | Gabriela P. | Artes | Obra-Prima | Paleta Viva |
+  | Gabriela S. | História | Linha do Tempo | Memória Histórica |
+  | Harilson | Matemática | Equação | Cálculo Mental |
+  | Jean Paulo | Física | Campo Gravitacional | Inércia |
+  | Marina | Inglês | Grammar Shield | Spelling Bee |
+  | Rosana | Ciências | Reação em Cadeia | Imunidade |
+  | Tatiane | Gramática e Literatura | Clássicos Vivos | Leitura Dinâmica |
+  | Vinícius | Física | Circuito | Alta Voltagem |
+  | Vivian | Biologia | Planta Carnívora | Metabolismo |
+  | William | Geografia | Terremoto / Vulcão | Cartógrafo |
 - **53 armas** em `shared/data/weapons.json`, com 5 raridades. Cada arma tem uma mecânica (`mode`):
   - tiro normal, rajada, carregar (segure e solte), aquecimento (acelera enquanto segura);
   - laser contínuo, lança-chamas, raio em cadeia;
@@ -166,15 +171,6 @@ docs/ARMAS.md           como criar armas novas pelo JSON
 
 ## O que falta
 
-- Liberar os 8 professores restantes, com habilidades e aliados:
-  - Andréia: Translate.
-  - Felipe: Exército Histórico.
-  - Gabriela P.: Obra-Prima.
-  - Gabriela S.: Linha do Tempo.
-  - Rosana: Reação em Cadeia.
-  - Tatiane: Clássicos Vivos.
-  - Vinícius: Circuito.
-  - William: Terremoto.
 - Mesa de laboratório (forja: combinar 2 armas) e itens passivos.
 - Reconectar no meio de uma partida online; hoje quem cai da conexão sai da partida.
 - Testar com controle de verdade e com pessoas jogando, para afinar o balanceamento (hoje foi calibrado com bots).

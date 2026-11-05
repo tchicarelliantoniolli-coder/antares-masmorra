@@ -8,8 +8,8 @@ const CARD_W = 120, CARD_H = 124, GAP = 9;
 
 /**
  * Seleção de personagem com cards (nome, matéria, arma inicial, habilidade e passivo).
- * No modo solo da Etapa 1, só os personagens marcados como "playable" podem ser escolhidos.
- * (No lobby online da Etapa 2, cada professor só poderá ser escolhido por um jogador.)
+ * Todos os 14 professores estão liberados (`playable` em characters.json).
+ * (No lobby online, cada professor só pode ser escolhido por um jogador.)
  */
 export class CharacterSelectScene extends Phaser.Scene {
   constructor() { super('CharacterSelect'); }

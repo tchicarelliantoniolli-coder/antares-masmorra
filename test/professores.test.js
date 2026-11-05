@@ -390,6 +390,7 @@ test('todos os 14 são jogáveis e têm habilidade implementada', () => {
     dummy(w, p.x + 120, p.y, 200);
     dummy(w, p.x - 90, p.y + 40, 200);
     run(w, 0.1, { p1: { aim: 0, fire: true, skill: true } });
+    assert.ok(p.skillCd > 0, c.id + ': habilidade entrou em recarga');
     run(w, 1, { p1: { aim: 0, fire: true } });
   }
 });
@@ -401,4 +402,15 @@ test('snapshot leva quakeNext e chainReaction', () => {
   const sp = decodeSnapshot(w.data, JSON.parse(JSON.stringify(serializeWorld(w)))).players[0];
   assert.equal(sp.buffs.quakeNext, 'vulcao');
   assert.equal(sp.buffs.chainReaction, 4);
+});
+
+test('snapshot leva o id do grupo do Circuito (online agrupa igual ao offline)', () => {
+  const { w, p } = arena();
+  const a = dummy(w, p.x + 50, p.y, 100), b = dummy(w, p.x + 80, p.y, 100), c = dummy(w, p.x - 80, p.y, 100);
+  a.linked = { until: w.time + 6, id: 41 }; b.linked = { until: w.time + 6, id: 41 }; c.linked = { until: w.time + 6, id: 42 };
+  const d = decodeSnapshot(w.data, JSON.parse(JSON.stringify(serializeWorld(w))));
+  const por = new Map(d.enemies.map((e) => [e.id, e]));
+  assert.equal(por.get(a.id).linked.id, 41);
+  assert.equal(por.get(b.id).linked.id, 41);
+  assert.equal(por.get(c.id).linked.id, 42);
 });
