@@ -17,7 +17,7 @@ export class OnlineSession {
     this.localPlayerIds = [this.myId];
     this.world = {
       ...buildMirrorMap(data, startMsg),
-      players: [], enemies: [], projectiles: [], pickups: [], areas: [], allies: [],
+      players: [], enemies: [], projectiles: [], pickups: [], areas: [], allies: [], beams: [],
       boss: null, state: 'playing', endTimer: 0, stats: {}, time: 0,
       getPlayer(id) { return this.players.find((p) => p.id === id); },
       alivePlayers() { return this.players.filter((p) => !p.downed && !p.dead); }
@@ -142,6 +142,7 @@ export class OnlineSession {
     w.allies = lerpList(a.allies, b.allies);
     w.pickups = lerpList(a.pickups, b.pickups);
     w.areas = latest.areas;
+    w.beams = latest.beams || [];
     w.time = this.renderT;
     const players = lerpList(a.players, b.players);
     // o jogador local usa os dados mais novos (HUD responde na hora) e a posição prevista
@@ -155,7 +156,7 @@ export class OnlineSession {
     // 4) previsão do movimento do jogador local
     const me = latest.players.find((p) => p.id === this.myId);
     if (!me) return;
-    if (!this.pred || me.downed || me.dead || me.jailTimer > 0 || me.pulling) {
+    if (!this.pred || me.downed || me.dead || me.jailTimer > 0 || me.pulling || me.dash) {
       this.pred = { x: me._x, y: me._y, r: me.r };
       this.history = [];
     } else {
@@ -163,6 +164,7 @@ export class OnlineSession {
       if (me.buffs.hasteTimer > 0) speed *= 1.6;
       if (me.slowTimer > 0) speed *= 0.55;
       if (me.signing > 0) speed *= 0.5;
+      if (me.wstate?.shielding) speed *= this.data.weapon(me.weapons[me.cur]).melee?.shield?.speedMul ?? 1;
       let mx = this.input.moveX || 0, my = this.input.moveY || 0;
       const ml = Math.hypot(mx, my);
       if (ml > 1) { mx /= ml; my /= ml; }
@@ -182,6 +184,9 @@ export class OnlineSession {
       }
     }
     this.newSnap = null;
+    // o raio do próprio jogador sai da posição prevista (senão fica atrasado em relação ao boneco)
+    const ox = this.pred.x - me._x, oy = this.pred.y - me._y;
+    w.beams = w.beams.map((b) => (b.ownerId === this.myId ? { ...b, x1: b.x1 + ox, y1: b.y1 + oy, x2: b.x2 + ox, y2: b.y2 + oy } : b));
     me.x = this.pred.x;
     me.y = this.pred.y;
     me.aim = this.input.aim;

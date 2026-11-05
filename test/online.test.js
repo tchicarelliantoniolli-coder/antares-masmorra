@@ -78,3 +78,43 @@ test('aimDist vindo da rede é sanitizado', () => {
   assert.equal(sanitizeInput({ aimDist: 1e9 }).aimDist, MAX_AIM_DIST);
   assert.equal(sanitizeInput({ aimDist: 'x' }).aimDist, DEFAULT_AIM_DIST);
 });
+
+import { withWeapon } from './helpers.js';
+
+test('snapshot leva raio, carga, arremesso e mina', () => {
+  const mgr = new RoomManager(data, { autoTick: false });
+  const a = fakeConn();
+  const r = mgr.create(a, 'Ana');
+  const room = r.room;
+  room.setReady(r.playerId, true);
+  const w = room.world;
+  const p = w.getPlayer(r.playerId);
+  p.energy = p.maxEnergy = 9999;
+  const tick = (n, inp) => { room.input(r.playerId, inp, 1); for (let i = 0; i < n; i++) room.tick(); return decodeSnapshot(data, a.last('game:snap')); };
+
+  withWeapon(w, { mode: 'beam', beam: { energyPerSec: 0 } }, p);
+  let s = tick(6, { fire: true, aim: 0, aimDist: 100 });
+  assert.equal(s.beams.length, 1);
+  assert.equal(s.beams[0].ownerId, r.playerId);
+  assert.ok(typeof s.beams[0].x2 === 'number');
+
+  withWeapon(w, { mode: 'charge' }, p);
+  s = tick(30, { fire: true, aim: 0 });
+  assert.ok(s.players[0].wstate.charge > 0);
+  assert.equal(s.beams.length, 0);
+
+  withWeapon(w, { mode: 'lob', fireRate: 1, lob: { flightTime: 2 } }, p);
+  tick(3, { fire: false, aim: 0 });
+  s = tick(12, { fire: true, aim: 0, aimDist: 150 });
+  const lobbed = s.projectiles.find((q) => q.z > 0);
+  assert.ok(lobbed, 'arremesso com altura');
+  assert.ok(Array.isArray(lobbed.lobTarget));
+
+  withWeapon(w, { mode: 'deploy', fireRate: 1, deploy: { kind: 'mine' } }, p);
+  tick(3, { fire: false, aim: 0 });
+  s = tick(100, { fire: true, aim: 0, aimDist: 50 }); // espera a recarga do arremesso (1 s) e a mina armar
+  const mine = s.allies.find((x) => x.kind === 'mine');
+  assert.ok(mine);
+  assert.equal(mine.ownerId, r.playerId);
+  assert.equal(mine.armed, true);
+});
