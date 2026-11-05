@@ -11,7 +11,7 @@ const MELEE_DEFAULTS = { range: 50, arc: 110, knockback: 150, deflect: false, re
 
 const REQUIRED_WEAPON_FIELDS = ['id', 'name', 'category', 'rarity', 'type', 'damage', 'fireRate', 'energyCost', 'critChance', 'inaccuracy'];
 const WEAPON_TYPES = ['ranged', 'melee'];
-const EFFECT_TYPES = ['fogo', 'gelo', 'veneno', 'choque'];
+const EFFECT_TYPES = ['fogo', 'gelo', 'veneno', 'choque', 'atordoar'];
 
 /** Valida o JSON de armas e devolve uma lista de erros (vazia = tudo certo). */
 export function validateWeapons(json) {

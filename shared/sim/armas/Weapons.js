@@ -1,6 +1,8 @@
 import { DEG, angleDiff } from '../math.js';
 import { spawnProjectile } from './Projectiles.js';
 import { damageEnemy } from '../combat.js';
+import { damageProp } from '../salas/Props.js';
+import { TILE, T } from '../constants.js';
 
 /** Custo de energia real (com passivos). */
 export function energyCost(p, w) {
@@ -40,6 +42,7 @@ export function fireWeapon(world, p) {
       if (pr.glyphs) {
         glyph = [...pr.glyphs][world.rng.int(0, [...pr.glyphs].length - 1)];
         if (pr.glyphBonus?.[glyph]) damage *= pr.glyphBonus[glyph];
+        if (p.mods.vowelCrit && 'AEIOU'.includes(glyph)) crit = true; // passivo Spelling Bee (Marina)
       }
       spawnProjectile(world, {
         team: 'player', owner: p,
@@ -55,6 +58,7 @@ export function fireWeapon(world, p) {
       });
     }
   }
+  if (p.mods.doubleShot && w.type !== 'melee' && world.rng.chance(p.mods.doubleShot)) p.fireCd *= 0.35;
   world.emit('shoot', { playerId: p.id, weaponId: w.id, category: w.category, wtype: w.type, x: p.x, y: p.y, angle: p.aim });
   return true;
 }
@@ -77,6 +81,18 @@ function meleeSwing(world, p, w, critChance) {
       crit: world.rng.chance(critChance), source: p, effect: w.effect,
       knockback: m.knockback, angle: a
     });
+  }
+  // caixas e barris no alcance do golpe
+  const map = world.map;
+  const tr = Math.ceil(reach / TILE) + 1;
+  const ptx = Math.floor(p.x / TILE), pty = Math.floor(p.y / TILE);
+  for (let ty = pty - tr; ty <= pty + tr; ty++) for (let tx = ptx - tr; tx <= ptx + tr; tx++) {
+    if (map.get(tx, ty) !== T.PROP) continue;
+    const cx = (tx + 0.5) * TILE, cy = (ty + 0.5) * TILE;
+    const d = Math.hypot(cx - p.x, cy - p.y);
+    if (d > reach + 16) continue;
+    if (d > 24 && Math.abs(angleDiff(p.aim, Math.atan2(cy - p.y, cx - p.x))) > (m.arc / 2) * DEG) continue;
+    damageProp(world, tx, ty, w.damage);
   }
   if (m.deflect) {
     for (const q of world.projectiles) {

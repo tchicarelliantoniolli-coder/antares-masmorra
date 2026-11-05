@@ -1,6 +1,6 @@
 import { TILE, T, SPAWN_TIME } from '../constants.js';
 import { createEnemy } from '../inimigos/Enemy.js';
-import { createPickup, dropEnergy } from './Pickups.js';
+import { createPickup, dropEnergy, BLESSINGS, SHOP_PRICES } from './Pickups.js';
 
 /** Coloca baús, enfermarias e placas nas salas especiais. */
 export function setupRoomContents(world) {
@@ -8,7 +8,32 @@ export function setupRoomContents(world) {
     const cx = (r.cx + 0.5) * TILE, cy = (r.cy + 0.5) * TILE;
     if (r.type === 'chest') createPickup(world, 'chest', cx, cy, { roomId: r.id });
     if (r.type === 'heal') createPickup(world, 'heal_station', cx, cy, { roomId: r.id });
+    if (r.type === 'shop') setupShop(world, r);
+    if (r.type === 'statue') {
+      const blessing = world.rng.pick(Object.keys(BLESSINGS));
+      createPickup(world, 'statue', cx, cy, { roomId: r.id, blessing, price: 12 + 6 * world.floorNum, usedBy: [] });
+    }
   }
+}
+
+/** Cantina: a "tia da cantina" vende armas, maçãs, suco e broches. */
+function setupShop(world, r) {
+  const y = (r.cy + 1.5) * TILE;
+  createPickup(world, 'npc', (r.cx + 0.5) * TILE, (r.y0 + 2.2) * TILE, { npc: 'cantineira' });
+  for (let x = r.cx - 5; x <= r.cx + 5; x++) world.map.set(x, r.y0 + 3, T.OBSTACLE); // balcão
+  const mult = 1 + 0.25 * (world.floorNum - 1);
+  const weights = { comum: 10, incomum: 35, rara: 35, epica: 15, lendaria: 5 };
+  const items = [];
+  for (let i = 0; i < 2; i++) {
+    const weaponId = world.data.rollWeapon(world.rng, weights);
+    const w = world.data.weapon(weaponId);
+    items.push({ item: 'weapon', weaponId, price: Math.round(SHOP_PRICES[w.rarity] * mult) });
+  }
+  items.push({ item: 'apple', price: 8 });
+  items.push({ item: world.rng.chance(0.5) ? 'suco' : 'broche', price: 10 });
+  items.forEach((it, i) => {
+    createPickup(world, 'shop_item', (r.cx + 0.5 - 4.5 + i * 3) * TILE, y, { roomId: r.id, ...it });
+  });
 }
 
 /** Ponto está completamente dentro da sala (além da linha das portas)? */
@@ -107,7 +132,8 @@ function spawnWave(world, room, index) {
       best = [x, y];
       if (!near) break;
     }
-    createEnemy(world, type, best[0], best[1], room.id, { spawnTime: SPAWN_TIME });
+    const elite = world.rng.chance(world.floorDef.eliteChance || 0);
+    createEnemy(world, type, best[0], best[1], room.id, { spawnTime: SPAWN_TIME, elite });
   }
   world.emit('wave_start', { roomId: room.id, wave: index + 1, total: room.waves.length });
 }
@@ -128,10 +154,20 @@ function clearRoom(world, room) {
   world.map.locked.delete(room.id);
   world.stats.roomsCleared++;
   world.emit('room_clear', { roomId: room.id });
-  // recompensa pequena
-  const cx = (room.cx + 0.5) * TILE, cy = (room.cy + 0.5) * TILE;
+  // recompensa pequena (no chão livre mais perto do centro)
+  const [ftx, fty] = nearestFreeTile(world, room.cx, room.cy);
+  const cx = (ftx + 0.5) * TILE, cy = (fty + 0.5) * TILE;
   if (room.type === 'combat') {
     dropEnergy(world, cx, cy, world.rng.int(3, 6));
     if (world.rng.chance(0.25)) createPickup(world, 'health', cx + 10, cy, {});
   }
+}
+
+export function nearestFreeTile(world, cx, cy) {
+  for (let r = 0; r < 8; r++) {
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (world.map.get(cx + dx, cy + dy) === T.FLOOR) return [cx + dx, cy + dy];
+    }
+  }
+  return [cx, cy];
 }

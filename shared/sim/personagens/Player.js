@@ -31,9 +31,13 @@ export function createPlayer(world, { id, characterId, name, slot = 0 }) {
     roomId: -1,
     coins: 0, kills: 0, damageDealt: 0, damageTaken: 0,
     mods: { critBonus: 0, energyCostMul: 1, damageMul: 1, fireRateMul: 1, speedMul: 1, knockback: 0, skillCdMul: 1, regen: 0 },
-    buffs: { nextHitMul: 1, nextHitTimer: 0, hasteTimer: 0 },
+    buffs: { nextHitMul: 1, nextHitTimer: 0, hasteTimer: 0, bubbleTimer: 0 },
     regenTimer: 0,
-    interactTarget: null
+    interactTarget: null,
+    blessings: [],
+    jailTimer: 0, jailFrom: null,   // Suspensão (Samara)
+    signing: 0, signFree: 0,        // Caderno Preto (Samara)
+    pull: null                      // Conversa Particular (Katia)
   };
   applyPassive(p, c.passive?.id);
   return p;
@@ -49,10 +53,49 @@ export function updatePlayers(world, dt, inputs) {
 function updatePlayer(world, p, inp, dt) {
   if (p.dead) return;
   p.invuln = Math.max(0, p.invuln - dt);
+  p.skillCd = Math.max(0, p.skillCd - dt);
+  if (p.buffs.bubbleTimer > 0) p.buffs.bubbleTimer -= dt;
+  if (p.buffs.hasteTimer > 0) p.buffs.hasteTimer -= dt;
   if (p.downed) {
     updateRevive(world, p, dt);
     return;
   }
+  if (typeof inp.aim === 'number' && !Number.isNaN(inp.aim)) p.aim = inp.aim;
+
+  // Suspensão: preso na cela, fora da luta
+  if (p.jailTimer > 0) {
+    p.moving = false;
+    p.jailTimer -= dt;
+    if (p.jailTimer <= 0) {
+      p.jailTimer = 0;
+      if (p.jailFrom) { p.x = p.jailFrom.x; p.y = p.jailFrom.y; p.jailFrom = null; }
+      p.invuln = 1;
+      world.emit('jail_free', { id: p.id, x: p.x, y: p.y });
+    }
+    return;
+  }
+  // Conversa Particular: é puxado até a orientadora
+  if (p.pull) {
+    p.moving = true;
+    const d = Math.hypot(p.pull.x - p.x, p.pull.y - p.y);
+    const step = Math.min(d, 560 * dt);
+    if (d > 1) world.map.moveBox(p, ((p.pull.x - p.x) / d) * step, ((p.pull.y - p.y) / d) * step);
+    p.pull.t -= dt;
+    if (p.pull.t <= 0 || d < 4) p.pull = null;
+    return;
+  }
+  // Caderno Preto: "assinando" — não pode atacar (anda devagar) até acabar ou um colega ajudar
+  if (p.signing > 0) {
+    p.signing -= dt;
+    const helper = world.players.find((q) => q !== p && !q.downed && !q.dead && !(q.signing > 0) && Math.hypot(q.x - p.x, q.y - p.y) < REVIVE_RADIUS);
+    if (helper) p.signFree += dt;
+    if (p.signFree >= 1 || p.signing <= 0) {
+      p.signing = 0;
+      p.signFree = 0;
+      world.emit('sign_free', { id: p.id, x: p.x, y: p.y, by: helper?.id });
+    }
+  }
+  const signing = p.signing > 0;
 
   // Movimento
   let mx = inp.moveX || 0, my = inp.moveY || 0;
@@ -62,14 +105,13 @@ function updatePlayer(world, p, inp, dt) {
   let speed = p.speed * p.mods.speedMul;
   if (p.buffs.hasteTimer > 0) speed *= 1.6;
   if (p.slowTimer > 0) { speed *= 0.55; p.slowTimer -= dt; }
+  if (signing) speed *= 0.5;
   p.vx = mx * speed;
   p.vy = my * speed;
   world.map.moveBox(p, p.vx * dt, p.vy * dt);
 
-  if (typeof inp.aim === 'number' && !Number.isNaN(inp.aim)) p.aim = inp.aim;
-
   // Troca de arma (Q)
-  if (inp.swap && p.weapons.length > 1) {
+  if (inp.swap && p.weapons.length > 1 && !signing) {
     p.cur = (p.cur + 1) % p.weapons.length;
     p.fireCd = Math.max(p.fireCd, 0.12);
     world.emit('weapon_swap', { playerId: p.id, weaponId: p.weapons[p.cur] });
@@ -78,11 +120,10 @@ function updatePlayer(world, p, inp, dt) {
   // Tiro
   p.fireCd -= dt;
   p.noEnergyCd -= dt;
-  if (inp.fire && p.fireCd <= 0) fireWeapon(world, p);
+  if (inp.fire && p.fireCd <= 0 && !signing) fireWeapon(world, p);
 
   // Habilidade (Espaço)
-  p.skillCd = Math.max(0, p.skillCd - dt);
-  if (inp.skill) {
+  if (inp.skill && !signing) {
     if (p.skillCd <= 0) {
       if (castSkill(world, p)) p.skillCd = p.skillCooldown * p.mods.skillCdMul;
     } else {
@@ -92,15 +133,13 @@ function updatePlayer(world, p, inp, dt) {
 
   // Interação (E)
   p.interactTarget = findInteractable(world, p);
-  if (inp.interact && p.interactTarget) interact(world, p, p.interactTarget);
+  if (inp.interact && p.interactTarget && !signing) interact(world, p, p.interactTarget);
 
   // Buffs
   if (p.buffs.nextHitTimer > 0) {
     p.buffs.nextHitTimer -= dt;
     if (p.buffs.nextHitTimer <= 0) p.buffs.nextHitMul = 1;
   }
-  if (p.buffs.hasteTimer > 0) p.buffs.hasteTimer -= dt;
-
   // Escudo regenera depois de alguns segundos sem levar dano
   p.shieldDelay += dt;
   if (p.shieldDelay >= SHIELD_REGEN_DELAY && p.shield < p.maxShield) {

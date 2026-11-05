@@ -10,8 +10,18 @@ export function makeWorld(opts = {}) {
 
 /** Coloca o jogador no centro de uma sala. */
 export function putInRoom(world, p, room) {
-  p.x = (room.cx + 0.5) * TILE;
-  p.y = (room.cy + 0.5) * TILE;
+  const [tx, ty] = nearestFree(world, room.cx, room.cy);
+  p.x = (tx + 0.5) * TILE;
+  p.y = (ty + 0.5) * TILE;
+}
+
+export function nearestFree(world, cx, cy) {
+  for (let r = 0; r < 6; r++) {
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (world.map.get(cx + dx, cy + dy) === 1) return [cx + dx, cy + dy];
+    }
+  }
+  return [cx, cy];
 }
 
 export function run(world, seconds, inputs = {}) {

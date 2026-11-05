@@ -1,13 +1,24 @@
 import { GAME_W, GAME_H, COLORS, textStyle, titleStyle } from '../config.js';
 import { THEME_LABELS } from '/shared/sim/constants.js';
 import { energyCost } from '/shared/sim/armas/Weapons.js';
+import { BLESSINGS } from '/shared/sim/salas/Pickups.js';
 import { hexToInt } from '../render/pixel.js';
 import { WeaponCard } from '../ui/WeaponCard.js';
 import { drawMinimap } from '../ui/Minimap.js';
 
-const SKILL_ICON = { nota_mil: '1000', equacao: '×5' };
+const SKILL_ICON = {
+  nota_mil: '1000', equacao: '×5', pique: 'PIQ', campo_gravitacional: 'G', planta_carnivora: 'PLT', grammar_shield: 'ABC'
+};
+const DEVICE_KEYS = {
+  auto: { interact: 'E' }, kbm: { interact: 'E' }, kb2: { interact: '.' },
+  pad0: { interact: 'A' }, pad1: { interact: 'A' }, pad2: { interact: 'A' }, pad3: { interact: 'A' }
+};
 
-/** HUD: vida/escudo/energia, armas, habilidade, minimapa, barra do chefe, avisos e card de arma. */
+/**
+ * HUD. Com 1 jogador local: painel completo (vida/escudo/energia, 2 armas, habilidade) + painéis menores
+ * dos colegas (online). Com vários jogadores locais (co-op): um painel compacto para cada um.
+ * Sempre: minimapa, barra do chefe, avisos, card de arma e mensagens de interação.
+ */
 export class HudScene extends Phaser.Scene {
   constructor() { super('Hud'); }
 
@@ -19,34 +30,15 @@ export class HudScene extends Phaser.Scene {
   create() {
     const data = this.registry.get('data');
     this.data_ = data;
-    const world = this.gameScene.world;
-    const p = world.getPlayer(this.gameScene.localId);
-    const c = data.character(p.charId);
-
-    // painel de status
+    const gs = this.gameScene;
+    this.localIds = gs.localIds;
+    this.multiLocal = this.localIds.length > 1;
+    const world = gs.world;
     this.g = this.add.graphics();
-    this.add.image(30, 34, 'char_' + p.charId, 0).setScale(1.6);
-    this.add.text(8, 66, c.shortName, textStyle(16, c.color));
-    this.add.image(64, 18, 'icon_heart');
-    this.add.image(64, 38, 'icon_shield');
-    this.add.image(64, 58, 'icon_energy');
-    this.hpText = this.add.text(150, 18, '', textStyle(18)).setOrigin(0.5);
-    this.shText = this.add.text(150, 38, '', textStyle(18)).setOrigin(0.5);
-    this.enText = this.add.text(150, 58, '', textStyle(18)).setOrigin(0.5);
-    this.add.image(14, 96, 'icon_coin').setScale(1.4);
-    this.coinText = this.add.text(26, 87, '0', textStyle(20, '#f2c94c'));
+    this.texts = [];
 
-    // armas
-    this.wpIcon = this.add.image(GAME_W - 202, GAME_H - 38, 'px').setScale(2);
-    this.wpName = this.add.text(GAME_W - 170, GAME_H - 66, '', textStyle(18, '#ffffff', { wordWrap: { width: 160 }, lineSpacing: -4 }));
-    this.wpCost = this.add.text(GAME_W - 170, GAME_H - 28, '', textStyle(17, '#7fb8ff'));
-    this.wp2Icon = this.add.image(GAME_W - 265, GAME_H - 36, 'px').setScale(1.2);
-    this.wp2Key = this.add.text(GAME_W - 288, GAME_H - 62, 'Q', titleStyle(8, '#ffd23f'));
-
-    // habilidade
-    this.skillIcon = this.add.text(GAME_W - 334, GAME_H - 36, SKILL_ICON[p.skillId] || c.skill.name.slice(0, 2), titleStyle(9, '#ffffff')).setOrigin(0.5);
-    this.add.text(GAME_W - 334, GAME_H - 8, 'ESPAÇO', textStyle(14, '#a39cc0')).setOrigin(0.5);
-    this.skillCdText = this.add.text(GAME_W - 334, GAME_H - 36, '', titleStyle(10, '#ffffff', { stroke: '#000', strokeThickness: 3 })).setOrigin(0.5);
+    this.full = false;
+    this.compact = new Map(); // id do jogador -> objetos do painel compacto
 
     // minimapa
     this.mm = this.add.graphics();
@@ -60,7 +52,8 @@ export class HudScene extends Phaser.Scene {
 
     // interação
     this.prompt = this.add.text(GAME_W / 2, GAME_H - 96, '', textStyle(22, '#ffffff', { stroke: '#000', strokeThickness: 4, backgroundColor: '#1d1a2bcc', padding: { x: 8, y: 2 } })).setOrigin(0.5);
-    this.card = new WeaponCard(this, data);
+    this.headPrompts = new Map();
+    this.cards = new Map(this.localIds.map((id) => [id, new WeaponCard(this, data)]));
 
     // avisos
     this.bannerTitle = this.add.text(GAME_W / 2, 150, '', titleStyle(20, '#ffd23f', { stroke: '#1b1424', strokeThickness: 8, align: 'center' })).setOrigin(0.5).setAlpha(0);
@@ -68,7 +61,81 @@ export class HudScene extends Phaser.Scene {
     this.toastText = this.add.text(GAME_W / 2, 110, '', textStyle(24, '#bfffd0', { stroke: '#1b1424', strokeThickness: 5 })).setOrigin(0.5).setAlpha(0);
     this.vignette = this.add.rectangle(0, 0, GAME_W, GAME_H, 0xff0000, 0).setOrigin(0);
     this.lowHp = this.add.graphics();
+    if (gs.mode === 'online') {
+      this.netText = this.add.text(8, GAME_H - 20, '', textStyle(16, '#8a83ad'));
+    }
     this.ready = true;
+  }
+
+  // ------------------------------------------------------------------ painel completo (1 jogador local)
+  buildFullPanel(p) {
+    const c = this.data_.character(p.charId);
+    this.add.image(30, 34, 'char_' + p.charId, 0).setScale(1.6);
+    this.add.text(8, 66, c.shortName, textStyle(16, c.color));
+    this.add.image(64, 18, 'icon_heart');
+    this.add.image(64, 38, 'icon_shield');
+    this.add.image(64, 58, 'icon_energy');
+    this.hpText = this.add.text(150, 18, '', textStyle(18)).setOrigin(0.5);
+    this.shText = this.add.text(150, 38, '', textStyle(18)).setOrigin(0.5);
+    this.enText = this.add.text(150, 58, '', textStyle(18)).setOrigin(0.5);
+    this.add.image(14, 96, 'icon_coin').setScale(1.4);
+    this.coinText = this.add.text(26, 87, '0', textStyle(20, '#f2c94c'));
+    this.blessText = this.add.text(60, 87, '', textStyle(16, '#ffd23f'));
+
+    this.wpIcon = this.add.image(GAME_W - 202, GAME_H - 38, 'px').setScale(2);
+    this.wpName = this.add.text(GAME_W - 170, GAME_H - 66, '', textStyle(18, '#ffffff', { wordWrap: { width: 160 }, lineSpacing: -4 }));
+    this.wpCost = this.add.text(GAME_W - 170, GAME_H - 28, '', textStyle(17, '#7fb8ff'));
+    this.wp2Icon = this.add.image(GAME_W - 265, GAME_H - 36, 'px').setScale(1.2);
+    this.wp2Key = this.add.text(GAME_W - 288, GAME_H - 62, 'Q', titleStyle(8, '#ffd23f'));
+
+    this.skillIcon = this.add.text(GAME_W - 334, GAME_H - 36, SKILL_ICON[p.skillId] || c.skill.name.slice(0, 2), titleStyle(9, '#ffffff')).setOrigin(0.5);
+    this.add.text(GAME_W - 334, GAME_H - 8, 'ESPAÇO', textStyle(14, '#a39cc0')).setOrigin(0.5);
+    this.skillCdText = this.add.text(GAME_W - 334, GAME_H - 36, '', titleStyle(10, '#ffffff', { stroke: '#000', strokeThickness: 3 })).setOrigin(0.5);
+    this.full = true;
+  }
+
+  // ------------------------------------------------------------------ painel compacto
+  compactPanel(p, x, y) {
+    let o = this.compact.get(p.id);
+    if (!o) {
+      const c = this.data_.character(p.charId);
+      o = {
+        portrait: this.add.image(x + 18, y + 22, 'char_' + p.charId, 0).setScale(1.1),
+        name: this.add.text(x + 38, y + 2, p.name, textStyle(16, c.color)),
+        wp: this.add.image(x + 190, y + 34, 'px'),
+        skill: this.add.text(x + 190, y + 12, SKILL_ICON[p.skillId] || '', titleStyle(6, '#ffffff')).setOrigin(0.5),
+        status: this.add.text(x + 38, y + 40, '', textStyle(14, '#ff8a8a')),
+        coins: this.add.text(x + 150, y + 2, '', textStyle(16, '#f2c94c')),
+        x, y
+      };
+      this.compact.set(p.id, o);
+    }
+    const g = this.g;
+    const { x: px0, y: py0 } = o;
+    g.fillStyle(0x000000, 0.35).fillRect(px0 + 3, py0 + 3, 220, 56);
+    g.fillStyle(COLORS.panel, 0.85).fillRect(px0, py0, 220, 56);
+    g.lineStyle(2, this.localIds.includes(p.id) ? COLORS.gold : COLORS.border, 1).strokeRect(px0 + 1, py0 + 1, 218, 54);
+    const bar = (yy, val, max, color) => {
+      g.fillStyle(0x0d0b14, 1).fillRect(px0 + 38, py0 + yy, 120, 6);
+      g.fillStyle(color, 1).fillRect(px0 + 38, py0 + yy, Math.round(120 * Math.max(0, val) / max), 6);
+    };
+    bar(20, p.hp, p.maxHp, COLORS.hp);
+    bar(28, p.shield, p.maxShield, COLORS.shield);
+    bar(36, p.energy, p.maxEnergy, COLORS.energy);
+    o.portrait.setTint(p.downed || p.dead ? 0x666688 : 0xffffff);
+    o.wp.setTexture('wpn_' + p.weapons[p.cur]);
+    o.coins.setText(p.coins + '●');
+    o.status.setText(p.dead ? 'saiu' : p.downed ? 'CAÍDO' : p.jailTimer > 0 ? 'SUSPENSO' : p.signing > 0 ? 'assinando' : '');
+    // habilidade
+    const sx = px0 + 190, sy = py0 + 12;
+    const readyS = p.skillCd <= 0;
+    g.fillStyle(readyS ? 0x6b4fd8 : 0x2a2540, 1).fillCircle(sx, sy, 10);
+    if (!readyS) {
+      const frac = p.skillCd / (p.skillCooldown * (p.mods.skillCdMul || 1));
+      g.fillStyle(0x0d0b14, 0.75);
+      g.slice(sx, sy, 10, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2, false).fillPath();
+    }
+    g.lineStyle(1, readyS ? COLORS.gold : COLORS.border, 1).strokeCircle(sx, sy, 10);
   }
 
   flashDamage(shieldOnly) {
@@ -101,7 +168,23 @@ export class HudScene extends Phaser.Scene {
     this.toastText.setText(text);
     this.tweens.killTweensOf(this.toastText);
     this.toastText.setAlpha(1).setY(110);
-    this.tweens.add({ targets: this.toastText, alpha: 0, y: 96, delay: 900, duration: 500 });
+    this.tweens.add({ targets: this.toastText, alpha: 0, y: 96, delay: 1100, duration: 500 });
+  }
+
+  promptFor(world, p, tgt, key) {
+    if (!tgt) return '';
+    const k = `[${key}]`;
+    switch (tgt.kind) {
+      case 'chest': return `${k} Abrir o baú`;
+      case 'heal_station': return `${k} Enfermaria: curar o time`;
+      case 'portal': return world.floorNum >= world.maxFloors ? `${k} Entrar no portal (vencer!)` : `${k} Portal para o Andar ${world.floorNum + 1}`;
+      case 'shop_item': {
+        const name = tgt.item === 'weapon' ? this.data_.weapon(tgt.weaponId).name : tgt.item === 'apple' ? 'Maçã (+3 vida)' : tgt.item === 'suco' ? 'Suco (+90 energia)' : 'Broche (+1 escudo máx.)';
+        return `${k} Comprar ${name} por ${tgt.price} moedas (você tem ${p.coins})`;
+      }
+      case 'statue': return `${k} ${BLESSINGS[tgt.blessing]?.name}: ${BLESSINGS[tgt.blessing]?.desc} — ${tgt.price} moedas`;
+      default: return '';
+    }
   }
 
   update(time, delta) {
@@ -109,12 +192,100 @@ export class HudScene extends Phaser.Scene {
     const gs = this.gameScene;
     const world = gs.world;
     const data = this.data_;
-    const p = world.getPlayer(gs.localId);
-    if (!p) return;
     const g = this.g;
     g.clear();
+    const me = world.getPlayer(this.localIds[0]);
+    if (!me) return;
+    if (!this.multiLocal && !this.full) this.buildFullPanel(me); // online: espera o 1º estado do servidor
 
-    // ---- painel de status
+    // ---- painéis
+    if (this.full) {
+      this.drawFull(me, time);
+      let i = 0;
+      for (const p of world.players) {
+        if (p.id === me.id) continue;
+        this.compactPanel(p, 4, 112 + i * 62);
+        i++;
+      }
+    } else {
+      const pos = [[4, 4], [230, 4], [4, GAME_H - 64], [230, GAME_H - 64]];
+      world.players.forEach((p, i) => this.compactPanel(p, pos[i % 4][0], pos[i % 4][1]));
+    }
+
+    // ---- minimapa
+    this.mmTimer -= delta;
+    if (this.mmTimer <= 0) {
+      this.mmTimer = 120;
+      const box = drawMinimap(this.mm, world, me, GAME_W - 8, 8, time);
+      this.floorText.setY(box.bottom + 4).setText(`Andar ${world.floorNum}/${world.maxFloors} — ${world.floorDef.name}`);
+      const room = world.rooms[me.roomId];
+      this.roomText.setY(box.bottom + 22).setText(room ? (room.type === 'boss' ? world.floorDef.bossRoomName : room.type === 'shop' ? 'Cantina' : THEME_LABELS[room.theme] || '') : 'Corredor');
+    }
+
+    // ---- chefe
+    this.bossG.clear();
+    const b = world.boss;
+    if (b && !b.dead && b.spawning <= 0) {
+      const bw = 420, bx = (GAME_W - bw) / 2, by = this.multiLocal ? 84 : 28;
+      this.bossName.setY(by - 20);
+      const phases = b.type === 'samara' ? 3 : 2;
+      const phase = b.phase || (b.phase2 ? 2 : 1);
+      this.bossName.setText(b.def.name + (phase > 1 ? `  (FASE ${phase})` : ''));
+      this.bossG.fillStyle(0x000000, 0.6).fillRect(bx - 3, by - 3, bw + 6, 18);
+      this.bossG.fillStyle(0x5a1a1a, 1).fillRect(bx, by, bw, 12);
+      this.bossG.fillStyle(phase > 1 ? 0xff5a2a : 0xe04848, 1).fillRect(bx, by, Math.round((bw * Math.max(0, b.hp)) / b.maxHp), 12);
+      this.bossG.fillStyle(0xffffff, 0.2).fillRect(bx, by, Math.round((bw * Math.max(0, b.hp)) / b.maxHp), 3);
+      for (let k = 1; k < phases; k++) this.bossG.fillStyle(0xffd23f, 1).fillRect(bx + (bw * k) / phases - 1, by - 2, 2, 16);
+    } else {
+      this.bossName.setText('');
+    }
+
+    // ---- interação e card da arma
+    const cam = gs.cameras.main;
+    const toScreen = (x, y) => [(x - cam.worldView.x) * cam.zoom, (y - cam.worldView.y) * cam.zoom];
+    let bottomMsg = '';
+    const seenHead = new Set();
+    for (const id of this.localIds) {
+      const p = world.getPlayer(id);
+      const card = this.cards.get(id);
+      if (!p || p.dead) { card.hide(); continue; }
+      const tgt = p.downed || p.jailTimer > 0 || p.signing > 0 ? null : p.interactTarget;
+      const dev = gs.localDevices.find((d) => d.id === id)?.device || 'auto';
+      const key = DEVICE_KEYS[dev]?.interact || 'E';
+      if (tgt && tgt.kind === 'weapon') {
+        const [sx, sy] = toScreen(tgt.x, tgt.y);
+        card.show(tgt.weaponId, p, sx, sy, key);
+        continue;
+      }
+      card.hide();
+      let msg = this.promptFor(world, p, tgt, key);
+      if (!msg && p.downed && world.players.length > 1) msg = 'Caído! Um colega precisa ficar perto de você por 3 s';
+      if (!msg && p.signing > 0 && world.players.length > 1) msg = 'Assinando! Um colega perto te liberta';
+      if (this.multiLocal) {
+        if (!msg) continue;
+        seenHead.add(id);
+        let t = this.headPrompts.get(id);
+        if (!t) { t = this.add.text(0, 0, '', textStyle(18, '#ffffff', { stroke: '#000', strokeThickness: 4 })).setOrigin(0.5, 1); this.headPrompts.set(id, t); }
+        const [sx, sy] = toScreen(p.x, p.y - 40);
+        t.setText(msg).setPosition(Math.max(150, Math.min(GAME_W - 150, sx)), Math.max(30, sy)).setVisible(true);
+      } else bottomMsg = msg;
+    }
+    for (const [id, t] of this.headPrompts) if (!seenHead.has(id)) t.setVisible(false);
+    this.prompt.setText(bottomMsg).setVisible(!!bottomMsg);
+
+    // ---- vida baixa
+    this.lowHp.clear();
+    const lowAny = this.localIds.map((id) => world.getPlayer(id)).some((p) => p && !p.downed && !p.dead && p.hp <= 2 && p.shield === 0);
+    if (lowAny) {
+      const a = 0.18 + Math.sin(time / 180) * 0.1;
+      this.lowHp.lineStyle(14, 0xff0000, a).strokeRect(0, 0, GAME_W, GAME_H);
+    }
+    if (this.netText) this.netText.setText(gs.session.disconnected ? 'Conexão perdida com o servidor' : `Sala ${gs.session.client.code || ''}`);
+  }
+
+  drawFull(p, time) {
+    const data = this.data_;
+    const g = this.g;
     g.fillStyle(0x000000, 0.35).fillRect(5, 5, 232, 78);
     g.fillStyle(COLORS.panel, 0.88).fillRect(2, 2, 232, 78);
     g.lineStyle(2, COLORS.border, 1).strokeRect(3, 3, 230, 76);
@@ -131,8 +302,8 @@ export class HudScene extends Phaser.Scene {
     this.shText.setText(`${p.shield}/${p.maxShield}`);
     this.enText.setText(`${Math.floor(p.energy)}/${p.maxEnergy}`);
     this.coinText.setText(String(p.coins));
+    this.blessText.setText((p.blessings || []).map((b) => BLESSINGS[b]?.desc).filter(Boolean).join(' • '));
 
-    // ---- armas
     const w1 = data.weapon(p.weapons[p.cur]);
     const rcol = data.rarities[w1.rarity].color;
     g.fillStyle(0x000000, 0.35).fillRect(GAME_W - 232, GAME_H - 70, 228, 66);
@@ -153,13 +324,12 @@ export class HudScene extends Phaser.Scene {
       this.wp2Key.setVisible(false);
     }
 
-    // ---- habilidade
     const sx = GAME_W - 334, sy = GAME_H - 36;
     const ready = p.skillCd <= 0;
     g.fillStyle(0x000000, 0.4).fillCircle(sx + 2, sy + 3, 24);
     g.fillStyle(ready ? 0x6b4fd8 : 0x2a2540, 1).fillCircle(sx, sy, 24);
     if (!ready) {
-      const frac = p.skillCd / (p.skillCooldown * p.mods.skillCdMul);
+      const frac = p.skillCd / (p.skillCooldown * (p.mods.skillCdMul || 1));
       g.fillStyle(0x0d0b14, 0.75);
       g.slice(sx, sy, 24, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2, false).fillPath();
       this.skillCdText.setText(Math.ceil(p.skillCd).toString());
@@ -169,55 +339,5 @@ export class HudScene extends Phaser.Scene {
       this.skillIcon.setAlpha(1);
     }
     g.lineStyle(2, ready ? COLORS.gold : COLORS.border, 1).strokeCircle(sx, sy, 24);
-
-    // ---- minimapa (redesenha algumas vezes por segundo)
-    this.mmTimer -= delta;
-    if (this.mmTimer <= 0) {
-      this.mmTimer = 120;
-      const box = drawMinimap(this.mm, world, p, GAME_W - 8, 8, time);
-      this.floorText.setY(box.bottom + 4).setText(`Andar ${world.floorNum} — ${world.floorDef.name}`);
-      const room = world.rooms[p.roomId];
-      this.roomText.setY(box.bottom + 22).setText(room ? (room.type === 'boss' ? world.floorDef.bossRoomName : THEME_LABELS[room.theme] || '') : 'Corredor');
-    }
-
-    // ---- chefe
-    this.bossG.clear();
-    const b = world.boss;
-    if (b && !b.dead && b.spawning <= 0) {
-      const bw = 420, bx = (GAME_W - bw) / 2, by = 28;
-      this.bossName.setText(b.def.name + (b.phase2 ? '  (FASE 2)' : ''));
-      this.bossG.fillStyle(0x000000, 0.6).fillRect(bx - 3, by - 3, bw + 6, 18);
-      this.bossG.fillStyle(0x5a1a1a, 1).fillRect(bx, by, bw, 12);
-      this.bossG.fillStyle(b.phase2 ? 0xff5a2a : 0xe04848, 1).fillRect(bx, by, Math.round((bw * b.hp) / b.maxHp), 12);
-      this.bossG.fillStyle(0xffffff, 0.2).fillRect(bx, by, Math.round((bw * b.hp) / b.maxHp), 3);
-      this.bossG.fillStyle(0xffd23f, 1).fillRect(bx + bw / 2 - 1, by - 2, 2, 16);
-    } else {
-      this.bossName.setText('');
-    }
-
-    // ---- interação e card da arma
-    const tgt = p.downed ? null : p.interactTarget;
-    const cam = gs.cameras.main;
-    if (tgt && tgt.kind === 'weapon') {
-      this.prompt.setText('');
-      const sxw = tgt.x - cam.worldView.x, syw = tgt.y - cam.worldView.y;
-      this.card.show(tgt.weaponId, p, sxw, syw);
-    } else {
-      this.card.hide();
-      let msg = '';
-      if (tgt?.kind === 'chest') msg = '[E] Abrir o baú';
-      else if (tgt?.kind === 'heal_station') msg = '[E] Enfermaria: curar o time';
-      else if (tgt?.kind === 'portal') msg = world.floorNum >= world.maxFloors ? '[E] Entrar no portal (concluir o andar)' : '[E] Entrar no portal (próximo andar)';
-      else if (p.downed) msg = world.players.length > 1 ? 'Caído! Um colega precisa ficar perto de você por 3 s' : '';
-      this.prompt.setText(msg).setVisible(!!msg);
-    }
-
-    // ---- aviso de vida baixa
-    this.lowHp.clear();
-    if (!p.downed && p.hp <= 2 && p.shield === 0) {
-      const a = 0.18 + Math.sin(time / 180) * 0.1;
-      this.lowHp.lineStyle(14, 0xff0000, a).strokeRect(0, 0, GAME_W, GAME_H);
-    }
   }
 }
-

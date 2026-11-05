@@ -3,15 +3,19 @@ import { damageEnemy, hurtPlayer } from '../combat.js';
 import { spawnProjectile } from '../armas/Projectiles.js';
 import { BEHAVIORS } from './behaviors.js';
 
-export function createEnemy(world, type, x, y, roomId, { spawnTime = 0.9, minion = false } = {}) {
+export function createEnemy(world, type, x, y, roomId, { spawnTime = 0.9, minion = false, elite = false, ...extra } = {}) {
   const def = world.data.enemy(type);
-  const players = Math.max(1, world.players.length);
-  const scale = (world.floorDef.hpScale || 1) * (def.boss ? 1 + 0.6 * (players - 1) : 1);
+  const players = Math.max(1, world.players.filter((p) => !p.dead).length);
+  const scaleByPlayers = def.boss || def.scaleWithPlayers ? 1 + 0.6 * (players - 1) : 1;
+  const scale = (def.boss ? 1 : (world.floorDef.hpScale || 1)) * scaleByPlayers * (elite ? 2 : 1);
   const e = {
     id: world.newId(), kind: 'enemy', type, def,
-    x, y, r: def.radius,
+    x, y, r: def.radius * (elite ? 1.2 : 1),
     hp: Math.round(def.hp * scale), maxHp: Math.round(def.hp * scale),
-    roomId, minion,
+    roomId, minion, elite,
+    atkMul: elite ? 0.75 : 1, extraBullets: elite ? 1 : 0,
+    speedMul: elite ? 1.1 : 1,
+    life: def.life || 0,
     spawning: spawnTime,
     state: 'move', t: 0,
     cd: world.rng.range(0.6, 1.6),     // primeiro ataque com atraso aleatório
@@ -20,7 +24,8 @@ export function createEnemy(world, type, x, y, roomId, { spawnTime = 0.9, minion
     status: {}, contactCd: 0,
     strafeDir: world.rng.chance(0.5) ? 1 : -1, strafeT: world.rng.range(1, 2.5),
     wanderA: world.rng.range(0, Math.PI * 2), wanderT: 0,
-    dead: false
+    dead: false,
+    ...extra
   };
   world.enemies.push(e);
   world.emit('enemy_spawn', { id: e.id, x, y, enemyType: type, boss: !!def.boss });
@@ -30,7 +35,7 @@ export function createEnemy(world, type, x, y, roomId, { spawnTime = 0.9, minion
 export function nearestPlayer(world, e) {
   let best = null, bd = Infinity;
   for (const p of world.players) {
-    if (p.dead || p.downed) continue;
+    if (p.dead || p.downed || p.jailTimer > 0) continue;
     const d = Math.hypot(p.x - e.x, p.y - e.y);
     if (d < bd) { bd = d; best = p; }
   }
@@ -38,9 +43,9 @@ export function nearestPlayer(world, e) {
 }
 
 export function enemySpeed(e) {
-  let s = e.def.speed;
+  let s = e.def.speed * (e.speedMul || 1);
   if (e.status.slow > 0) s *= e.status.slowMul ?? 0.5;
-  return s * (e.speedMul || 1);
+  return s;
 }
 
 export function moveToward(world, e, tx, ty, speed, dt, sign = 1) {
@@ -51,14 +56,14 @@ export function moveToward(world, e, tx, ty, speed, dt, sign = 1) {
 }
 
 export function enemyShoot(world, e, angle, atk) {
-  const n = atk.bullets || 1;
+  const n = (atk.bullets || 1) + (atk.noExtra ? 0 : e.extraBullets || 0);
   for (let i = 0; i < n; i++) {
     const a = n > 1 ? angle + ((-atk.spread / 2 + (atk.spread * i) / (n - 1)) * Math.PI) / 180 : angle;
     spawnProjectile(world, {
       team: 'enemy', x: e.x, y: e.y - 4, angle: a,
       speed: atk.speed, radius: atk.radius || 5, damage: atk.damage || 1,
       range: atk.range || 900, sprite: 'ebullet_' + (atk.style || 'paper'), style: atk.style || 'paper',
-      slow: atk.slow || 0
+      slow: atk.slow || 0, explode: atk.explode || null, explodeOnExpire: !!atk.explode
     });
   }
   world.emit('enemy_shoot', { x: e.x, y: e.y, style: atk.style, boss: !!e.def.boss });
@@ -99,13 +104,30 @@ export function updateEnemies(world, dt) {
     const target = nearestPlayer(world, e);
     const fn = BEHAVIORS[e.def.behavior];
     if (fn) fn(world, e, dt, target);
+    if (e.dead) continue;
+    if (e.life > 0) {
+      e.life -= dt;
+      if (e.life <= 0) { e.minion = true; e.dead = true; world.emit('enemy_vanish', { x: e.x, y: e.y, id: e.id, enemyType: e.type }); continue; }
+    }
     // dano de contato
     const cdmg = e.contactOverride ?? e.def.contactDamage;
     if (cdmg && e.contactCd <= 0) {
       for (const p of world.players) {
-        if (p.dead || p.downed) continue;
+        if (p.dead || p.downed || p.jailTimer > 0) continue;
         if (Math.hypot(p.x - e.x, p.y - e.y) < p.r + e.r - 2) {
           if (hurtPlayer(world, p, cdmg)) e.contactCd = 0.8;
+        }
+      }
+    }
+    // alunos da "Assembleia" empurram os jogadores
+    if (e.def.pushPlayers) {
+      for (const p of world.players) {
+        if (p.dead || p.downed || p.jailTimer > 0) continue;
+        const d = Math.hypot(p.x - e.x, p.y - e.y);
+        const min = p.r + e.r;
+        if (d < min && d > 0.01) {
+          const push = min - d;
+          world.map.moveBox(p, ((p.x - e.x) / d) * push, ((p.y - e.y) / d) * push);
         }
       }
     }

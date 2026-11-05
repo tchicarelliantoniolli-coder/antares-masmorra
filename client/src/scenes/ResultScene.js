@@ -1,58 +1,80 @@
 import { GAME_W, GAME_H, titleStyle, textStyle } from '../config.js';
 import { button, ButtonList, panel } from '../ui/widgets.js';
 import { sound } from '../audio/Sound.js';
+import { OnlineClient } from '../net/OnlineClient.js';
 
-/** Tela de vitória ou derrota com as estatísticas da partida. */
+/** Tela de vitória ou derrota com as estatísticas da partida (solo, co-op local ou online). */
 export class ResultScene extends Phaser.Scene {
   constructor() { super('Result'); }
 
   init(params) { this.params = params; }
 
   create() {
-    const { victory, stats, characterId, player } = this.params;
+    const { victory, stats = {}, players = [], mode, floor = 1 } = this.params;
     const data = this.registry.get('data');
-    const c = data.character(characterId);
     this.cameras.main.fadeIn(400);
     const g = this.add.graphics();
     g.fillGradientStyle(victory ? 0x1f3a2a : 0x3a1420, victory ? 0x1f3a2a : 0x3a1420, 0x0d0b14, 0x0d0b14, 1);
     g.fillRect(0, 0, GAME_W, GAME_H);
 
     sound.playMusic(victory ? 'victory' : 'defeat');
-    this.add.text(GAME_W / 2, 56, victory ? 'VITÓRIA!' : 'FICOU DE RECUPERAÇÃO...', titleStyle(victory ? 32 : 22, victory ? '#ffd23f' : '#ff7a7a', { stroke: '#1b1424', strokeThickness: 8 })).setOrigin(0.5);
-    this.add.text(GAME_W / 2, 96, victory
-      ? 'A Máquina de Xerox foi desligada. O Andar 1 está livre!'
-      : 'Todos caíram. Mas toda prova tem uma segunda chamada!', textStyle(24, '#ffffff')).setOrigin(0.5);
+    const title = this.params.disconnected ? 'CONEXÃO PERDIDA' : victory ? 'VITÓRIA!' : 'FICOU DE RECUPERAÇÃO...';
+    this.add.text(GAME_W / 2, 50, title, titleStyle(victory ? 32 : 22, victory ? '#ffd23f' : '#ff7a7a', { stroke: '#1b1424', strokeThickness: 8 })).setOrigin(0.5);
+    this.add.text(GAME_W / 2, 90, victory
+      ? 'A coordenação foi vencida! A escola inteira está livre!'
+      : `Parou no Andar ${floor}. Toda prova tem uma segunda chamada!`, textStyle(24, '#ffffff')).setOrigin(0.5);
 
-    const s = this.add.sprite(230, 270, 'char_' + characterId).setScale(5);
-    if (victory) {
-      s.play('char_' + characterId + '_walk');
-      this.tweens.add({ targets: s, y: 250, duration: 300, yoyo: true, repeat: -1, ease: 'Sine.out' });
-      this.time.addEvent({ delay: 280, loop: true, callback: () => this.confetti() });
-    } else {
-      s.setAngle(90).setTint(0x8888aa);
-    }
-    this.add.text(230, 350, c.name, textStyle(22, c.color)).setOrigin(0.5);
+    // personagens
+    const n = Math.max(1, players.length);
+    players.forEach((p, i) => {
+      const x = GAME_W / 2 + (i - (n - 1) / 2) * 200;
+      const s = this.add.sprite(x, 170, 'char_' + p.charId).setScale(3);
+      if (victory) {
+        s.play('char_' + p.charId + '_walk');
+        this.tweens.add({ targets: s, y: 158, duration: 300, yoyo: true, repeat: -1, ease: 'Sine.out', delay: i * 80 });
+      } else s.setAngle(90).setTint(0x8888aa);
+      this.add.text(x, 222, p.name, textStyle(20, data.character(p.charId).color)).setOrigin(0.5);
+      this.add.text(x, 242, `${p.kills} inimigos • ${p.damage} de dano`, textStyle(18, '#cfc8ef')).setOrigin(0.5);
+    });
+    if (victory) this.time.addEvent({ delay: 280, loop: true, callback: () => this.confetti() });
 
-    panel(this, 420, 140, 470, 250);
-    const mins = Math.floor(stats.time / 60), secs = Math.floor(stats.time % 60).toString().padStart(2, '0');
+    panel(this, 230, 270, 500, 150);
+    const t = stats.time || 0;
+    const mins = Math.floor(t / 60), secs = Math.floor(t % 60).toString().padStart(2, '0');
     const rows = [
       ['Tempo', `${mins}:${secs}`],
-      ['Inimigos derrotados', stats.kills],
-      ['Dano causado', player.damage],
-      ['Salas liberadas', stats.roomsCleared],
-      ['Moedas', player.coins],
-      ['Armas no fim', player.weapons.map((id) => data.weapon(id).name).join(' + ')]
+      ['Andares vencidos', `${victory ? 3 : Math.max(0, floor - 1)} de 3`],
+      ['Inimigos derrotados', stats.kills ?? 0],
+      ['Salas liberadas', stats.roomsCleared ?? 0]
     ];
     rows.forEach(([k, v], i) => {
-      this.add.text(444, 162 + i * 36, k, textStyle(24, '#cfc8ef'));
-      this.add.text(866, 162 + i * 36, String(v), textStyle(24, '#ffffff', { align: 'right', wordWrap: { width: 250 } })).setOrigin(1, 0);
+      this.add.text(254, 286 + i * 32, k, textStyle(24, '#cfc8ef'));
+      this.add.text(706, 286 + i * 32, String(v), textStyle(24, '#ffffff')).setOrigin(1, 0);
     });
 
-    const buttons = [
-      button(this, 250, 470, 260, 38, 'JOGAR DE NOVO', () => this.scene.start('Game', { characterId, mode: 'solo' })),
-      button(this, 520, 470, 260, 38, 'TROCAR PROFESSOR', () => this.scene.start('CharacterSelect', { mode: 'solo' })),
-      button(this, 770, 470, 200, 38, 'MENU', () => this.scene.start('Menu'))
-    ];
+    let buttons;
+    if (mode === 'online') {
+      const client = OnlineClient.get();
+      const inRoom = !!client.code && client.connected;
+      buttons = [
+        button(this, 330, 470, 280, 38, 'VOLTAR À SALA', () => this.scene.start('Lobby', { mode: 'online' }), { enabled: inRoom }),
+        button(this, 640, 470, 260, 38, 'MENU', () => { client.leave(); this.scene.start('Menu'); })
+      ];
+    } else if (mode === 'local') {
+      const replay = this.params.replay;
+      buttons = [
+        button(this, 230, 470, 240, 38, 'JOGAR DE NOVO', () => this.scene.start('Game', replay)),
+        button(this, 490, 470, 240, 38, 'TROCAR TIME', () => this.scene.start('Lobby', { mode: 'local' })),
+        button(this, 730, 470, 200, 38, 'MENU', () => this.scene.start('Menu'))
+      ];
+    } else {
+      const replay = this.params.replay;
+      buttons = [
+        button(this, 230, 470, 240, 38, 'JOGAR DE NOVO', () => this.scene.start('Game', replay)),
+        button(this, 490, 470, 260, 38, 'TROCAR PROFESSOR', () => this.scene.start('CharacterSelect', { mode: 'solo' })),
+        button(this, 740, 470, 200, 38, 'MENU', () => this.scene.start('Menu'))
+      ];
+    }
     this.list = new ButtonList(this, buttons);
     this.input.keyboard.on('keydown-RIGHT', () => this.list.move(1));
     this.input.keyboard.on('keydown-LEFT', () => this.list.move(-1));

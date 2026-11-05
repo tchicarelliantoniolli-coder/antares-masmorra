@@ -197,6 +197,27 @@ export function drawProjectile(shape, color, accent) {
       }
       px(ctx, 1, 10, 18, 1, accent);
     });
+    case 'ball': return canvasFrom(14, 14, (ctx) => {
+      circle(ctx, 7, 7, 5, color); px(ctx, 3, 6, 9, 1, accent); px(ctx, 6, 2, 1, 10, accent); px(ctx, 4, 4, 2, 2, '#ffffff');
+    });
+    case 'proton': return canvasFrom(14, 14, (ctx) => {
+      circle(ctx, 7, 7, 5, color); circle(ctx, 7, 7, 2, accent); ring(ctx, 7, 7, 6, shade(color, 0.4));
+    });
+    case 'dna': return canvasFrom(16, 10, (ctx) => {
+      for (let x = 1; x < 15; x++) { const o = Math.round(Math.sin(x * 0.9) * 3); px(ctx, x, 5 + o, 1, 1, color); px(ctx, x, 5 - o, 1, 1, accent); if (x % 3 === 0) px(ctx, x, 5 - Math.abs(o), 1, Math.abs(o) * 2 + 1, '#ffffff'); }
+    }, false);
+    case 'plane': return canvasFrom(16, 12, (ctx) => {
+      dots(ctx, [[14, 6], [13, 5], [13, 6], [12, 4], [12, 5], [12, 6], [12, 7]], color);
+      px(ctx, 2, 3, 10, 3, color); px(ctx, 4, 6, 8, 3, shade(color, -0.12)); px(ctx, 2, 6, 10, 1, accent);
+    });
+    case 'shaving': return canvasFrom(8, 8, (ctx) => {
+      px(ctx, 1, 2, 5, 3, color); px(ctx, 2, 3, 3, 1, accent); px(ctx, 5, 4, 2, 2, '#3a3a3a');
+    });
+    case 'wave': return canvasFrom(14, 14, (ctx) => { ring(ctx, 7, 7, 5, color, 2); px(ctx, 6, 6, 2, 2, accent); }, false);
+    case 'beam': return canvasFrom(26, 14, (ctx) => {
+      ctx.globalAlpha = 0.8; px(ctx, 0, 3, 26, 8, color); ctx.globalAlpha = 1; px(ctx, 0, 6, 26, 2, '#ffffff'); px(ctx, 20, 2, 6, 10, accent);
+    }, false);
+    case 'seed': return canvasFrom(10, 10, (ctx) => { circle(ctx, 5, 5, 3, color); px(ctx, 4, 3, 2, 2, accent); });
     default: return canvasFrom(10, 10, (ctx) => circle(ctx, 5, 5, 3, color));
   }
 }

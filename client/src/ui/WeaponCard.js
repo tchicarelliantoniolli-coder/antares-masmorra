@@ -23,10 +23,11 @@ export class WeaponCard {
 
   hide() { this.c.setVisible(false); this.key = null; }
 
-  show(weaponId, player, sx, sy) {
-    const key = weaponId + '|' + player.weapons.join(',') + '|' + player.cur;
+  show(weaponId, player, sx, sy, button = 'E') {
+    const key = weaponId + '|' + player.weapons.join(',') + '|' + player.cur + '|' + button;
     if (key !== this.key) {
       this.key = key;
+      this.button = button;
       this.build(weaponId, player);
     }
     const h = this.h;
@@ -71,8 +72,8 @@ export class WeaponCard {
     this.extra.setText(tags.length ? 'Efeito: ' + tags.join(', ') : '').setY(y);
     if (tags.length) y += this.extra.height + 2;
     const full = player.weapons.length >= 2;
-    this.foot.setText(full ? `[E] Trocar pela ${d.weapon(player.weapons[player.cur]).name.split(' ')[0]}...` : '[E] Pegar').setY(y + 2);
-    if (full) this.foot.setText('[E] Trocar pela arma atual');
+    const b = this.button || 'E';
+    this.foot.setText(full ? `[${b}] Trocar pela arma atual` : `[${b}] Pegar`).setY(y + 2);
     y += 26;
     this.h = y;
     const g = this.bg;

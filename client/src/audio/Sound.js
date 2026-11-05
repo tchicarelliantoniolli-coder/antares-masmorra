@@ -166,6 +166,11 @@ export class Sound {
       case 'click': this.tone('square', 700, 700, 0.03, 0.06); break;
       case 'select': this.tone('square', 523, 523, 0.05, 0.07); this.tone('square', 784, 784, 0.08, 0.07, 0.05); break;
       case 'bounce': this.tone('triangle', 700 * r, 500, 0.04, 0.04); break;
+      case 'crate': this.noise(0.15, 0.16, 1800); this.tone('square', 180 * r, 90, 0.1, 0.06); break;
+      case 'bell': [1568, 1760, 1568, 1760].forEach((f, i) => this.tone('square', f, f, 0.06, 0.04, i * 0.06)); break;
+      case 'whistle': this.tone('sine', 2200, 2400, 0.25, 0.1); this.tone('sine', 2400, 2200, 0.2, 0.1, 0.25); break;
+      case 'fuse': this.noise(0.4, 0.08, 5000, 'highpass'); break;
+      case 'bite': this.tone('square', 300, 120, 0.08, 0.1); this.noise(0.05, 0.1, 2000); break;
       default: break;
     }
   }

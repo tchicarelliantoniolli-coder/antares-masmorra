@@ -1,5 +1,6 @@
 import { damageEnemy, explode, hurtPlayer } from '../combat.js';
 import { angleDiff } from '../math.js';
+import { propAt, damageProp } from '../salas/Props.js';
 
 /**
  * Cria um projétil.
@@ -48,7 +49,8 @@ function impact(world, p) {
   p.dead = true;
   if (p.explodeDef) {
     explode(world, p.x, p.y, p.explodeDef.radius, p.explodeDef.damage, {
-      source: p.owner, effect: p.effect, style: p.sprite?.includes('acido') || p.effect?.type === 'veneno' ? 'acid' : 'chalk'
+      source: p.owner, effect: p.effect, style: p.effect?.type === 'veneno' ? 'acid' : (p.explodeDef.style || 'chalk'),
+      hurtsPlayers: p.team === 'enemy', playerDamage: p.damage
     });
   } else {
     world.emit('proj_hit', { x: p.x, y: p.y, team: p.team, style: p.style || p.sprite });
@@ -92,6 +94,11 @@ export function updateProjectiles(world, dt) {
 
     const nx = p.x + p.vx * dt, ny = p.y + p.vy * dt;
     if (!p.ghost && map.solidAt(nx, ny)) {
+      const prop = propAt(world, nx, ny);
+      if (prop) {
+        damageProp(world, prop.tx, prop.ty, p.team === 'player' ? p.damage : 1);
+        if (p.boomerang) { p.returning = true; } else { p.x = nx; p.y = ny; impact(world, p); continue; }
+      }
       if (p.boomerang) {
         p.returning = true;
       } else if (p.bounce > 0) {
@@ -111,7 +118,7 @@ export function updateProjectiles(world, dt) {
 
     if (p.team === 'player') {
       for (const e of world.enemies) {
-        if (e.dead || e.spawning > 0 || p.hit.has(e.id)) continue;
+        if (e.dead || e.spawning > 0 || p.hit.has(e.id) || e.def.invulnerable) continue;
         if (Math.hypot(e.x - p.x, e.y - p.y) > e.r + p.r) continue;
         p.hit.add(e.id);
         if (p.explodeDef) { impact(world, p); break; }
@@ -135,8 +142,14 @@ export function updateProjectiles(world, dt) {
         }
       }
     } else {
+      // Grammar Shield: bolha de letras apaga as balas inimigas
+      let blocked = false;
       for (const pl of world.players) {
-        if (pl.dead || pl.downed) continue;
+        if (pl.buffs?.bubbleTimer > 0 && !pl.downed && Math.hypot(pl.x - p.x, pl.y - p.y) < pl.r + 26) { blocked = true; break; }
+      }
+      if (blocked) { p.dead = true; world.emit('deflect', { x: p.x, y: p.y }); continue; }
+      for (const pl of world.players) {
+        if (pl.dead || pl.downed || pl.jailTimer > 0) continue;
         if (Math.hypot(pl.x - p.x, pl.y - p.y) > pl.r + p.r - 2) continue;
         if (pl.invuln > 0) continue;
         hurtPlayer(world, pl, p.damage, { slow: p.slow });

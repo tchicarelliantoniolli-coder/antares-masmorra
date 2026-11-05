@@ -1,7 +1,18 @@
 import { INTERACT_RADIUS, PICKUP_MAGNET_RADIUS } from '../constants.js';
 
-const INTERACTIVE = new Set(['weapon', 'chest', 'heal_station', 'portal']);
-const RADIUS = { energy: 4, coin: 4, health: 6, weapon: 10, chest: 14, heal_station: 14, portal: 20 };
+const INTERACTIVE = new Set(['weapon', 'chest', 'heal_station', 'portal', 'shop_item', 'statue']);
+const RADIUS = { energy: 4, coin: 4, health: 6, weapon: 10, chest: 14, heal_station: 14, portal: 20, shop_item: 10, statue: 18, npc: 10 };
+
+/** Bênçãos das estátuas (pagas com moedas, valem até o fim da partida). */
+export const BLESSINGS = {
+  sabedoria: { name: 'Estátua da Sabedoria', desc: '+20% de dano', apply: (p) => { p.mods.damageMul *= 1.2; } },
+  disciplina: { name: 'Estátua da Disciplina', desc: '+2 de escudo máximo', apply: (p) => { p.maxShield += 2; p.shield += 2; } },
+  esporte: { name: 'Estátua do Esporte', desc: '+15% de velocidade', apply: (p) => { p.mods.speedMul *= 1.15; } },
+  paciencia: { name: 'Estátua da Paciência', desc: 'Habilidade recarrega 25% mais rápido', apply: (p) => { p.mods.skillCdMul *= 0.75; } },
+  sorte: { name: 'Estátua da Sorte', desc: '+12% de chance de crítico', apply: (p) => { p.mods.critBonus += 0.12; } }
+};
+
+export const SHOP_PRICES = { comum: 12, incomum: 20, rara: 32, epica: 48, lendaria: 70 };
 
 export function createPickup(world, kind, x, y, opts = {}) {
   const p = {
@@ -83,6 +94,7 @@ export function findInteractable(world, p) {
     if (pk.dead || !INTERACTIVE.has(pk.kind)) continue;
     if (pk.kind === 'chest' && pk.opened) continue;
     if (pk.kind === 'heal_station' && pk.used) continue;
+    if (pk.kind === 'statue' && pk.usedBy.includes(p.id)) continue;
     const d = Math.hypot(p.x - pk.x, p.y - pk.y);
     if (d < INTERACT_RADIUS + pk.r && d < bd) { bd = d; best = pk; }
   }
@@ -121,6 +133,52 @@ export function interact(world, p, pk) {
       q.shield = q.maxShield;
     }
     world.emit('heal', { x: pk.x, y: pk.y });
+  } else if (pk.kind === 'shop_item') {
+    if (p.coins < pk.price) {
+      world.emit('no_money', { playerId: p.id, x: p.x, y: p.y, price: pk.price });
+      return;
+    }
+    p.coins -= pk.price;
+    pk.dead = true;
+    if (pk.item === 'weapon') createPickup(world, 'weapon', pk.x, pk.y, { weaponId: pk.weaponId });
+    else if (pk.item === 'apple') p.hp = Math.min(p.maxHp, p.hp + 3);
+    else if (pk.item === 'suco') p.energy = Math.min(p.maxEnergy, p.energy + 90);
+    else if (pk.item === 'broche') { p.maxShield += 1; p.shield += 1; }
+    world.emit('buy', { playerId: p.id, x: pk.x, y: pk.y, item: pk.item });
+  } else if (pk.kind === 'statue') {
+    if (p.coins < pk.price) {
+      world.emit('no_money', { playerId: p.id, x: p.x, y: p.y, price: pk.price });
+      return;
+    }
+    p.coins -= pk.price;
+    pk.usedBy.push(p.id);
+    const b = BLESSINGS[pk.blessing];
+    b.apply(p);
+    p.blessings.push(pk.blessing);
+    world.emit('blessing', { playerId: p.id, x: pk.x, y: pk.y, name: b.name, desc: b.desc });
+  } else if (pk.kind === 'shop_item') {
+    if (p.coins < pk.price) {
+      world.emit('no_money', { playerId: p.id, x: p.x, y: p.y, price: pk.price });
+      return;
+    }
+    p.coins -= pk.price;
+    pk.dead = true;
+    if (pk.item === 'weapon') createPickup(world, 'weapon', pk.x, pk.y, { weaponId: pk.weaponId });
+    else if (pk.item === 'apple') p.hp = Math.min(p.maxHp, p.hp + 3);
+    else if (pk.item === 'suco') p.energy = Math.min(p.maxEnergy, p.energy + 90);
+    else if (pk.item === 'broche') { p.maxShield += 1; p.shield += 1; }
+    world.emit('buy', { playerId: p.id, x: pk.x, y: pk.y, item: pk.item });
+  } else if (pk.kind === 'statue') {
+    if (p.coins < pk.price) {
+      world.emit('no_money', { playerId: p.id, x: p.x, y: p.y, price: pk.price });
+      return;
+    }
+    p.coins -= pk.price;
+    pk.usedBy.push(p.id);
+    const b = BLESSINGS[pk.blessing];
+    b.apply(p);
+    p.blessings.push(pk.blessing);
+    world.emit('blessing', { playerId: p.id, x: pk.x, y: pk.y, name: b.name, desc: b.desc });
   } else if (pk.kind === 'portal') {
     world.emit('portal_enter', { playerId: p.id });
     world.completeFloor();

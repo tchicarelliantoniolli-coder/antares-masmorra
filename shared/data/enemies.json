@@ -1,150 +1,119 @@
 {
-  "_doc": "Inimigos e configuração dos andares. 'behavior' escolhe a IA (chaser, shooter, fan_shooter, boss_xerox). Os números podem ser ajustados livremente.",
+  "_doc": "Inimigos e configuração dos andares. 'behavior' escolhe a IA (chaser, shooter, fan_shooter, turret, ringer, kamikaze, boss_xerox, boss_katia, boss_samara...). Os números podem ser ajustados livremente.",
   "enemies": {
     "caderno_zumbi": {
-      "name": "Caderno Zumbi",
-      "behavior": "chaser",
-      "hp": 12,
-      "speed": 78,
-      "radius": 11,
-      "contactDamage": 1,
-      "lunge": {
-        "range": 74,
-        "windup": 0.4,
-        "speed": 270,
-        "duration": 0.3,
-        "cooldown": 1.6
-      },
-      "drops": {
-        "energy": [
-          1,
-          2
-        ],
-        "coins": [
-          0,
-          2
-        ]
-      }
+      "name": "Caderno Zumbi", "behavior": "chaser", "hp": 12, "speed": 78, "radius": 11, "contactDamage": 1,
+      "lunge": { "range": 74, "windup": 0.4, "speed": 270, "duration": 0.3, "cooldown": 1.6 },
+      "drops": { "energy": [1, 2], "coins": [0, 2] }
     },
     "prova_voadora": {
-      "name": "Prova Voadora",
-      "behavior": "shooter",
-      "hp": 7,
-      "speed": 86,
-      "radius": 10,
-      "flying": true,
-      "contactDamage": 0,
-      "preferredRange": [
-        150,
-        260
-      ],
-      "attack": {
-        "interval": 1.6,
-        "windup": 0.4,
-        "bullets": 1,
-        "spread": 0,
-        "speed": 180,
-        "damage": 1,
-        "style": "paper"
-      },
-      "drops": {
-        "energy": [
-          1,
-          3
-        ],
-        "coins": [
-          0,
-          2
-        ]
-      }
+      "name": "Prova Voadora", "behavior": "shooter", "hp": 7, "speed": 86, "radius": 10, "flying": true, "contactDamage": 0,
+      "preferredRange": [150, 260],
+      "attack": { "interval": 1.6, "windup": 0.4, "bullets": 1, "spread": 0, "speed": 180, "damage": 1, "style": "paper" },
+      "drops": { "energy": [1, 3], "coins": [0, 2] }
     },
     "estojo": {
-      "name": "Estojo Raivoso",
-      "behavior": "fan_shooter",
-      "hp": 16,
-      "speed": 46,
-      "radius": 12,
-      "contactDamage": 1,
-      "preferredRange": [
-        120,
-        220
-      ],
-      "attack": {
-        "interval": 2.2,
-        "windup": 0.55,
-        "bullets": 4,
-        "spread": 48,
-        "speed": 185,
-        "damage": 1,
-        "style": "pencil"
-      },
-      "drops": {
-        "energy": [
-          2,
-          3
-        ],
-        "coins": [
-          1,
-          3
-        ]
-      }
+      "name": "Estojo Raivoso", "behavior": "fan_shooter", "hp": 16, "speed": 46, "radius": 12, "contactDamage": 1,
+      "preferredRange": [120, 220],
+      "attack": { "interval": 2.2, "windup": 0.55, "bullets": 4, "spread": 48, "speed": 185, "damage": 1, "style": "pencil" },
+      "drops": { "energy": [2, 3], "coins": [1, 3] }
+    },
+    "lousa": {
+      "name": "Lousa Assombrada", "behavior": "turret", "hp": 24, "speed": 0, "radius": 13, "contactDamage": 1,
+      "attack": { "interval": 2.4, "windup": 0.5, "bullets": 8, "speed": 150, "damage": 1, "style": "chalk" },
+      "drops": { "energy": [2, 4], "coins": [1, 3] }
+    },
+    "sinal_recreio": {
+      "name": "Sinal do Recreio", "behavior": "ringer", "hp": 14, "speed": 64, "radius": 11, "flying": true, "contactDamage": 0,
+      "attack": { "interval": 3, "windup": 0.6, "bullets": 18, "speed": 120, "damage": 1, "style": "wave" },
+      "drops": { "energy": [2, 3], "coins": [1, 2] }
+    },
+    "mochila": {
+      "name": "Mochila-Bomba", "behavior": "kamikaze", "hp": 9, "speed": 118, "radius": 11, "contactDamage": 0,
+      "onDeathExplode": { "radius": 52, "damage": 6 },
+      "drops": { "energy": [1, 2], "coins": [0, 2] }
+    },
+    "aluno": {
+      "name": "Aluno da Assembleia", "behavior": "assembly", "hp": 6, "speed": 46, "radius": 11, "contactDamage": 0,
+      "pushPlayers": true, "life": 6.5, "drops": {}
+    },
+    "diva": {
+      "name": "Divã", "behavior": "healer", "hp": 70, "speed": 0, "radius": 18, "contactDamage": 0,
+      "healPerSecond": 9, "scaleWithPlayers": true, "drops": {}
+    },
+    "caderno_preto": {
+      "name": "Caderno Preto", "behavior": "capturer", "hp": 1, "speed": 95, "radius": 16, "flying": true, "contactDamage": 0,
+      "invulnerable": true, "life": 8, "drops": {}
     },
     "maquina_xerox": {
-      "name": "A Máquina de Xerox",
-      "title": "Mini-chefe do Andar 1",
-      "behavior": "boss_xerox",
-      "boss": true,
-      "hp": 320,
-      "speed": 60,
-      "radius": 26,
-      "contactDamage": 1,
-      "drops": {
-        "energy": [
-          10,
-          14
-        ],
-        "coins": [
-          15,
-          25
-        ]
-      }
+      "name": "A Máquina de Xerox", "title": "Mini-chefe do Andar 1", "behavior": "boss_xerox", "boss": true,
+      "hp": 320, "speed": 60, "radius": 26, "contactDamage": 1,
+      "drops": { "energy": [10, 14], "coins": [15, 25] }
+    },
+    "katia": {
+      "name": "Katia da Vinha Tornisielo", "title": "Orientadora Pedagógica — Chefe do Andar 2", "behavior": "boss_katia", "boss": true,
+      "hp": 540, "speed": 72, "radius": 20, "contactDamage": 1,
+      "sprite": { "texture": "char_katia", "scale": 2 },
+      "drops": { "energy": [12, 16], "coins": [20, 30] }
+    },
+    "samara": {
+      "name": "Samara S. de A. Peres", "title": "Coordenadora Pedagógica — Chefe Final", "behavior": "boss_samara", "boss": true,
+      "hp": 680, "speed": 74, "radius": 20, "contactDamage": 1,
+      "sprite": { "texture": "char_samara", "scale": 2 },
+      "drops": { "energy": [12, 16], "coins": [30, 40] }
     }
   },
   "floors": [
     {
       "floor": 1,
       "name": "Salas de Aula",
-      "themes": [
-        "sala_aula",
-        "laboratorio",
-        "quadra",
-        "biblioteca",
-        "patio"
-      ],
-      "enemyPool": {
-        "caderno_zumbi": 3,
-        "prova_voadora": 3,
-        "estojo": 2
-      },
-      "wavesPerRoom": [
-        2,
-        3
-      ],
-      "enemiesPerWave": [
-        3,
-        5
-      ],
+      "rooms": [5, 7],
+      "themes": ["sala_aula", "patio", "quadra", "biblioteca"],
+      "enemyPool": { "caderno_zumbi": 3, "prova_voadora": 3, "estojo": 2, "lousa": 1, "mochila": 1 },
+      "wavesPerRoom": [2, 3],
+      "enemiesPerWave": [3, 5],
       "hpScale": 1,
+      "eliteChance": 0.06,
+      "trapChance": 0.3,
       "boss": "maquina_xerox",
       "bossTheme": "secretaria",
+      "bossPillars": true,
       "bossRoomName": "Secretaria (Sala da Xerox)",
-      "chestRarityWeights": {
-        "comum": 40,
-        "incomum": 32,
-        "rara": 19,
-        "epica": 7,
-        "lendaria": 2
-      }
+      "chestRarityWeights": { "comum": 40, "incomum": 32, "rara": 19, "epica": 7, "lendaria": 2 }
+    },
+    {
+      "floor": 2,
+      "name": "Laboratórios e Biblioteca",
+      "rooms": [6, 8],
+      "themes": ["laboratorio", "biblioteca", "quadra", "sala_aula"],
+      "enemyPool": { "caderno_zumbi": 2, "prova_voadora": 3, "estojo": 2, "lousa": 2, "sinal_recreio": 2, "mochila": 2 },
+      "wavesPerRoom": [2, 3],
+      "enemiesPerWave": [4, 6],
+      "hpScale": 1.35,
+      "eliteChance": 0.12,
+      "trapChance": 0.45,
+      "boss": "katia",
+      "bossTheme": "orientacao",
+      "bossPillars": false,
+      "bossRoomName": "Sala da Orientação",
+      "chestRarityWeights": { "comum": 20, "incomum": 35, "rara": 28, "epica": 13, "lendaria": 4 }
+    },
+    {
+      "floor": 3,
+      "name": "Corredores da Coordenação",
+      "rooms": [6, 8],
+      "themes": ["sala_aula", "laboratorio", "quadra", "biblioteca", "patio"],
+      "enemyPool": { "caderno_zumbi": 2, "prova_voadora": 3, "estojo": 3, "lousa": 2, "sinal_recreio": 3, "mochila": 2 },
+      "wavesPerRoom": [2, 3],
+      "enemiesPerWave": [5, 7],
+      "hpScale": 1.7,
+      "eliteChance": 0.2,
+      "trapChance": 0.6,
+      "boss": "samara",
+      "bossTheme": "coordenacao",
+      "bossPillars": true,
+      "bossRoomName": "Sala da Coordenação",
+      "chestRarityWeights": { "comum": 10, "incomum": 30, "rara": 33, "epica": 20, "lendaria": 7 }
     }
   ]
 }

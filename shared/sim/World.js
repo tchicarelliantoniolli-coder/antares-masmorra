@@ -7,6 +7,8 @@ import { createPlayer, updatePlayers } from './personagens/Player.js';
 import { updateEnemies } from './inimigos/Enemy.js';
 import { updateProjectiles } from './armas/Projectiles.js';
 import { updateAreas } from './areas.js';
+import { updateAllies } from './personagens/Allies.js';
+import { updateTraps } from './salas/Props.js';
 
 /**
  * O "mundo" da partida: toda a lógica do jogo, sem nenhuma dependência do Phaser.
@@ -15,7 +17,7 @@ import { updateAreas } from './areas.js';
  * O renderizador só lê o estado e consome os eventos (sons, efeitos, números de dano).
  */
 export class World {
-  constructor({ data, seed = (Math.random() * 2 ** 31) | 0, players = [], floor = 1, maxFloors = 1, mode = 'solo', roomCount = null }) {
+  constructor({ data, seed = (Math.random() * 2 ** 31) | 0, players = [], floor = 1, maxFloors = 3, mode = 'solo', roomCount = null }) {
     this.data = data;
     this.seed = seed;
     this.rng = new RNG(seed);
@@ -28,6 +30,7 @@ export class World {
     this.projectiles = [];
     this.pickups = [];
     this.areas = [];
+    this.allies = [];
     this.events = [];
     this.state = 'playing'; // playing | victory | defeat
     this.endTimer = 0;
@@ -60,6 +63,7 @@ export class World {
     this.projectiles = [];
     this.pickups = [];
     this.areas = [];
+    this.allies = [];
     this.boss = null;
     setupRoomContents(this);
     const start = rooms[startRoomId];
@@ -111,6 +115,8 @@ export class World {
     updateEnemies(this, dt);
     updateProjectiles(this, dt);
     updateAreas(this, dt);
+    updateAllies(this, dt);
+    updateTraps(this);
     updatePickups(this, dt);
 
     // limpeza
@@ -118,8 +124,9 @@ export class World {
     if (this.projectiles.some((p) => p.dead)) this.projectiles = this.projectiles.filter((p) => !p.dead);
     if (this.pickups.some((p) => p.dead)) this.pickups = this.pickups.filter((p) => !p.dead);
     if (this.areas.some((a) => a.dead)) this.areas = this.areas.filter((a) => !a.dead);
+    if (this.allies.some((a) => a.dead)) this.allies = this.allies.filter((a) => !a.dead);
 
-    // derrota: todos caídos
+    // derrota: todos caídos (quem saiu da partida online conta como "dead")
     if (this.players.length && this.players.every((p) => p.downed || p.dead)) {
       this.state = 'defeat';
       this.emit('defeat');
@@ -134,8 +141,13 @@ export class World {
       return;
     }
     for (const p of this.players) {
+      if (p.dead) continue;
       if (p.downed) { p.downed = false; p.hp = Math.ceil(p.maxHp / 2); }
+      p.jailTimer = 0; p.jailFrom = null; p.signing = 0; p.pull = null;
+      p.reviveProgress = 0;
+      p.invuln = 1.5;
     }
+    this.stats.floorsCleared = this.floorNum;
     this.setupFloor(this.floorNum + 1);
   }
 }

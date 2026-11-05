@@ -46,7 +46,7 @@ Se algum campo estiver errado, o jogo mostra o erro na tela de carregamento (e `
 | `sprite` | orb | Aparência: `{ "shape", "color", "accent" }`. |
 
 Formatos de projétil (`shape`): `paper`, `staple`, `eraser`, `clip`, `pencil`, `chalk`, `blob`, `bolt`,
-`orb`, `paperball`, `puff`, `protractor`, `glyph`.
+`orb`, `paperball`, `puff`, `protractor`, `glyph`, `ball`, `proton`, `dna`, `plane`, `shaving`, `wave`, `beam`, `seed`.
 
 ### `melee`
 
@@ -70,11 +70,13 @@ Formatos de projétil (`shape`): `paper`, `staple`, `eraser`, `clip`, `pencil`, 
 | `veneno` | Envenena (acumula duração, até 8 s) | dano/s |
 | `gelo` | Deixa lento; `freeze` = chance de congelar | multiplicador de velocidade (0.5 = metade) |
 | `choque` | Raio que pula para inimigos próximos (`chains`, `radius`) | dano de cada salto |
+| `atordoar` | Atordoa (inimigo fica parado); chefes só ficam lentos | — (use `duration`) |
 
 ### Formatos de arma na mão (`sprite.shape`)
 
 `sheets`, `calculator`, `pistol`, `smg`, `shotgun`, `rifle`, `launcher`, `sword`, `bat`, `staff`, `tube`,
-`slingshot`, `magnifier`, `extinguisher`, `protractor`. Qualquer outro nome desenha um retângulo com as cores.
+`slingshot`, `magnifier`, `extinguisher`, `protractor`, `ball`, `cannon`, `dna_gun`, `bow`, `compass`, `umbrella`,
+`backpack`, `sharpener`, `bell`, `projector`, `magnet`. Qualquer outro nome desenha um retângulo com as cores.
 Para usar um desenho próprio, veja `client/assets/sprites/LEIA-ME.md` (chave `wpn_<id>`).
 
 ## Exemplo completo

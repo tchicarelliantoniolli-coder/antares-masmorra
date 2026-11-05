@@ -15,7 +15,10 @@ const PALETTES = {
   biblioteca:  { floor: '#8c3b3b', line: '#7a3030', wall: '#7a5232', wallTrim: '#5a3a22', top: '#3b2617' },
   patio:       { floor: '#a9a59b', line: '#8d897f', wall: '#b65a3c', wallTrim: '#d98a6a', top: '#5a3a2e' },
   secretaria:  { floor: '#5b6c88', line: '#4e5d77', wall: '#d8d0bc', wallTrim: '#8a7a5a', top: '#3a3f4f' },
-  corredor:    { floor: '#d6c7a2', line: '#c2b28d', wall: '#e9dcae', wallTrim: '#4a7bd8', top: '#4a4436' }
+  corredor:    { floor: '#d6c7a2', line: '#c2b28d', wall: '#e9dcae', wallTrim: '#4a7bd8', top: '#4a4436' },
+  orientacao:  { floor: '#7aa08a', line: '#6a907a', wall: '#f0dfe8', wallTrim: '#b07ad0', top: '#4a3a5a' },
+  coordenacao: { floor: '#7a2a2a', line: '#6a2020', wall: '#5a3a26', wallTrim: '#c9a227', top: '#2a1a12' },
+  cantina:     { floor: '#f0e8d8', line: '#e03a3a', wall: '#f6f0e0', wallTrim: '#e03a3a', top: '#5a3a2e' }
 };
 
 export function buildTileset() {
@@ -84,6 +87,19 @@ function floor(c, p, theme, v) {
       px(c, 0, 0, 32, 1, p.line); px(c, 0, 0, 1, 32, p.line); px(c, 16, 0, 1, 32, p.line); px(c, 0, 16, 32, 1, p.line);
       if (v === 1) px(c, 20, 20, 4, 4, shade(p.floor, -0.08));
       break;
+    case 'orientacao': // tapete macio verde com flores
+      noise(c, p.floor, 0.12, 61 + v);
+      if (v === 1) { px(c, 10, 10, 3, 3, '#ffd0e0'); px(c, 11, 11, 1, 1, '#ffd23f'); }
+      if (v === 2) px(c, 0, 0, 32, 2, p.line);
+      break;
+    case 'coordenacao': // carpete vermelho com borda dourada
+      noise(c, p.floor, 0.15, 71 + v);
+      if (v >= 1) { px(c, 0, 0, 32, 2, '#c9a227'); px(c, 0, 30, 32, 2, '#c9a227'); }
+      break;
+    case 'cantina': // piso xadrez vermelho e branco
+      px(c, 0, 0, 16, 16, p.floor); px(c, 16, 16, 16, 16, p.floor);
+      px(c, 16, 0, 16, 16, '#d84a4a'); px(c, 0, 16, 16, 16, '#d84a4a');
+      break;
   }
 }
 
@@ -121,6 +137,17 @@ function wallFace(c, p, theme) {
       break;
     case 'secretaria':
       px(c, 6, 8, 18, 12, '#c8a26a'); px(c, 9, 10, 4, 4, '#fbfbf3'); px(c, 15, 11, 5, 3, '#ffd23f');
+      break;
+    case 'orientacao':
+      px(c, 0, 12, 32, 2, p.wallTrim);
+      px(c, 6, 15, 6, 8, '#9be27a'); px(c, 20, 16, 5, 6, '#ffd0e0');
+      break;
+    case 'coordenacao':
+      for (let x = 2; x < 32; x += 10) px(c, x, 6, 8, 18, shade(p.wall, -0.15));
+      px(c, 0, 4, 32, 1, p.wallTrim);
+      break;
+    case 'cantina':
+      for (let x = 0; x < 32; x += 8) for (let y = 6; y < 26; y += 8) px(c, x, y, 7, 7, (x + y) % 16 ? '#ffffff' : '#ffd0d0');
       break;
     case 'corredor':
       // armários (lockers)
@@ -163,6 +190,16 @@ function obstacle(c, p, theme) {
       px(octx, 4, 18, 24, 11, '#b65a3c'); px(octx, 4, 18, 24, 2, '#d98a6a');
       circle(octx, 11, 13, 6, '#3a8a3a'); circle(octx, 20, 12, 7, '#4aa04a'); circle(octx, 16, 9, 5, '#5ab85a');
       px(octx, 13, 8, 2, 2, '#ff8fb1'); px(octx, 21, 10, 2, 2, '#ffd23f');
+      break;
+    case 'orientacao': // vaso de planta grande
+      px(octx, 9, 18, 14, 11, '#c98b4a'); circle(octx, 16, 12, 8, '#4aa04a'); circle(octx, 12, 9, 4, '#5ab85a');
+      break;
+    case 'coordenacao': // mesa de reunião
+      px(octx, 2, 8, 28, 14, '#6a4426'); px(octx, 2, 8, 28, 2, '#8a5a3a'); px(octx, 4, 22, 3, 7, '#3a2412'); px(octx, 25, 22, 3, 7, '#3a2412'); px(octx, 8, 11, 7, 5, '#fbfbf3');
+      break;
+    case 'cantina': // balcão
+      px(octx, 0, 6, 32, 22, '#d8d0bc'); px(octx, 0, 6, 32, 4, '#f6f0e0'); px(octx, 0, 24, 32, 4, '#a89a7a');
+      px(octx, 6, 2, 6, 6, '#ffd23f'); px(octx, 20, 3, 6, 5, '#ff7a1a');
       break;
     case 'secretaria': // arquivo de aço
       px(octx, 5, 2, 22, 27, '#8f98a3'); px(octx, 5, 2, 22, 2, '#b8bfc7');

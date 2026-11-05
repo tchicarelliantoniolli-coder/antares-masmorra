@@ -64,7 +64,7 @@ export class CharacterSelectScene extends Phaser.Scene {
       const lock = this.add.container(0, 0);
       lock.add(this.add.rectangle(0, 0, CARD_W, CARD_H, 0x0d0b14, 0.55).setOrigin(0));
       lock.add(this.add.image(CARD_W - 16, 16, 'icon_lock').setScale(1.2));
-      lock.add(this.add.text(6, 9, 'Etapa 3', titleStyle(7, '#ffd23f')));
+      lock.add(this.add.text(6, 9, 'Em breve', titleStyle(7, '#ffd23f')));
       cont.add(lock);
     }
     const zone = this.add.zone(0, 0, CARD_W, CARD_H).setOrigin(0).setInteractive({ useHandCursor: true });
@@ -135,7 +135,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     d.add(this.add.text(right, 398, c.skill.description, textStyle(18, '#e0dcf5', { wordWrap: { width: 450 } })));
     d.add(this.add.text(right, 440, `Passivo: ${c.passive.name}`, textStyle(20, '#7be04a')));
     d.add(this.add.text(right, 460, c.passive.description, textStyle(18, '#e0dcf5', { wordWrap: { width: 280 } })));
-    if (!c.playable) d.add(this.add.text(176, 486, 'Este professor chega na Etapa 3.', textStyle(20, '#ff9a1f')));
+    if (!c.playable) d.add(this.add.text(176, 486, 'Este professor chega numa próxima atualização.', textStyle(20, '#ff9a1f')));
   }
 
   confirm() {
@@ -143,7 +143,9 @@ export class CharacterSelectScene extends Phaser.Scene {
     if (!c.playable) { sound.play('no_energy'); this.cameras.main.shake(120, 0.004); return; }
     sound.play('select');
     this.cameras.main.fadeOut(250);
-    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Game', { characterId: c.id, mode: this.mode }));
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Game', {
+      mode: 'solo', players: [{ id: 'p1', characterId: c.id, name: 'Jogador 1', device: 'auto' }]
+    }));
   }
 
   back() {

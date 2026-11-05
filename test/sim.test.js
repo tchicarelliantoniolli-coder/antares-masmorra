@@ -125,8 +125,8 @@ test('co-op: jogador caído é revivido por colega perto por 3 s; todos caídos 
   assert.equal(w.state, 'defeat');
 });
 
-test('derrotar o chefe abre o portal; entrar nele = vitória (1 andar no MVP)', () => {
-  const w = makeWorld();
+test('derrotar o chefe abre o portal; no último andar, entrar nele = vitória', () => {
+  const w = makeWorld({ maxFloors: 1 });
   const p = w.players[0];
   const room = w.rooms[w.bossRoomId];
   putInRoom(w, p, room);

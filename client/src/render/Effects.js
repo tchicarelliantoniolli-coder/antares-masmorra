@@ -7,10 +7,10 @@ const DEPTH = 9600;
  * Transforma os eventos da simulação em sons, partículas, números de dano e tremidas de câmera.
  */
 export class Effects {
-  constructor(scene, renderer, localId) {
+  constructor(scene, renderer, localIds) {
     this.scene = scene;
     this.renderer = renderer;
-    this.localId = localId;
+    this.local = new Set(localIds);
     this.emitters = new Map();
     this.textPool = [];
   }
@@ -121,8 +121,8 @@ export class Effects {
           this.burst(ev.x, ev.y, ev.team === 'enemy' ? 0xff3d6e : 0xffffff, 4);
           break;
         case 'explosion':
-          this.ring(ev.x, ev.y, ev.radius, ev.style === 'acid' ? 0x7be04a : 0xfff4d6, 380, 0.9);
-          this.burst(ev.x, ev.y, ev.style === 'acid' ? 0x7be04a : 0xffffff, 18);
+          this.ring(ev.x, ev.y, ev.radius, ev.style === 'acid' ? 0x7be04a : ev.style === 'barrel' ? 0xffb02e : 0xfff4d6, 380, 0.9);
+          this.burst(ev.x, ev.y, ev.style === 'acid' ? 0x7be04a : ev.style === 'barrel' ? 0xff7a1a : 0xffffff, 18);
           sound.play(ev.style === 'acid' ? 'splash' : 'explosion', 0.05);
           this.shake(120, ev.style === 'acid' ? 0.002 : 0.006);
           break;
@@ -132,7 +132,7 @@ export class Effects {
         case 'reflect': this.burst(ev.x, ev.y, 0x9fffd0, 8); sound.play('deflect', 0.03); break;
         case 'player_hit':
           this.renderer.onPlayerHit(ev);
-          if (ev.id === this.localId) {
+          if (this.local.has(ev.id)) {
             sound.play(ev.shieldOnly ? 'shield_hit' : 'player_hurt');
             this.shake(140, ev.shieldOnly ? 0.004 : 0.008);
             hud?.flashDamage(ev.shieldOnly);
@@ -153,12 +153,16 @@ export class Effects {
         case 'room_lock': sound.play('door_close'); this.shake(120, 0.004); break;
         case 'room_clear': sound.play('door_open'); hud?.toast('Sala liberada!'); break;
         case 'wave_start': if (ev.wave > 1) hud?.toast(`Onda ${ev.wave}/${ev.total}`); break;
-        case 'no_energy': if (ev.playerId === this.localId) { sound.play('no_energy', 0.3); this.floatText(ev.x, ev.y - 30, 'Sem energia!', '#7fb8ff', 20); } break;
-        case 'skill_not_ready': if (ev.playerId === this.localId) sound.play('not_ready', 0.2); break;
+        case 'no_energy': if (this.local.has(ev.playerId)) { sound.play('no_energy', 0.3); this.floatText(ev.x, ev.y - 30, 'Sem energia!', '#7fb8ff', 20); } break;
+        case 'skill_not_ready': if (this.local.has(ev.playerId)) sound.play('not_ready', 0.2); break;
         case 'skill':
           sound.play('skill');
           if (ev.skill === 'nota_mil') { this.shake(200, 0.006); this.floatText(ev.x, ev.y - 34, 'NOTA MIL!', '#ff4d4d', 28, 900); }
           if (ev.skill === 'equacao') { sound.play('equation'); this.floatText(ev.x, ev.y - 34, 'x = 5', '#ffd23f', 28, 900); this.ring(ev.x, ev.y, 50, 0xffd23f, 400); }
+          if (ev.skill === 'pique') { sound.play('whistle'); this.floatText(ev.x, ev.y - 34, 'PIQUE!', '#5ee05e', 28, 900); this.ring(ev.x, ev.y, 120, 0x5ee05e, 500); }
+          if (ev.skill === 'campo_gravitacional') { this.ring(ev.x, ev.y, 125, 0xb08aff, 600); this.floatText(ev.x, ev.y - 30, 'F = G·m·M / d²', '#d0c0ff', 22, 1000); }
+          if (ev.skill === 'planta_carnivora') { this.burst(ev.x, ev.y, 0x3ac46a, 16); this.floatText(ev.x, ev.y - 30, 'Planta Carnívora!', '#7be04a', 22, 900); }
+          if (ev.skill === 'grammar_shield') { this.ring(ev.x, ev.y, 100, 0xff8fa3, 500); this.floatText(ev.x, ev.y - 34, 'GRAMMAR SHIELD!', '#ff8fa3', 26, 900); }
           break;
         case 'equation_hit':
           sound.play('big_hit');
@@ -185,6 +189,39 @@ export class Effects {
           break;
         case 'portal_enter': sound.play('portal'); break;
         case 'teleport': this.ring(ev.x, ev.y, 30, 0xc86bff, 300); break;
+        case 'prop_break':
+          this.renderer.onPropBreak(ev);
+          this.burst(ev.x, ev.y, ev.kind === 'barril' ? 0x3a9a4a : 0xc8945a, 12);
+          sound.play(ev.kind === 'barril' ? 'explosion' : 'crate', 0.04);
+          break;
+        case 'prop_hit': this.renderer.onPropHit(ev); sound.play('hit', 0.06); break;
+        case 'bell': sound.play('bell', 0.15); this.ring(ev.x, ev.y, 40, 0xe0b0ff, 300, 0.5); break;
+        case 'fuse': sound.play('fuse', 0.1); break;
+        case 'bite': sound.play('bite', 0.1); this.burst(ev.x, ev.y, 0x3ac46a, 6); break;
+        case 'immune': this.floatText(ev.x, ev.y, 'imune', '#9aa0a6', 18, 400); break;
+        case 'no_money': if (this.local.has(ev.playerId)) { sound.play('no_energy', 0.3); this.floatText(ev.x, ev.y - 30, `Precisa de ${ev.price} moedas`, '#f2c94c', 20); } break;
+        case 'buy': sound.play('coin'); sound.play('weapon'); this.burst(ev.x, ev.y, 0xf2c94c, 14); break;
+        case 'blessing':
+          sound.play('heal');
+          this.ring(ev.x, ev.y, 80, 0xffd23f, 600);
+          if (this.local.has(ev.playerId)) hud?.banner(ev.name.toUpperCase(), ev.desc);
+          break;
+        case 'jail': sound.play('door_close'); this.shake(150, 0.006); if (this.local.has(ev.id)) hud?.toast('SUSPENSO! Aguarde na cela...'); break;
+        case 'jail_free': sound.play('door_open'); this.ring(ev.x, ev.y, 30, 0xffffff, 300); break;
+        case 'signing': sound.play('player_hurt'); if (this.local.has(ev.id)) hud?.toast('Assinando o Caderno Preto! Um colega pode te libertar'); break;
+        case 'sign_free': sound.play('revive'); this.floatText(ev.x, ev.y - 30, 'Livre!', '#5ee05e', 22); break;
+        case 'enemy_vanish': this.burst(ev.x, ev.y, 0x9aa0a6, 8); break;
+        case 'boss_say': {
+          const b = this.renderer.world.enemies.find((e) => e.id === ev.id);
+          if (b) this.floatText(b.x, b.y - 70, ev.text, '#ffe0f0', 22, 1800);
+          break;
+        }
+        case 'player_left': hud?.toast(`${ev.name} saiu da partida`); break;
+        case 'floor_start':
+          sound.playMusic('dungeon');
+          hud?.banner(`ANDAR ${ev.floor}`, ev.name, 2600);
+          break;
+        case 'ally_end': this.burst(ev.x, ev.y, 0x3ac46a, 8); break;
         default: break;
       }
     }

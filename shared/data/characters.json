@@ -8,15 +8,37 @@
       "subject": "Redação",
       "playable": true,
       "color": "#ff7a1a",
-      "stats": { "hp": 6, "shield": 5, "energy": 200, "speed": 150 },
+      "stats": {
+        "hp": 6,
+        "shield": 5,
+        "energy": 200,
+        "speed": 150
+      },
       "starterWeapon": "folhas_redacao",
       "starterWeaponName": "Folhas de Redação Afiadas",
-      "skill": { "id": "nota_mil", "name": "Nota Mil", "cooldown": 10,
-                 "description": "Lança um texto gigante nota 1000 que atravessa a tela, paredes e inimigos, apagando projéteis." },
-      "passive": { "id": "caneta_vermelha", "name": "Caneta Vermelha",
-                   "description": "+15% de chance de crítico com qualquer arma." },
-      "visual": { "skin": "#e9b896", "hair": "#1f1714", "hairStyle": "long_straight", "glasses": "thin", "glassesColor": "#a89a8c",
-                  "beard": "none", "coat": "#f6f6f2", "trim": "#ff7a1a", "shirt": "#f6f6f2", "pants": "#3a4258" }
+      "skill": {
+        "id": "nota_mil",
+        "name": "Nota Mil",
+        "cooldown": 10,
+        "description": "Lança um texto gigante nota 1000 que atravessa a tela, paredes e inimigos, apagando projéteis."
+      },
+      "passive": {
+        "id": "caneta_vermelha",
+        "name": "Caneta Vermelha",
+        "description": "+15% de chance de crítico com qualquer arma."
+      },
+      "visual": {
+        "skin": "#e9b896",
+        "hair": "#1f1714",
+        "hairStyle": "long_straight",
+        "glasses": "thin",
+        "glassesColor": "#a89a8c",
+        "beard": "none",
+        "coat": "#f6f6f2",
+        "trim": "#ff7a1a",
+        "shirt": "#f6f6f2",
+        "pants": "#3a4258"
+      }
     },
     {
       "id": "andreia",
@@ -25,15 +47,37 @@
       "subject": "Inglês",
       "playable": false,
       "color": "#f5c400",
-      "stats": { "hp": 6, "shield": 5, "energy": 200, "speed": 150 },
+      "stats": {
+        "hp": 6,
+        "shield": 5,
+        "energy": 200,
+        "speed": 150
+      },
       "starterWeapon": "baloes_ingles",
       "starterWeaponName": "Balões de Fala (English!)",
-      "skill": { "id": "translate", "name": "Translate", "cooldown": 14,
-                 "description": "Confunde os inimigos próximos: eles atacam uns aos outros por alguns segundos." },
-      "passive": { "id": "bilingue", "name": "Bilíngue",
-                   "description": "20% de chance de disparar duas vezes." },
-      "visual": { "skin": "#f0c4a0", "hair": "#6b3a22", "hairStyle": "curly_medium", "glasses": "none",
-                  "beard": "none", "coat": "#f6f6f2", "trim": "#f5c400", "shirt": "#d8d8d8", "pants": "#3a4258", "earrings": true }
+      "skill": {
+        "id": "translate",
+        "name": "Translate",
+        "cooldown": 14,
+        "description": "Confunde os inimigos próximos: eles atacam uns aos outros por alguns segundos."
+      },
+      "passive": {
+        "id": "bilingue",
+        "name": "Bilíngue",
+        "description": "20% de chance de disparar duas vezes."
+      },
+      "visual": {
+        "skin": "#f0c4a0",
+        "hair": "#6b3a22",
+        "hairStyle": "curly_medium",
+        "glasses": "none",
+        "beard": "none",
+        "coat": "#f6f6f2",
+        "trim": "#f5c400",
+        "shirt": "#d8d8d8",
+        "pants": "#3a4258",
+        "earrings": true
+      }
     },
     {
       "id": "felipe_cardoso",
@@ -42,15 +86,37 @@
       "subject": "História",
       "playable": false,
       "color": "#b5743c",
-      "stats": { "hp": 7, "shield": 4, "energy": 180, "speed": 150 },
+      "stats": {
+        "hp": 7,
+        "shield": 4,
+        "energy": 180,
+        "speed": 150
+      },
       "starterWeapon": "catapulta_mini",
       "starterWeaponName": "Catapulta Medieval em Miniatura",
-      "skill": { "id": "exercito_historico", "name": "Exército Histórico", "cooldown": 18,
-                 "description": "Invoca soldados históricos (legionário, cavaleiro, bandeirante) como aliados temporários." },
-      "passive": { "id": "estrategista", "name": "Estrategista",
-                   "description": "Aliados invocados duram 50% mais." },
-      "visual": { "skin": "#e2ae8a", "hair": "#2a1e18", "hairStyle": "quiff", "glasses": "none",
-                  "beard": "stubble", "beardColor": "#3a2a20", "coat": "#f6f6f2", "trim": "#f6f6f2", "shirt": "#f6f6f2", "pants": "#2e3440" }
+      "skill": {
+        "id": "exercito_historico",
+        "name": "Exército Histórico",
+        "cooldown": 18,
+        "description": "Invoca soldados históricos (legionário, cavaleiro, bandeirante) como aliados temporários."
+      },
+      "passive": {
+        "id": "estrategista",
+        "name": "Estrategista",
+        "description": "Aliados invocados duram 50% mais."
+      },
+      "visual": {
+        "skin": "#e2ae8a",
+        "hair": "#2a1e18",
+        "hairStyle": "quiff",
+        "glasses": "none",
+        "beard": "stubble",
+        "beardColor": "#3a2a20",
+        "coat": "#f6f6f2",
+        "trim": "#f6f6f2",
+        "shirt": "#f6f6f2",
+        "pants": "#2e3440"
+      }
     },
     {
       "id": "filipe_stefanini",
@@ -58,17 +124,39 @@
       "shortName": "Filipe",
       "subject": "Educação Física",
       "subjectShort": "Ed. Física",
-      "playable": false,
+      "playable": true,
       "color": "#3ac46a",
-      "stats": { "hp": 9, "shield": 4, "energy": 160, "speed": 160 },
+      "stats": {
+        "hp": 9,
+        "shield": 4,
+        "energy": 160,
+        "speed": 160
+      },
       "starterWeapon": "bolas_esportes",
       "starterWeaponName": "Bolas de Vários Esportes",
-      "skill": { "id": "pique", "name": "Pique", "cooldown": 15,
-                 "description": "Apita e dá +60% de velocidade e cadência ao time todo por 5 segundos." },
-      "passive": { "id": "condicionamento", "name": "Condicionamento Físico",
-                   "description": "+3 de vida máxima." },
-      "visual": { "skin": "#e9b994", "hair": "#3b2a20", "hairStyle": "spiky", "glasses": "none",
-                  "beard": "stubble", "beardColor": "#4a3626", "coat": "#f6f6f2", "trim": "#f6f6f2", "shirt": "#f6f6f2", "pants": "#1f3a8a" }
+      "skill": {
+        "id": "pique",
+        "name": "Pique",
+        "cooldown": 15,
+        "description": "Apita e dá +60% de velocidade e cadência ao time todo por 5 segundos."
+      },
+      "passive": {
+        "id": "condicionamento",
+        "name": "Condicionamento Físico",
+        "description": "+3 de vida máxima."
+      },
+      "visual": {
+        "skin": "#e9b994",
+        "hair": "#3b2a20",
+        "hairStyle": "spiky",
+        "glasses": "none",
+        "beard": "stubble",
+        "beardColor": "#4a3626",
+        "coat": "#f6f6f2",
+        "trim": "#f6f6f2",
+        "shirt": "#f6f6f2",
+        "pants": "#1f3a8a"
+      }
     },
     {
       "id": "gabriela_pyles",
@@ -77,15 +165,37 @@
       "subject": "Artes",
       "playable": false,
       "color": "#e04ad0",
-      "stats": { "hp": 6, "shield": 5, "energy": 200, "speed": 150 },
+      "stats": {
+        "hp": 6,
+        "shield": 5,
+        "energy": 200,
+        "speed": 150
+      },
       "starterWeapon": "pincel_tinta",
       "starterWeaponName": "Pincel de Poças de Tinta",
-      "skill": { "id": "obra_prima", "name": "Obra-Prima", "cooldown": 16,
-                 "description": "Pinta uma obra de arte gigante no chão que deixa todos os inimigos em cima dela bem lentos." },
-      "passive": { "id": "paleta_viva", "name": "Paleta Viva",
-                   "description": "Poças de tinta ganham um efeito aleatório (fogo, gelo ou veneno)." },
-      "visual": { "skin": "#e7b48e", "hair": "#2b1a12", "hairStyle": "ponytail", "glasses": "none",
-                  "beard": "none", "coat": "#f6f6f2", "trim": "#1f6b3a", "shirt": "#1c1c1c", "pants": "#2e3440", "earrings": true }
+      "skill": {
+        "id": "obra_prima",
+        "name": "Obra-Prima",
+        "cooldown": 16,
+        "description": "Pinta uma obra de arte gigante no chão que deixa todos os inimigos em cima dela bem lentos."
+      },
+      "passive": {
+        "id": "paleta_viva",
+        "name": "Paleta Viva",
+        "description": "Poças de tinta ganham um efeito aleatório (fogo, gelo ou veneno)."
+      },
+      "visual": {
+        "skin": "#e7b48e",
+        "hair": "#2b1a12",
+        "hairStyle": "ponytail",
+        "glasses": "none",
+        "beard": "none",
+        "coat": "#f6f6f2",
+        "trim": "#1f6b3a",
+        "shirt": "#1c1c1c",
+        "pants": "#2e3440",
+        "earrings": true
+      }
     },
     {
       "id": "gabriela_simonetti",
@@ -94,15 +204,37 @@
       "subject": "História",
       "playable": false,
       "color": "#c9a227",
-      "stats": { "hp": 6, "shield": 6, "energy": 180, "speed": 150 },
+      "stats": {
+        "hp": 6,
+        "shield": 6,
+        "energy": 180,
+        "speed": 150
+      },
       "starterWeapon": "lanca_romana",
       "starterWeaponName": "Pergaminhos e Lança Romana",
-      "skill": { "id": "linha_do_tempo", "name": "Linha do Tempo", "cooldown": 20,
-                 "description": "Volta a posição e a vida de todo o time para como estavam 3 segundos antes." },
-      "passive": { "id": "memoria_historica", "name": "Memória Histórica",
-                   "description": "+1 de escudo máximo e o escudo regenera mais rápido." },
-      "visual": { "skin": "#f0c3a2", "hair": "#5a3a26", "hairStyle": "bob", "glasses": "round", "glassesColor": "#2a2a2a",
-                  "beard": "none", "coat": "#f6f6f2", "trim": "#f5c400", "shirt": "#f6f6f2", "pants": "#3a4258" }
+      "skill": {
+        "id": "linha_do_tempo",
+        "name": "Linha do Tempo",
+        "cooldown": 20,
+        "description": "Volta a posição e a vida de todo o time para como estavam 3 segundos antes."
+      },
+      "passive": {
+        "id": "memoria_historica",
+        "name": "Memória Histórica",
+        "description": "+1 de escudo máximo e o escudo regenera mais rápido."
+      },
+      "visual": {
+        "skin": "#f0c3a2",
+        "hair": "#5a3a26",
+        "hairStyle": "bob",
+        "glasses": "round",
+        "glassesColor": "#2a2a2a",
+        "beard": "none",
+        "coat": "#f6f6f2",
+        "trim": "#f5c400",
+        "shirt": "#f6f6f2",
+        "pants": "#3a4258"
+      }
     },
     {
       "id": "harilson",
@@ -111,49 +243,116 @@
       "subject": "Matemática",
       "playable": true,
       "color": "#4aa8ff",
-      "stats": { "hp": 7, "shield": 4, "energy": 200, "speed": 148 },
+      "stats": {
+        "hp": 7,
+        "shield": 4,
+        "energy": 200,
+        "speed": 148
+      },
       "starterWeapon": "numeros_sinais",
       "starterWeaponName": "Números e Sinais",
-      "skill": { "id": "equacao", "name": "Equação", "cooldown": 9,
-                 "description": "Resolve a equação: o próximo inimigo atingido leva dano x5." },
-      "passive": { "id": "calculo_mental", "name": "Cálculo Mental",
-                   "description": "Todas as armas gastam 25% menos energia." },
-      "visual": { "skin": "#efc3a0", "hair": "#a9a6a2", "hairStyle": "short", "glasses": "rect", "glassesColor": "#2e2e2e",
-                  "beard": "none", "coat": "#f6f6f2", "trim": "#f6f6f2", "shirt": "#f6f6f2", "pants": "#3a4258" }
+      "skill": {
+        "id": "equacao",
+        "name": "Equação",
+        "cooldown": 9,
+        "description": "Resolve a equação: o próximo inimigo atingido leva dano x5."
+      },
+      "passive": {
+        "id": "calculo_mental",
+        "name": "Cálculo Mental",
+        "description": "Todas as armas gastam 25% menos energia."
+      },
+      "visual": {
+        "skin": "#efc3a0",
+        "hair": "#a9a6a2",
+        "hairStyle": "short",
+        "glasses": "rect",
+        "glassesColor": "#2e2e2e",
+        "beard": "none",
+        "coat": "#f6f6f2",
+        "trim": "#f6f6f2",
+        "shirt": "#f6f6f2",
+        "pants": "#3a4258"
+      }
     },
     {
       "id": "jean_paulo",
       "name": "Jean Paulo W. Monteiro",
       "shortName": "Jean Paulo",
       "subject": "Física",
-      "playable": false,
+      "playable": true,
       "color": "#7a5cff",
-      "stats": { "hp": 7, "shield": 5, "energy": 180, "speed": 145 },
+      "stats": {
+        "hp": 7,
+        "shield": 5,
+        "energy": 180,
+        "speed": 145
+      },
       "starterWeapon": "canhao_protons",
       "starterWeaponName": "Canhão de Prótons",
-      "skill": { "id": "campo_gravitacional", "name": "Campo Gravitacional", "cooldown": 14,
-                 "description": "Cria um campo gravitacional que puxa os inimigos para o centro e causa dano." },
-      "passive": { "id": "inercia", "name": "Inércia",
-                   "description": "Os tiros empurram os inimigos para trás." },
-      "visual": { "skin": "#e6b58f", "hair": "#241a15", "hairStyle": "short", "glasses": "thin", "glassesColor": "#555555",
-                  "beard": "none", "coat": "#f6f6f2", "trim": "#f6f6f2", "shirt": "#3a1e22", "pants": "#2e3440" }
+      "skill": {
+        "id": "campo_gravitacional",
+        "name": "Campo Gravitacional",
+        "cooldown": 14,
+        "description": "Cria um campo gravitacional que puxa os inimigos para o centro e causa dano."
+      },
+      "passive": {
+        "id": "inercia",
+        "name": "Inércia",
+        "description": "Os tiros empurram os inimigos para trás."
+      },
+      "visual": {
+        "skin": "#e6b58f",
+        "hair": "#241a15",
+        "hairStyle": "short",
+        "glasses": "thin",
+        "glassesColor": "#555555",
+        "beard": "none",
+        "coat": "#f6f6f2",
+        "trim": "#f6f6f2",
+        "shirt": "#3a1e22",
+        "pants": "#2e3440"
+      }
     },
     {
       "id": "marina",
       "name": "Marina Demarque dos Santos",
       "shortName": "Marina",
       "subject": "Inglês",
-      "playable": false,
+      "playable": true,
       "color": "#d62828",
-      "stats": { "hp": 6, "shield": 5, "energy": 200, "speed": 152 },
+      "stats": {
+        "hp": 6,
+        "shield": 5,
+        "energy": 200,
+        "speed": 152
+      },
       "starterWeapon": "arco_alfabeto",
       "starterWeaponName": "Arco do Alfabeto",
-      "skill": { "id": "grammar_shield", "name": "Grammar Shield", "cooldown": 15,
-                 "description": "Cria um escudo de letras ao redor do time que bloqueia projéteis por 4 segundos." },
-      "passive": { "id": "spelling_bee", "name": "Spelling Bee",
-                   "description": "Letras vogais causam dano crítico garantido." },
-      "visual": { "skin": "#f0c3a0", "hair": "#c49a5e", "hairHighlight": "#e6c78f", "hairStyle": "long_wavy", "glasses": "round", "glassesColor": "#8a6a50",
-                  "beard": "none", "coat": "#f6f6f2", "trim": "#f5c400", "shirt": "#d62828", "pants": "#3a4258" }
+      "skill": {
+        "id": "grammar_shield",
+        "name": "Grammar Shield",
+        "cooldown": 15,
+        "description": "Cria um escudo de letras ao redor do time que bloqueia projéteis por 4 segundos."
+      },
+      "passive": {
+        "id": "spelling_bee",
+        "name": "Spelling Bee",
+        "description": "Letras vogais causam dano crítico garantido."
+      },
+      "visual": {
+        "skin": "#f0c3a0",
+        "hair": "#c49a5e",
+        "hairHighlight": "#e6c78f",
+        "hairStyle": "long_wavy",
+        "glasses": "round",
+        "glassesColor": "#8a6a50",
+        "beard": "none",
+        "coat": "#f6f6f2",
+        "trim": "#f5c400",
+        "shirt": "#d62828",
+        "pants": "#3a4258"
+      }
     },
     {
       "id": "rosana",
@@ -162,15 +361,36 @@
       "subject": "Ciências",
       "playable": false,
       "color": "#7be04a",
-      "stats": { "hp": 6, "shield": 5, "energy": 200, "speed": 148 },
+      "stats": {
+        "hp": 6,
+        "shield": 5,
+        "energy": 200,
+        "speed": 148
+      },
       "starterWeapon": "frascos_quimicos",
       "starterWeaponName": "Frascos Químicos Explosivos",
-      "skill": { "id": "reacao_em_cadeia", "name": "Reação em Cadeia", "cooldown": 16,
-                 "description": "Cada inimigo atingido explode, atingindo os vizinhos, que também explodem." },
-      "passive": { "id": "imunidade", "name": "Imunidade",
-                   "description": "Imune a veneno e a poças de toner." },
-      "visual": { "skin": "#f0c4a4", "hair": "#4a2418", "hairStyle": "curly_short", "glasses": "none",
-                  "beard": "none", "coat": "#f6f6f2", "trim": "#f5c400", "shirt": "#7a1f2b", "pants": "#2e3440" }
+      "skill": {
+        "id": "reacao_em_cadeia",
+        "name": "Reação em Cadeia",
+        "cooldown": 16,
+        "description": "Cada inimigo atingido explode, atingindo os vizinhos, que também explodem."
+      },
+      "passive": {
+        "id": "imunidade",
+        "name": "Imunidade",
+        "description": "Imune a veneno e a poças de toner."
+      },
+      "visual": {
+        "skin": "#f0c4a4",
+        "hair": "#4a2418",
+        "hairStyle": "curly_short",
+        "glasses": "none",
+        "beard": "none",
+        "coat": "#f6f6f2",
+        "trim": "#f5c400",
+        "shirt": "#7a1f2b",
+        "pants": "#2e3440"
+      }
     },
     {
       "id": "tatiane",
@@ -180,15 +400,38 @@
       "subjectShort": "Gramática e Lit.",
       "playable": false,
       "color": "#c0392b",
-      "stats": { "hp": 6, "shield": 5, "energy": 220, "speed": 150 },
+      "stats": {
+        "hp": 6,
+        "shield": 5,
+        "energy": 220,
+        "speed": 150
+      },
       "starterWeapon": "livro_magico",
       "starterWeaponName": "Livro Mágico",
-      "skill": { "id": "classicos_vivos", "name": "Clássicos Vivos", "cooldown": 18,
-                 "description": "Invoca personagens de clássicos da literatura brasileira (Capitu, Macunaíma, Policarpo Quaresma) para lutar." },
-      "passive": { "id": "leitura_dinamica", "name": "Leitura Dinâmica",
-                   "description": "Recarga da habilidade 20% mais rápida." },
-      "visual": { "skin": "#efc19e", "hair": "#6a4a30", "hairHighlight": "#8a6a48", "hairStyle": "long_wavy", "glasses": "none",
-                  "beard": "none", "coat": "#f6f6f2", "trim": "#f6f6f2", "shirt": "#f6f6f2", "pants": "#3a4258", "earrings": true }
+      "skill": {
+        "id": "classicos_vivos",
+        "name": "Clássicos Vivos",
+        "cooldown": 18,
+        "description": "Invoca personagens de clássicos da literatura brasileira (Capitu, Macunaíma, Policarpo Quaresma) para lutar."
+      },
+      "passive": {
+        "id": "leitura_dinamica",
+        "name": "Leitura Dinâmica",
+        "description": "Recarga da habilidade 20% mais rápida."
+      },
+      "visual": {
+        "skin": "#efc19e",
+        "hair": "#6a4a30",
+        "hairHighlight": "#8a6a48",
+        "hairStyle": "long_wavy",
+        "glasses": "none",
+        "beard": "none",
+        "coat": "#f6f6f2",
+        "trim": "#f6f6f2",
+        "shirt": "#f6f6f2",
+        "pants": "#3a4258",
+        "earrings": true
+      }
     },
     {
       "id": "vinicius",
@@ -197,32 +440,77 @@
       "subject": "Física",
       "playable": false,
       "color": "#5ef2ff",
-      "stats": { "hp": 7, "shield": 5, "energy": 190, "speed": 150 },
+      "stats": {
+        "hp": 7,
+        "shield": 5,
+        "energy": 190,
+        "speed": 150
+      },
       "starterWeapon": "raios_eletricos",
       "starterWeaponName": "Raios Elétricos",
-      "skill": { "id": "circuito", "name": "Circuito", "cooldown": 14,
-                 "description": "Liga os inimigos num circuito: o dano causado em um é dividido entre todos." },
-      "passive": { "id": "alta_voltagem", "name": "Alta Voltagem",
-                   "description": "Todas as armas têm 15% de chance de dar choque." },
-      "visual": { "skin": "#ebb994", "hair": "#4a3020", "hairStyle": "quiff", "glasses": "none",
-                  "beard": "full", "beardColor": "#4a3020", "coat": "#f6f6f2", "trim": "#f6f6f2", "shirt": "#f6f6f2", "pants": "#2e3440" }
+      "skill": {
+        "id": "circuito",
+        "name": "Circuito",
+        "cooldown": 14,
+        "description": "Liga os inimigos num circuito: o dano causado em um é dividido entre todos."
+      },
+      "passive": {
+        "id": "alta_voltagem",
+        "name": "Alta Voltagem",
+        "description": "Todas as armas têm 15% de chance de dar choque."
+      },
+      "visual": {
+        "skin": "#ebb994",
+        "hair": "#4a3020",
+        "hairStyle": "quiff",
+        "glasses": "none",
+        "beard": "full",
+        "beardColor": "#4a3020",
+        "coat": "#f6f6f2",
+        "trim": "#f6f6f2",
+        "shirt": "#f6f6f2",
+        "pants": "#2e3440"
+      }
     },
     {
       "id": "vivian",
       "name": "Vivian Cristine Calegari",
       "shortName": "Vivian",
       "subject": "Biologia",
-      "playable": false,
+      "playable": true,
       "color": "#2fbf71",
-      "stats": { "hp": 6, "shield": 5, "energy": 200, "speed": 150 },
+      "stats": {
+        "hp": 6,
+        "shield": 5,
+        "energy": 200,
+        "speed": 150
+      },
       "starterWeapon": "dna_celulas",
       "starterWeaponName": "Lançador de DNA e Células",
-      "skill": { "id": "planta_carnivora", "name": "Planta Carnívora", "cooldown": 16,
-                 "description": "Planta uma planta carnívora que funciona como torreta e morde os inimigos." },
-      "passive": { "id": "metabolismo", "name": "Metabolismo",
-                   "description": "Regenera 1 de vida a cada 20 segundos." },
-      "visual": { "skin": "#f0c4a0", "hair": "#e3c27a", "hairHighlight": "#f2dca0", "hairStyle": "long_straight", "glasses": "none",
-                  "beard": "none", "coat": "#f6f6f2", "trim": "#ff7a1a", "shirt": "#f6f6f2", "pants": "#3a4258", "necklace": true }
+      "skill": {
+        "id": "planta_carnivora",
+        "name": "Planta Carnívora",
+        "cooldown": 16,
+        "description": "Planta uma planta carnívora que funciona como torreta e morde os inimigos."
+      },
+      "passive": {
+        "id": "metabolismo",
+        "name": "Metabolismo",
+        "description": "Regenera 1 de vida a cada 20 segundos."
+      },
+      "visual": {
+        "skin": "#f0c4a0",
+        "hair": "#e3c27a",
+        "hairHighlight": "#f2dca0",
+        "hairStyle": "long_straight",
+        "glasses": "none",
+        "beard": "none",
+        "coat": "#f6f6f2",
+        "trim": "#ff7a1a",
+        "shirt": "#f6f6f2",
+        "pants": "#3a4258",
+        "necklace": true
+      }
     },
     {
       "id": "william",
@@ -231,15 +519,37 @@
       "subject": "Geografia",
       "playable": false,
       "color": "#2a8fd8",
-      "stats": { "hp": 7, "shield": 5, "energy": 180, "speed": 150 },
+      "stats": {
+        "hp": 7,
+        "shield": 5,
+        "energy": 180,
+        "speed": 150
+      },
       "starterWeapon": "globo_bumerangue",
       "starterWeaponName": "Globo Terrestre Bumerangue",
-      "skill": { "id": "terremoto", "name": "Terremoto / Vulcão", "cooldown": 17,
-                 "description": "Faz tremer a sala (atordoa inimigos) ou abre um vulcão que lança lava." },
-      "passive": { "id": "cartografo", "name": "Cartógrafo",
-                   "description": "O minimapa já começa mostrando o andar inteiro." },
-      "visual": { "skin": "#e2aa86", "hair": "#1c1512", "hairStyle": "curly_short", "glasses": "rect", "glassesColor": "#222222",
-                  "beard": "none", "coat": "#f6f6f2", "trim": "#f6f6f2", "shirt": "#f6f6f2", "pants": "#2e3440" }
+      "skill": {
+        "id": "terremoto",
+        "name": "Terremoto / Vulcão",
+        "cooldown": 17,
+        "description": "Faz tremer a sala (atordoa inimigos) ou abre um vulcão que lança lava."
+      },
+      "passive": {
+        "id": "cartografo",
+        "name": "Cartógrafo",
+        "description": "O minimapa já começa mostrando o andar inteiro."
+      },
+      "visual": {
+        "skin": "#e2aa86",
+        "hair": "#1c1512",
+        "hairStyle": "curly_short",
+        "glasses": "rect",
+        "glassesColor": "#222222",
+        "beard": "none",
+        "coat": "#f6f6f2",
+        "trim": "#f6f6f2",
+        "shirt": "#f6f6f2",
+        "pants": "#2e3440"
+      }
     }
   ],
   "bosses": [
@@ -248,16 +558,35 @@
       "name": "Katia da Vinha Tornisielo",
       "role": "Orientadora Pedagógica e Psicóloga",
       "floor": 2,
-      "visual": { "skin": "#ecb994", "hair": "#2a1a14", "hairStyle": "long_straight", "glasses": "none",
-                  "beard": "none", "coat": "#20335a", "trim": "#20335a", "shirt": "#20335a", "pants": "#1c2438" }
+      "visual": {
+        "skin": "#ecb994",
+        "hair": "#2a1a14",
+        "hairStyle": "long_straight",
+        "glasses": "none",
+        "beard": "none",
+        "coat": "#20335a",
+        "trim": "#20335a",
+        "shirt": "#20335a",
+        "pants": "#1c2438"
+      }
     },
     {
       "id": "samara",
       "name": "Samara S. de A. Peres",
       "role": "Coordenadora Pedagógica",
       "floor": 3,
-      "visual": { "skin": "#efc0a0", "hair": "#5a3420", "hairStyle": "bob", "glasses": "rect", "glassesColor": "#3a6a9a",
-                  "beard": "none", "coat": "#1e2f55", "trim": "#1e2f55", "shirt": "#1e2f55", "pants": "#1c2438" }
+      "visual": {
+        "skin": "#efc0a0",
+        "hair": "#5a3420",
+        "hairStyle": "bob",
+        "glasses": "rect",
+        "glassesColor": "#3a6a9a",
+        "beard": "none",
+        "coat": "#1e2f55",
+        "trim": "#1e2f55",
+        "shirt": "#1e2f55",
+        "pants": "#1c2438"
+      }
     }
   ]
 }

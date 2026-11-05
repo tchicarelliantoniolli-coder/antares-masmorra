@@ -6,6 +6,8 @@ import { GameScene } from './scenes/GameScene.js';
 import { HudScene } from './scenes/HudScene.js';
 import { PauseScene } from './scenes/PauseScene.js';
 import { ResultScene } from './scenes/ResultScene.js';
+import { LobbyScene } from './scenes/LobbyScene.js';
+import { OnlineMenuScene } from './scenes/OnlineMenuScene.js';
 import { GAME_W, GAME_H } from './config.js';
 
 async function loadJson(name) {
@@ -48,7 +50,7 @@ async function start() {
     roundPixels: true,
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
     input: { gamepad: true },
-    scene: [BootScene, MenuScene, CharacterSelectScene, GameScene, HudScene, PauseScene, ResultScene]
+    scene: [BootScene, MenuScene, CharacterSelectScene, LobbyScene, OnlineMenuScene, GameScene, HudScene, PauseScene, ResultScene]
   });
   game.registry.set('data', data);
   window.__game = game; // útil para depuração no console

@@ -15,6 +15,33 @@ export class TileMap {
     this.owner = new Int16Array(w * h).fill(-1);
     this.theme = new Uint8Array(w * h);
     this.locked = new Set();
+    this.props = new Map();   // índice do tile -> { kind: 'caixa' | 'barril', hp, maxHp }
+    this.traps = [];          // { tx, ty, phase } espinhos
+    this.decor = [];          // { kind, tx, ty } decoração sem colisão
+  }
+
+  /** Versão compacta para enviar pela rede (modo online). */
+  serialize() {
+    return {
+      w: this.w, h: this.h,
+      tiles: Array.from(this.tiles),
+      owner: Array.from(this.owner),
+      theme: Array.from(this.theme),
+      props: [...this.props].map(([i, p]) => [i, p.kind, p.hp, p.maxHp]),
+      traps: this.traps,
+      decor: this.decor
+    };
+  }
+
+  static deserialize(o) {
+    const m = new TileMap(o.w, o.h);
+    m.tiles.set(o.tiles);
+    m.owner.set(o.owner);
+    m.theme.set(o.theme);
+    for (const [i, kind, hp, maxHp] of o.props) m.props.set(i, { kind, hp, maxHp });
+    m.traps = o.traps;
+    m.decor = o.decor;
+    return m;
   }
 
   inBounds(tx, ty) { return tx >= 0 && ty >= 0 && tx < this.w && ty < this.h; }

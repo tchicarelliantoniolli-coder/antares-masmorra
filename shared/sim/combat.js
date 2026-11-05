@@ -1,5 +1,6 @@
 import { INVULN_TIME, TILE } from './constants.js';
 import { dropEnergy, dropCoins, dropWeapon, createPickup } from './salas/Pickups.js';
+import { damagePropsInRadius } from './salas/Props.js';
 
 /**
  * Dano em inimigo. opts: { crit, source (jogador), effect, knockback, angle, noMul }
@@ -7,6 +8,10 @@ import { dropEnergy, dropCoins, dropWeapon, createPickup } from './salas/Pickups
  */
 export function damageEnemy(world, e, amount, opts = {}) {
   if (e.dead || e.spawning > 0) return 0;
+  if (e.def.invulnerable || e.shielded > 0) {
+    world.emit('immune', { x: e.x, y: e.y - e.r });
+    return 0;
+  }
   let dmg = amount;
   const src = opts.source;
   if (src && !opts.noMul && src.buffs.nextHitMul > 1) {
@@ -54,6 +59,10 @@ export function applyEffect(world, e, eff, src) {
     case 'choque':
       chainShock(world, e, eff, src);
       break;
+    case 'atordoar':
+      if (!e.def.boss) e.status.stun = Math.max(e.status.stun || 0, eff.duration);
+      else e.status.slow = Math.max(e.status.slow || 0, eff.duration * 0.5), e.status.slowMul = 0.6;
+      break;
   }
 }
 
@@ -79,8 +88,9 @@ function chainShock(world, first, eff, src) {
 }
 
 /** Explosão em área (dano em inimigos; opcionalmente nos jogadores). */
-export function explode(world, x, y, radius, damage, { source = null, effect = null, hurtsPlayers = false, style = 'chalk' } = {}) {
+export function explode(world, x, y, radius, damage, { source = null, effect = null, hurtsPlayers = false, style = 'chalk', playerDamage = 1 } = {}) {
   world.emit('explosion', { x, y, radius, style });
+  damagePropsInRadius(world, x, y, radius * 0.8, damage);
   for (const e of world.enemies) {
     if (e.dead || e.spawning > 0) continue;
     const d = Math.hypot(e.x - x, e.y - y);
@@ -90,7 +100,7 @@ export function explode(world, x, y, radius, damage, { source = null, effect = n
   }
   if (hurtsPlayers) {
     for (const p of world.players) {
-      if (Math.hypot(p.x - x, p.y - y) < radius + p.r) hurtPlayer(world, p, 1);
+      if (Math.hypot(p.x - x, p.y - y) < radius + p.r) hurtPlayer(world, p, playerDamage);
     }
   }
 }
@@ -103,9 +113,14 @@ export function killEnemy(world, e, src) {
   if (src) src.kills++;
   world.emit('enemy_die', { x: e.x, y: e.y, enemyType: e.type, boss: !!e.def.boss, id: e.id });
   const drops = e.def.drops || {};
+  if (e.def.onDeathExplode && !e.exploded) {
+    e.exploded = true;
+    explode(world, e.x, e.y, e.def.onDeathExplode.radius, e.def.onDeathExplode.damage, { style: 'barrel' });
+  }
   if (e.minion) return; // invocações do chefe não dão drop
-  if (drops.energy) dropEnergy(world, e.x, e.y, world.rng.int(drops.energy[0], drops.energy[1]));
-  if (drops.coins) dropCoins(world, e.x, e.y, world.rng.int(drops.coins[0], drops.coins[1]));
+  const mul = e.elite ? 2 : 1;
+  if (drops.energy) dropEnergy(world, e.x, e.y, world.rng.int(drops.energy[0], drops.energy[1]) * mul);
+  if (drops.coins) dropCoins(world, e.x, e.y, world.rng.int(drops.coins[0], drops.coins[1]) * mul);
   if (e.def.boss) {
     // chefe: arma rara ou melhor + portal
     const room = world.rooms[e.roomId];
@@ -115,18 +130,21 @@ export function killEnemy(world, e, src) {
     createPickup(world, 'health', e.x + 30, e.y + 10, {});
     const px = (room.cx + 0.5) * TILE, py = (room.cy + 2.5) * TILE;
     createPickup(world, 'portal', px, py, {});
-    // apaga projéteis inimigos restantes
+    dropCoins(world, e.x, e.y, 10);
+    // apaga projéteis inimigos restantes, invocações e áreas do chefe; solta quem estava preso
     for (const pr of world.projectiles) if (pr.team === 'enemy') pr.dead = true;
-    for (const m of world.enemies) if (m.minion && !m.dead) killEnemy(world, m, null);
+    for (const m of world.enemies) if ((m.minion || m.roomId === e.roomId) && !m.dead && m !== e) { m.minion = true; killEnemy(world, m, null); }
+    for (const a of world.areas) a.dead = true;
+    for (const p of world.players) { p.signing = 0; p.jailTimer = Math.min(p.jailTimer || 0, 0.01); }
     world.emit('boss_defeated', { x: e.x, y: e.y, name: e.def.name });
-  } else if (world.rng.chance(0.03)) {
+  } else if (world.rng.chance(e.elite ? 0.12 : 0.03)) {
     dropWeapon(world, world.data.rollWeapon(world.rng, world.floorDef.chestRarityWeights), e.x, e.y);
   }
 }
 
 /** Dano em jogador: escudo primeiro, depois vida. */
 export function hurtPlayer(world, p, amount, opts = {}) {
-  if (p.dead || p.downed || p.invuln > 0 || world.state !== 'playing') return false;
+  if (p.dead || p.downed || p.invuln > 0 || p.jailTimer > 0 || world.state !== 'playing') return false;
   let left = amount;
   if (p.shield > 0) {
     const a = Math.min(p.shield, left);

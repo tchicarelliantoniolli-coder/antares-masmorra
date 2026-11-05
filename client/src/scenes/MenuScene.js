@@ -29,8 +29,8 @@ export class MenuScene extends Phaser.Scene {
     const cx = GAME_W / 2;
     const buttons = [
       button(this, cx, 240, 300, 36, 'JOGAR SOLO', () => this.goSelect()),
-      button(this, cx, 286, 300, 36, 'CO-OP LOCAL', () => {}, { enabled: false, tag: 'chega na Etapa 3', size: 11 }),
-      button(this, cx, 332, 300, 36, 'ONLINE (SALAS)', () => {}, { enabled: false, tag: 'chega na Etapa 2', size: 11 }),
+      button(this, cx, 286, 300, 36, 'CO-OP LOCAL (2-4)', () => this.go('Lobby', { mode: 'local' })),
+      button(this, cx, 332, 300, 36, 'ONLINE (SALAS)', () => this.go('OnlineMenu', {})),
       button(this, cx, 378, 300, 36, 'CONTROLES', () => this.toggleControls()),
       button(this, cx, 424, 300, 36, sound.muted ? 'SOM: DESLIGADO' : 'SOM: LIGADO', () => {
         const m = sound.toggleMute();
@@ -39,7 +39,7 @@ export class MenuScene extends Phaser.Scene {
     ];
     this.list = new ButtonList(this, buttons);
 
-    this.add.text(8, GAME_H - 20, 'Uma homenagem aos professores do Ensino Médio do Colégio Antares Americana  •  v0.1 (Etapa 1 - MVP)', textStyle(16, '#8a83ad'));
+    this.add.text(8, GAME_H - 20, 'Uma homenagem aos professores do Ensino Médio do Colégio Antares Americana  •  v0.2', textStyle(16, '#8a83ad'));
 
     this.input.once('pointerdown', () => sound.unlock());
     this.input.keyboard.once('keydown', () => { sound.unlock(); sound.playMusic('menu'); });
@@ -81,7 +81,7 @@ export class MenuScene extends Phaser.Scene {
     const c = this.add.container(0, 0);
     const shade = this.add.rectangle(0, 0, GAME_W, GAME_H, 0x000000, 0.6).setOrigin(0).setInteractive();
     c.add(shade);
-    c.add(panel(this, 110, 70, 740, 400));
+    c.add(panel(this, 60, 40, 840, 460));
     c.add(this.add.text(GAME_W / 2, 100, 'CONTROLES', titleStyle(16)).setOrigin(0.5));
     const lines = [
       ['Mover', 'W A S D  (ou setas)', 'Analógico esquerdo'],
@@ -93,6 +93,8 @@ export class MenuScene extends Phaser.Scene {
       ['Pausar', 'Esc', 'Start'],
       ['Som liga/desliga', 'M', '—']
     ];
+    c.add(this.add.text(GAME_W / 2, 412, 'Co-op local, 2º jogador no mesmo teclado: SETAS movem (mira automática), ENTER atira,\nSHIFT direito = habilidade, "." = pegar, "," = trocar arma. Controles extras: botão A para entrar.',
+      textStyle(18, '#ffd0a0', { align: 'center' })).setOrigin(0.5));
     c.add(this.add.text(140, 132, 'Ação', textStyle(22, '#ffd23f')));
     c.add(this.add.text(320, 132, 'Teclado e mouse', textStyle(22, '#ffd23f')));
     c.add(this.add.text(570, 132, 'Controle', textStyle(22, '#ffd23f')));
@@ -102,14 +104,20 @@ export class MenuScene extends Phaser.Scene {
       c.add(this.add.text(320, y, k, textStyle(22, '#bfe0ff')));
       c.add(this.add.text(570, y, p, textStyle(22, '#bfffd0')));
     });
-    c.add(this.add.text(GAME_W / 2, 430, 'Clique ou aperte Esc para fechar', textStyle(20, '#a39cc0')).setOrigin(0.5));
+    c.add(this.add.text(GAME_W / 2, 470, 'Clique ou aperte Esc para fechar', textStyle(20, '#a39cc0')).setOrigin(0.5));
     shade.on('pointerdown', () => this.toggleControls());
     this.controls = c;
   }
 
   goSelect() {
+    this.go('CharacterSelect', { mode: 'solo' });
+  }
+
+  go(scene, params) {
+    if (this.leaving) return;
+    this.leaving = true;
     this.cameras.main.fadeOut(200);
-    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('CharacterSelect', { mode: 'solo' }));
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start(scene, params));
   }
 
   update(_, dt) {

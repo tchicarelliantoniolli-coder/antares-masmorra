@@ -5,6 +5,12 @@ import {
   drawSpawnCircle, drawCrosshair, drawDoorBar, drawPixel, drawSoftCircle, drawIcon
 } from './itemArt.js';
 import { buildTileset } from './tileArt.js';
+import {
+  drawCrate, drawBarrel, drawSpikes, drawDecor, drawLousaEnemy, drawSinal, drawMochila, drawDiva, drawCadernoPreto,
+  drawAlunos, drawCantineira, drawStatue, drawPlant, drawCage, drawExtraBullet, drawLetters
+} from './propArt.js';
+
+export const DECOR_KINDS = ['lousa', 'placar', 'estante_parede', 'cartaz', 'relogio', 'tabela_periodica', 'cartaz_dna', 'cesta', 'quadro', 'janela', 'mural', 'cardapio'];
 
 /**
  * Gera todas as texturas provisórias por código e registra no Phaser.
@@ -32,6 +38,13 @@ export function generateTextures(scene, data, overrideKeys = new Set()) {
   add('enemy_prova_voadora', drawProvaVoadora(), 32, 32);
   add('enemy_estojo', drawEstojo(), 32, 32);
   add('enemy_maquina_xerox', drawXerox(), 64, 64);
+  add('enemy_lousa', drawLousaEnemy(), 32, 32);
+  add('enemy_sinal_recreio', drawSinal(), 32, 32);
+  add('enemy_mochila', drawMochila(), 32, 32);
+  add('enemy_diva', drawDiva(), 48, 40);
+  add('enemy_caderno_preto', drawCadernoPreto(), 44, 44);
+  drawAlunos().forEach((sheet, i) => add('aluno_' + i, sheet, 32, 32));
+  add('char_cantineira', drawCantineira(), 32, 32);
 
   // Armas e projéteis (lidos do weapons.json — armas novas ganham sprite automaticamente)
   for (const w of data.weapons.values()) {
@@ -45,7 +58,19 @@ export function generateTextures(scene, data, overrideKeys = new Set()) {
     }
   }
   add('proj_nota_mil', drawNotaMil());
+  add('proj_semente', drawProjectile('seed', '#7be04a', '#2f8a1f'));
   for (const st of ['paper', 'pencil', 'toner']) add('ebullet_' + st, drawEnemyBullet(st));
+  for (const st of ['chalk', 'wave', 'paper_red']) add('ebullet_' + st, drawExtraBullet(st));
+
+  // Cenário: caixas, barris, espinhos, decoração, estátua, cela, planta, bolha de letras
+  add('prop_caixa', drawCrate());
+  add('prop_barril', drawBarrel());
+  for (let i = 0; i < 3; i++) add('spikes_' + i, drawSpikes(i));
+  for (const k of DECOR_KINDS) add('decor_' + k, drawDecor(k));
+  add('statue', drawStatue());
+  add('cage', drawCage());
+  add('ally_planta', drawPlant(), 32, 32);
+  add('letters', drawLetters());
 
   // Itens e cenário
   add('chest_closed', drawChest(false));
@@ -80,7 +105,10 @@ function createAnimations(scene, data) {
     mk(tex + '_idle', tex, [0, 1], 3);
     mk(tex + '_walk', tex, CHAR_FRAMES >= 6 ? [2, 3, 4, 5] : [0, 1], 10);
   }
-  for (const e of ['caderno_zumbi', 'prova_voadora', 'estojo']) mk('enemy_' + e + '_move', 'enemy_' + e, [0, 1], 6);
+  for (const e of ['caderno_zumbi', 'prova_voadora', 'estojo', 'lousa', 'sinal_recreio', 'mochila', 'diva', 'caderno_preto']) mk('enemy_' + e + '_move', 'enemy_' + e, [0, 1], 6);
+  for (let i = 0; i < 4; i++) mk('aluno_' + i + '_walk', 'aluno_' + i, [2, 3, 4, 5], 10);
+  mk('char_cantineira_idle', 'char_cantineira', [0, 1], 3);
+  mk('ally_planta_bite', 'ally_planta', [0, 1], 5);
   mk('enemy_maquina_xerox_move', 'enemy_maquina_xerox', [0, 1], 4);
   mk('enemy_maquina_xerox_angry', 'enemy_maquina_xerox', [2, 1], 8);
   mk('portal_spin', 'portal', [0, 1, 2, 3, 4, 5, 6, 7], 12);

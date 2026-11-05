@@ -69,6 +69,43 @@ export function drawWeapon(shape, color, accent) {
       }
       px(ctx, 1, 10, 16, 1, accent);
     });
+    case 'ball': return c(14, 14, (ctx) => {
+      circle(ctx, 7, 7, 5, color); px(ctx, 3, 6, 9, 1, accent); px(ctx, 6, 2, 1, 10, accent); px(ctx, 4, 4, 2, 2, '#ffffff');
+    });
+    case 'cannon': return c(24, 14, (ctx) => {
+      px(ctx, 2, 4, 16, 7, color); px(ctx, 2, 4, 16, 1, light); circle(ctx, 19, 7, 4, accent); px(ctx, 18, 6, 2, 2, '#ffffff'); px(ctx, 5, 11, 4, 3, dark);
+    });
+    case 'dna_gun': return c(22, 12, (ctx) => {
+      px(ctx, 2, 3, 14, 6, color); px(ctx, 4, 9, 3, 3, dark);
+      for (let x = 15; x < 22; x++) { const o = Math.round(Math.sin(x) * 2); px(ctx, x, 5 + o, 1, 1, accent); px(ctx, x, 6 - o, 1, 1, '#ffffff'); }
+    });
+    case 'bow': return c(16, 22, (ctx) => {
+      for (let y = 1; y < 21; y++) { const x = Math.round(3 + Math.sin((y / 20) * Math.PI) * 8); px(ctx, x, y, 2, 1, color); }
+      px(ctx, 3, 1, 1, 20, accent); px(ctx, 5, 10, 10, 1, '#9aa0a6');
+    });
+    case 'compass': return c(30, 10, (ctx) => {
+      px(ctx, 1, 3, 4, 4, accent); px(ctx, 5, 4, 22, 1, color); px(ctx, 5, 6, 18, 1, color); px(ctx, 27, 4, 2, 1, '#ffffff'); px(ctx, 23, 6, 3, 1, '#ffd23f');
+    });
+    case 'umbrella': return c(26, 22, (ctx) => {
+      for (let y = 0; y < 9; y++) px(ctx, 13 - y - 3, 2 + y, (y + 3) * 2, 1, y % 3 === 2 ? shade(color, -0.2) : color);
+      px(ctx, 12, 11, 2, 9, accent); px(ctx, 9, 19, 4, 2, accent);
+    });
+    case 'backpack': return c(18, 20, (ctx) => {
+      px(ctx, 2, 3, 14, 15, color); px(ctx, 4, 1, 10, 3, dark); px(ctx, 4, 10, 10, 6, dark); px(ctx, 4, 10, 10, 1, accent); px(ctx, 8, 6, 2, 2, accent);
+    });
+    case 'sharpener': return c(14, 12, (ctx) => {
+      px(ctx, 2, 2, 10, 8, color); px(ctx, 9, 4, 3, 4, '#2b2b33'); px(ctx, 3, 3, 5, 1, '#ffffff'); px(ctx, 12, 5, 1, 2, accent);
+    });
+    case 'bell': return c(16, 16, (ctx) => {
+      px(ctx, 5, 2, 6, 3, color); px(ctx, 4, 5, 8, 6, color); px(ctx, 2, 11, 12, 2, color); circle(ctx, 8, 14, 1, accent); px(ctx, 5, 4, 2, 6, '#fff2a8');
+    });
+    case 'projector': return c(22, 14, (ctx) => {
+      px(ctx, 2, 3, 14, 9, color); circle(ctx, 17, 7, 3, accent); px(ctx, 4, 5, 6, 1, light); px(ctx, 5, 12, 2, 2, dark); px(ctx, 12, 12, 2, 2, dark);
+    });
+    case 'magnet': return c(18, 16, (ctx) => {
+      px(ctx, 2, 2, 12, 4, color); px(ctx, 2, 10, 12, 4, color); px(ctx, 2, 2, 4, 12, color);
+      px(ctx, 12, 2, 4, 4, accent); px(ctx, 12, 10, 4, 4, accent);
+    });
     default: return c(18, 10, (ctx) => { px(ctx, 2, 2, 14, 6, color); px(ctx, 2, 2, 14, 1, accent); });
   }
 }

@@ -1,22 +1,27 @@
 import { TILE, T } from '/shared/sim/constants.js';
+import { trapState } from '/shared/sim/salas/Props.js';
+import { BLESSINGS } from '/shared/sim/salas/Pickups.js';
 import { TILESET_COLS, TILE_KIND } from './tileArt.js';
 import { hexToInt } from './pixel.js';
 import { textStyle } from '../config.js';
 
 const DEPTH_GROUND_FX = 2;
+const DEPTH_TRAPS = 1;
 const DEPTH_PROJ = 9000;
 const DEPTH_FX = 9500;
 
+const ITEM_ICON = { apple: 'apple', suco: 'energy', broche: 'icon_shield' };
+
 /**
- * Desenha o estado da simulação com Phaser. Não decide nada de jogo: só lê o "world".
- * Cada entidade tem uma "view" (sprites) criada/atualizada/destruída conforme aparece no estado.
+ * Desenha o estado da simulação com Phaser. Não decide nada de jogo: só lê o "world"
+ * (o mundo local no solo/co-op, ou o espelho montado a partir do servidor no online).
  */
 export class WorldRenderer {
-  constructor(scene, world, data, localId) {
+  constructor(scene, world, data, localIds) {
     this.scene = scene;
     this.world = world;
     this.data = data;
-    this.localId = localId;
+    this.localIds = new Set(localIds);
     this.views = new Map();
     this.groundFx = scene.add.graphics().setDepth(DEPTH_GROUND_FX);
     this.fx = scene.add.graphics().setDepth(DEPTH_FX);
@@ -25,11 +30,9 @@ export class WorldRenderer {
 
   buildMap() {
     const { map, rooms } = this.world;
-    if (this.tilemap) {
-      this.tilemap.destroy();
-      this.doors.forEach((d) => d.sprite.destroy());
-      this.decor?.forEach((o) => o.destroy());
-    }
+    this.clearMapObjects();
+    for (const v of this.views.values()) v.destroy();
+    this.views.clear();
     const rows = [];
     for (let y = 0; y < map.h; y++) {
       const row = [];
@@ -39,6 +42,7 @@ export class WorldRenderer {
     this.tilemap = this.scene.make.tilemap({ data: rows, tileWidth: TILE, tileHeight: TILE });
     const ts = this.tilemap.addTilesetImage('tiles', 'tiles', TILE, TILE, 0, 0);
     this.layer = this.tilemap.createLayer(0, ts, 0, 0).setDepth(0);
+    this.mapObjects = [];
 
     // Portas (grades que sobem quando a sala tranca)
     this.doors = [];
@@ -50,18 +54,40 @@ export class WorldRenderer {
         this.doors.push({ sprite: s, owner: map.owner[i], shown: false });
       }
     }
-
-    // Placa de boas-vindas na entrada
-    this.decor = [];
+    // Caixas e barris
+    this.props = new Map();
+    for (const [idx, p] of map.props) {
+      const tx = idx % map.w, ty = Math.floor(idx / map.w);
+      const img = this.scene.add.image((tx + 0.5) * TILE, (ty + 0.5) * TILE - 2, 'prop_' + p.kind).setDepth((ty + 1) * TILE - 1);
+      this.props.set(idx, img);
+    }
+    // Espinhos
+    this.traps = map.traps.map((tr) => ({ tr, img: this.scene.add.image((tr.tx + 0.5) * TILE, (tr.ty + 0.5) * TILE, 'spikes_0').setDepth(DEPTH_TRAPS), state: 0 }));
+    // Decoração das paredes
+    for (const d of map.decor) {
+      const key = 'decor_' + d.kind;
+      if (!this.scene.textures.exists(key)) continue;
+      this.mapObjects.push(this.scene.add.image(d.tx * TILE, d.ty * TILE, key).setOrigin(0, 0).setDepth(1));
+    }
+    // Placas
     const start = rooms[this.world.startRoomId];
-    const sx = (start.cx + 0.5) * TILE, sy = (start.y0 + 1.6) * TILE;
-    const sign = this.scene.add.text(sx, sy, 'COLÉGIO ANTARES\nENSINO MÉDIO', textStyle(18, '#fff6d8', { align: 'center', stroke: '#3a1e0e', strokeThickness: 4 }))
-      .setOrigin(0.5, 0).setDepth(1);
-    this.decor.push(sign);
+    this.mapObjects.push(this.scene.add.text((start.cx + 0.5) * TILE, (start.y0 + 1.6) * TILE, `COLÉGIO ANTARES\nANDAR ${this.world.floorNum}`,
+      textStyle(18, '#fff6d8', { align: 'center', stroke: '#3a1e0e', strokeThickness: 4 })).setOrigin(0.5, 0).setDepth(1));
     const boss = rooms[this.world.bossRoomId];
-    const bl = this.scene.add.text((boss.cx + 0.5) * TILE, (boss.y0 + 1.4) * TILE, this.world.floorDef.bossRoomName || 'Sala do Chefe',
-      textStyle(18, '#ffd0d0', { stroke: '#3a0e0e', strokeThickness: 4 })).setOrigin(0.5, 0).setDepth(1);
-    this.decor.push(bl);
+    this.mapObjects.push(this.scene.add.text((boss.cx + 0.5) * TILE, (boss.y0 + 1.4) * TILE, this.world.floorDef.bossRoomName || 'Sala do Chefe',
+      textStyle(18, '#ffd0d0', { stroke: '#3a0e0e', strokeThickness: 4 })).setOrigin(0.5, 0).setDepth(1));
+    for (const r of rooms) {
+      const label = r.type === 'shop' ? 'CANTINA' : r.type === 'statue' ? 'SALA DA ESTÁTUA' : r.type === 'heal' ? 'ENFERMARIA' : null;
+      if (label) this.mapObjects.push(this.scene.add.text((r.cx + 0.5) * TILE, (r.y0 + r.h - 2) * TILE, label, textStyle(18, '#fff6d8', { stroke: '#3a1e0e', strokeThickness: 4 })).setOrigin(0.5, 0).setDepth(1));
+    }
+  }
+
+  clearMapObjects() {
+    this.tilemap?.destroy();
+    this.doors?.forEach((d) => d.sprite.destroy());
+    this.props?.forEach((p) => p.destroy());
+    this.traps?.forEach((t) => t.img.destroy());
+    this.mapObjects?.forEach((o) => o.destroy());
   }
 
   tileIndex(map, x, y) {
@@ -71,13 +97,29 @@ export class WorldRenderer {
     const base = theme * TILESET_COLS;
     if (t === T.WALL) {
       const below = map.get(x, y + 1);
-      return base + (below === T.FLOOR || below === T.DOOR || below === T.OBSTACLE ? TILE_KIND.WALL_FACE : TILE_KIND.WALL_TOP);
+      return base + (below === T.FLOOR || below === T.DOOR || below === T.OBSTACLE || below === T.PROP ? TILE_KIND.WALL_FACE : TILE_KIND.WALL_TOP);
     }
     if (t === T.OBSTACLE) return base + TILE_KIND.OBSTACLE;
     const h = ((x * 73856093) ^ (y * 19349663)) >>> 0;
     if (h % 11 === 0) return base + TILE_KIND.FLOOR_B;
     if (h % 17 === 0) return base + TILE_KIND.FLOOR_C;
     return base + TILE_KIND.FLOOR_A;
+  }
+
+  /** Caixa/barril quebrou: some o sprite e o tile vira chão. */
+  onPropBreak(ev) {
+    const img = this.props.get(ev.idx);
+    if (img) { img.destroy(); this.props.delete(ev.idx); }
+    const map = this.world.map;
+    const tx = ev.idx % map.w, ty = Math.floor(ev.idx / map.w);
+    this.layer.putTileAt(this.tileIndex(map, tx, ty), tx, ty);
+  }
+
+  onPropHit(ev) {
+    const img = this.props.get(ev.idx);
+    if (!img) return;
+    img.setTintFill(0xffffff);
+    this.scene.time.delayedCall(60, () => img.active && img.clearTint());
   }
 
   // ---------------------------------------------------------------- sincronização
@@ -87,11 +129,12 @@ export class WorldRenderer {
     this.groundFx.clear();
     this.fx.clear();
 
+    for (const a of w.areas) this.drawArea(a, time);
     for (const p of w.players) { seen.add(p.id); this.syncPlayer(p, time); }
     for (const e of w.enemies) { seen.add(e.id); this.syncEnemy(e, time); }
     for (const pr of w.projectiles) { seen.add(pr.id); this.syncProjectile(pr, dt); }
     for (const pk of w.pickups) { seen.add(pk.id); this.syncPickup(pk, time); }
-    for (const a of w.areas) this.drawArea(a);
+    for (const al of w.allies || []) { seen.add(al.id); this.syncAlly(al, time); }
 
     for (const [id, v] of this.views) {
       if (!seen.has(id)) {
@@ -110,6 +153,14 @@ export class WorldRenderer {
           this.scene.tweens.add({ targets: d.sprite, scaleY: 1, duration: 180, ease: 'Back.out' });
         }
       }
+    }
+
+    const t = w.time;
+    const cam = this.scene.cameras.main.worldView;
+    for (const tp of this.traps) {
+      const st = trapState(tp.tr, t);
+      if (st !== tp.state) { tp.state = st; tp.img.setTexture('spikes_' + st); }
+      tp.img.setVisible(tp.img.x > cam.x - 40 && tp.img.x < cam.right + 40 && tp.img.y > cam.y - 40 && tp.img.y < cam.bottom + 40);
     }
 
     if (w.boss && !w.boss.dead && w.boss.telegraph) this.drawTelegraph(w.boss);
@@ -132,26 +183,43 @@ export class WorldRenderer {
         shadow: s.add.image(p.x, p.y, 'shadow'),
         body: s.add.sprite(p.x, p.y, 'char_' + p.charId).play('char_' + p.charId + '_idle'),
         weapon: s.add.image(p.x, p.y, 'wpn_' + p.weapons[p.cur]).setOrigin(0.2, 0.5),
-        label: this.world.players.length > 1 ? s.add.text(p.x, p.y, p.name, textStyle(16, '#ffffff', { stroke: '#000', strokeThickness: 3 })).setOrigin(0.5) : null,
+        label: this.world.players.length > 1 ? s.add.text(p.x, p.y, p.name, textStyle(16, this.localIds.has(p.id) ? '#ffd23f' : '#ffffff', { stroke: '#000', strokeThickness: 3 })).setOrigin(0.5) : null,
         buff: s.add.text(p.x, p.y, '×5', textStyle(22, '#ffd23f', { stroke: '#3a1e00', strokeThickness: 4 })).setOrigin(0.5).setVisible(false),
+        bubble: s.add.image(p.x, p.y, 'letters').setVisible(false).setAlpha(0.85),
+        status: s.add.text(p.x, p.y, '', textStyle(16, '#ffffff', { stroke: '#000', strokeThickness: 3 })).setOrigin(0.5),
+        cage: s.add.image(p.x, p.y, 'cage').setVisible(false),
         recoil: 0, swingT: 0, weaponKey: null, hurtT: 0, anim: 'idle'
       };
-      objs.destroy = () => { objs.shadow.destroy(); objs.body.destroy(); objs.weapon.destroy(); objs.label?.destroy(); objs.buff.destroy(); };
+      objs.destroy = () => { for (const k of ['shadow', 'body', 'weapon', 'label', 'buff', 'bubble', 'status', 'cage']) objs[k]?.destroy(); };
       return objs;
     });
+    if (p.dead) {
+      for (const k of ['shadow', 'body', 'weapon', 'label', 'buff', 'bubble', 'status', 'cage']) v[k]?.setVisible(false);
+      return;
+    }
     const by = p.y - 6;
     const depth = p.y;
-    v.shadow.setPosition(p.x, p.y + 10).setDepth(depth - 1);
-    v.body.setPosition(p.x, by).setDepth(depth);
+    v.shadow.setVisible(true).setPosition(p.x, p.y + 10).setDepth(depth - 1);
+    v.body.setVisible(true).setPosition(p.x, by).setDepth(depth);
     const face = Math.cos(p.aim) < 0 ? -1 : 1;
     v.body.setFlipX(face < 0);
+    if (v.label) v.label.setVisible(true).setPosition(p.x, by - 26).setDepth(depth + 1);
+
+    // presa na cela (Suspensão)
+    v.cage.setVisible(p.jailTimer > 0).setPosition(p.x, p.y - 8).setDepth(depth + 3);
+    if (p.jailTimer > 0) v.status.setText('SUSPENSO ' + Math.ceil(p.jailTimer) + 's').setColor('#ff9a9a');
+    else if (p.signing > 0) v.status.setText('assinando... (sem atacar)').setColor('#ffd0d0');
+    else if (p.downed) v.status.setText(this.world.players.length > 1 ? 'CAÍDO! ajude!' : '').setColor('#ff8a8a');
+    else v.status.setText('');
+    v.status.setPosition(p.x, by - (v.label ? 40 : 28)).setDepth(depth + 4);
+
+    v.bubble.setVisible(p.buffs?.bubbleTimer > 0 && !p.downed).setPosition(p.x, p.y - 6).setRotation(time / 500).setDepth(depth + 2);
 
     if (p.downed) {
       v.body.setAngle(90).setTint(0x8888aa);
       v.body.anims.stop();
       v.weapon.setVisible(false);
       v.buff.setVisible(false);
-      // anel de revive
       const prog = p.reviveProgress / 3;
       this.fx.lineStyle(3, 0x000000, 0.5).strokeCircle(p.x, p.y - 4, 22);
       if (prog > 0) {
@@ -170,35 +238,44 @@ export class WorldRenderer {
     }
     v.hurtT = Math.max(0, v.hurtT - 1 / 60);
     if (v.hurtT > 0) v.body.setTint(0xff6060);
-    else if (p.buffs.hasteTimer > 0) v.body.setTint(0xc8ffc8);
+    else if (p.signing > 0) v.body.setTint(0x9a9aaa);
+    else if (p.buffs.hasteTimer > 0) v.body.setTint(Math.floor(time / 90) % 2 ? 0xc8ffc8 : 0xffffff);
     else v.body.clearTint();
     v.body.setAlpha(p.invuln > 0 && Math.floor(time / 60) % 2 ? 0.45 : 1);
 
-    // arma na mão, apontando para a mira
-    const wkey = 'wpn_' + p.weapons[p.cur];
-    if (v.weaponKey !== wkey) { v.weapon.setTexture(wkey); v.weaponKey = wkey; }
-    v.recoil *= 0.8;
-    let ang = p.aim;
-    if (v.swingT > 0) {
-      v.swingT -= 1 / 60;
-      const k = 1 - v.swingT / 0.16;
-      ang = p.aim + (v.swingArc / 2) * (k * 2 - 1) * face;
+    if (p.signing > 0) {
+      // caderno preto na frente do jogador + barra de "libertação"
+      v.weapon.setVisible(false);
+      this.fx.fillStyle(0x1b1b22, 1).fillRect(p.x - 8, by + 2, 16, 12);
+      this.fx.fillStyle(0xfbfbf3, 1).fillRect(p.x - 5, by + 4, 10, 3);
+      if (p.signFree > 0) {
+        this.fx.fillStyle(0x000000, 0.6).fillRect(p.x - 14, by + 18, 28, 4);
+        this.fx.fillStyle(0x5ee05e, 1).fillRect(p.x - 14, by + 18, 28 * Math.min(1, p.signFree), 4);
+      }
+    } else {
+      const wkey = 'wpn_' + p.weapons[p.cur];
+      if (v.weaponKey !== wkey) { v.weapon.setTexture(wkey); v.weaponKey = wkey; }
+      v.recoil *= 0.8;
+      let ang = p.aim;
+      if (v.swingT > 0) {
+        v.swingT -= 1 / 60;
+        const k = 1 - v.swingT / 0.16;
+        ang = p.aim + (v.swingArc / 2) * (k * 2 - 1) * face;
+      }
+      const hx = p.x + Math.cos(ang) * (7 - v.recoil);
+      const hy = by + 6 + Math.sin(ang) * (5 - v.recoil);
+      v.weapon.setVisible(p.jailTimer <= 0).setPosition(hx, hy).setRotation(ang).setFlipY(Math.cos(ang) < 0);
+      v.weapon.setDepth(Math.sin(ang) < -0.35 ? depth - 0.5 : depth + 0.5);
     }
-    const hx = p.x + Math.cos(ang) * (7 - v.recoil);
-    const hy = by + 6 + Math.sin(ang) * (5 - v.recoil);
-    v.weapon.setVisible(true).setPosition(hx, hy).setRotation(ang).setFlipY(Math.cos(ang) < 0);
-    v.weapon.setDepth(Math.sin(ang) < -0.35 ? depth - 0.5 : depth + 0.5);
 
-    if (v.label) v.label.setPosition(p.x, by - 26).setDepth(depth + 1);
     if (p.buffs.nextHitMul > 1) {
-      v.buff.setVisible(true).setText('×' + p.buffs.nextHitMul).setPosition(p.x, by - 26 + Math.sin(time / 120) * 2).setDepth(depth + 2);
+      v.buff.setVisible(true).setText('×' + p.buffs.nextHitMul).setPosition(p.x, by - 26 - (v.label ? 14 : 0) + Math.sin(time / 120) * 2).setDepth(depth + 2);
     } else v.buff.setVisible(false);
   }
 
   onShoot(ev) {
     const v = this.views.get(ev.playerId);
-    if (!v) return;
-    if (ev.wtype === 'melee') return;
+    if (!v || ev.wtype === 'melee') return;
     v.recoil = 4;
   }
 
@@ -213,13 +290,21 @@ export class WorldRenderer {
   }
 
   // ---------------------------------------------------------------- inimigos
+  enemyKeys(e) {
+    if (e.type === 'aluno') { const k = 'aluno_' + (e.id % 4); return { tex: k, anim: k + '_walk', scale: 1 }; }
+    const sp = e.def.sprite;
+    if (sp?.texture) return { tex: sp.texture, anim: sp.texture + '_walk', scale: sp.scale || 1, character: true };
+    const k = 'enemy_' + e.type;
+    return { tex: k, anim: k + '_move', scale: 1 };
+  }
+
   syncEnemy(e, time) {
     const s = this.scene;
-    const key = 'enemy_' + e.type;
+    const keys = this.enemyKeys(e);
     const v = this.view(e.id, () => {
       const objs = {
-        shadow: s.add.image(e.x, e.y, 'shadow').setScale(e.def.boss ? 2.6 : 1),
-        body: s.add.sprite(e.x, e.y, key).play(key + '_move'),
+        shadow: s.add.image(e.x, e.y, 'shadow').setScale(e.def.boss ? 2.6 : e.r > 15 ? 1.8 : 1),
+        body: s.add.sprite(e.x, e.y, keys.tex).play(keys.anim),
         spawn: s.add.image(e.x, e.y, 'spawn_circle').setScale(e.def.boss ? 2.4 : 1),
         angry: false
       };
@@ -229,43 +314,78 @@ export class WorldRenderer {
     });
     const flying = !!e.def.flying;
     const bob = flying ? Math.sin(time / 180 + e.id) * 3 - 6 : 0;
-    const by = e.y - (e.def.boss ? 18 : 6) + bob;
+    const scale = keys.scale * (e.elite ? 1.2 : 1);
+    const lift = e.def.boss ? (keys.character ? 22 : 18) : e.type === 'diva' ? 6 : 6;
+    const by = e.y - lift + bob;
     v.shadow.setPosition(e.x, e.y + e.r * 0.8).setDepth(e.y - 1).setAlpha(flying ? 0.6 : 1);
-    v.body.setPosition(e.x, by).setDepth(e.y).setFlipX(e.facing < 0 && !e.def.boss);
+    v.body.setPosition(e.x, by).setDepth(e.y).setFlipX(e.facing < 0 && e.type !== 'maquina_xerox');
 
     if (e.spawning > 0) {
       const k = 1 - e.spawning / 0.9;
       v.spawn.setVisible(true).setPosition(e.x, e.y + e.r * 0.6).setDepth(DEPTH_GROUND_FX + 1).setAngle(time / 4).setAlpha(0.6 + Math.sin(time / 50) * 0.3);
-      v.body.setAlpha(Math.max(0, Math.min(1, k))).setScale(0.4 + 0.6 * Math.max(0, k));
+      v.body.setAlpha(Math.max(0, Math.min(1, k))).setScale(scale * (0.4 + 0.6 * Math.max(0, k)));
       v.shadow.setAlpha(0);
       return;
     }
     v.spawn.setVisible(false);
-    v.body.setAlpha(1).setScale(1);
+    v.body.setAlpha(1).setScale(scale);
 
-    if (e.def.boss && e.phase2 && !v.angry) {
+    if (e.type === 'maquina_xerox' && e.phase2 && !v.angry) {
       v.angry = true;
-      v.body.play(key + '_angry');
+      v.body.play('enemy_maquina_xerox_angry');
+    }
+    if (keys.character) {
+      const moving = e.state === 'idle' || e.state === 'advertencia' || e.state === 'combo';
+      const want = moving ? keys.anim : keys.tex + '_idle';
+      if (v.body.anims.currentAnim?.key !== want) v.body.play(want);
     }
 
     // cor de status / flash de dano
     if (e.flash > 0) v.body.setTintFill(0xffffff);
     else if (e.status.frozen > 0) v.body.setTint(0x7fd0ff);
+    else if (e.status.stun > 0) v.body.setTint(Math.floor(time / 120) % 2 ? 0xfff8c0 : 0xffffff);
     else if (e.status.slow > 0) v.body.setTint(0xb0e8ff);
     else if (e.status.burn) v.body.setTint(Math.floor(time / 100) % 2 ? 0xff9a5a : 0xffd0a0);
     else if (e.status.poison) v.body.setTint(0xa8f080);
-    else if (e.state === 'windup' || e.state === 'jam_windup') v.body.setTint(Math.floor(time / 70) % 2 ? 0xff7070 : 0xffffff);
+    else if (e.state === 'windup' || e.state === 'jam_windup' || e.state === 'fuse') v.body.setTint(Math.floor(time / 70) % 2 ? 0xff7070 : 0xffffff);
     else if (e.state === 'stunned') v.body.setTint(0xb0b0c0);
+    else if (e.elite) v.body.setTint(Math.floor(time / 200) % 2 ? 0xffe08a : 0xfff4d0);
+    else if (e.def.boss && e.phase >= 3) v.body.setTint(Math.floor(time / 150) % 2 ? 0xff9a9a : 0xffffff);
     else v.body.clearTint();
 
-    if (e.state === 'windup' && e.def.behavior === 'chaser') v.body.x += Math.sin(time / 15) * 1.5;
+    if ((e.state === 'windup' && e.def.behavior === 'chaser') || e.state === 'fuse') v.body.x += Math.sin(time / 15) * 1.5;
 
-    // barrinha de vida (inimigos comuns já feridos)
-    if (!e.def.boss && e.hp < e.maxHp) {
-      const w = 22, x = e.x - w / 2, y = by - 20;
-      this.fx.fillStyle(0x000000, 0.7).fillRect(x - 1, y - 1, w + 2, 5);
-      this.fx.fillStyle(0xe04848, 1).fillRect(x, y, Math.max(1, (w * e.hp) / e.maxHp), 3);
+    if (e.elite) {
+      this.groundFx.lineStyle(2, 0xffd23f, 0.6 + Math.sin(time / 150) * 0.3).strokeEllipse(e.x, e.y + e.r * 0.8, e.r * 2.6, e.r * 1.1);
     }
+    if (e.type === 'caderno_preto') {
+      this.groundFx.fillStyle(0x000000, 0.35).fillCircle(e.x, e.y + 10, 22);
+    }
+    // Divã curando a Katia
+    if (e.type === 'diva' && e.healTarget) {
+      const boss = this.world.enemies.find((b) => b.id === e.healTarget);
+      if (boss) {
+        this.fx.lineStyle(3, 0x5ee05e, 0.35 + Math.sin(time / 80) * 0.25).lineBetween(e.x, e.y - 10, boss.x, boss.y - 20);
+      }
+    }
+    // barrinha de vida (inimigos comuns já feridos)
+    if (!e.def.boss && !e.def.invulnerable && e.hp < e.maxHp) {
+      const w = e.r > 15 ? 36 : 22, x = e.x - w / 2, y = by - (e.r > 15 ? 28 : 20) * scale;
+      this.fx.fillStyle(0x000000, 0.7).fillRect(x - 1, y - 1, w + 2, 5);
+      this.fx.fillStyle(e.elite ? 0xffb02e : 0xe04848, 1).fillRect(x, y, Math.max(1, (w * e.hp) / e.maxHp), 3);
+    }
+  }
+
+  // ---------------------------------------------------------------- aliados
+  syncAlly(a, time) {
+    const s = this.scene;
+    const v = this.view(a.id, () => {
+      const o = { shadow: s.add.image(a.x, a.y, 'shadow'), body: s.add.sprite(a.x, a.y, 'ally_planta').play('ally_planta_bite') };
+      o.destroy = () => { o.shadow.destroy(); o.body.destroy(); };
+      return o;
+    });
+    v.shadow.setPosition(a.x, a.y + 10).setDepth(a.y - 1);
+    v.body.setPosition(a.x, a.y - 8).setDepth(a.y).setFlipX(Math.cos(a.aim || 0) < 0).setAlpha(a.life < 1.5 && Math.floor(time / 100) % 2 ? 0.5 : 1);
   }
 
   // ---------------------------------------------------------------- projéteis
@@ -276,22 +396,23 @@ export class WorldRenderer {
       if (pr.glyph) key = 'glyph_' + pr.glyph.codePointAt(0);
       if (!s.textures.exists(key)) key = pr.team === 'enemy' ? 'ebullet_paper' : 'energy';
       const img = s.add.image(pr.x, pr.y, key).setDepth(DEPTH_PROJ);
-      if (pr.team === 'player' && pr.sprite === 'proj_nota_mil') img.setDepth(DEPTH_PROJ + 10);
-      const objs = { img, rot: 0, destroy: () => img.destroy() };
+      if (pr.sprite === 'proj_nota_mil') img.setDepth(DEPTH_PROJ + 10);
+      if (pr.team === 'player' && pr.sprite?.startsWith('ebullet')) img.setTint(0x9fffd0); // bala rebatida pelo taco
+      const objs = { img, rot: 0, age: 0, destroy: () => img.destroy() };
       return objs;
     });
+    v.age += dt;
     v.img.setPosition(pr.x, pr.y);
     if (pr.spin) {
       v.rot += pr.spin * dt;
       v.img.setRotation(v.rot);
     } else if (pr.sprite === 'proj_nota_mil') {
       v.img.setRotation(0);
-      v.img.setScale(1 + Math.sin(pr.age * 20) * 0.05);
+      v.img.setScale(1 + Math.sin(v.age * 20) * 0.05);
     } else if (!pr.glyph) {
       v.img.setRotation(Math.atan2(pr.vy, pr.vx));
     }
-    if (pr.team === 'enemy') v.img.setScale(1 + Math.sin(pr.age * 18) * 0.12);
-    if (pr.team === 'player' && pr.sprite?.startsWith('ebullet')) v.img.setTint(0x9fffd0); // bala rebatida pelo taco
+    if (pr.team === 'enemy') v.img.setScale(1 + Math.sin(v.age * 18) * 0.12);
   }
 
   // ---------------------------------------------------------------- itens
@@ -309,6 +430,26 @@ export class WorldRenderer {
           o.parts.push(o.glow, o.img);
           break;
         }
+        case 'shop_item': {
+          const tex = pk.item === 'weapon' ? 'wpn_' + pk.weaponId : ITEM_ICON[pk.item] || 'coin';
+          o.glow = s.add.image(pk.x, pk.y, 'soft').setTint(pk.item === 'weapon' ? hexToInt(this.data.rarities[this.data.weapon(pk.weaponId).rarity].color) : 0xffffff).setAlpha(0.35).setScale(0.6, 0.3);
+          o.img = s.add.image(pk.x, pk.y, tex).setScale(pk.item === 'weapon' ? 1.25 : 1.8);
+          o.price = s.add.text(pk.x, pk.y + 16, pk.price + ' ●', textStyle(18, '#f2c94c', { stroke: '#000', strokeThickness: 3 })).setOrigin(0.5, 0);
+          o.parts.push(o.glow, o.img, o.price);
+          break;
+        }
+        case 'statue': {
+          o.img = s.add.image(pk.x, pk.y - 14, 'statue');
+          const b = BLESSINGS[pk.blessing];
+          o.price = s.add.text(pk.x, pk.y + 16, `${b?.desc || ''}\n${pk.price} ●`, textStyle(16, '#f2c94c', { align: 'center', stroke: '#000', strokeThickness: 3 })).setOrigin(0.5, 0);
+          o.parts.push(o.img, o.price);
+          break;
+        }
+        case 'npc':
+          o.img = s.add.sprite(pk.x, pk.y, 'char_cantineira').play('char_cantineira_idle');
+          o.name = s.add.text(pk.x, pk.y - 26, 'Tia da Cantina', textStyle(16, '#ffffff', { stroke: '#000', strokeThickness: 3 })).setOrigin(0.5);
+          o.parts.push(o.img, o.name);
+          break;
         case 'chest': o.img = s.add.image(pk.x, pk.y, 'chest_closed'); o.parts.push(o.img); break;
         case 'heal_station': o.img = s.add.image(pk.x, pk.y, 'heal_station'); o.parts.push(o.img); break;
         case 'portal':
@@ -328,13 +469,28 @@ export class WorldRenderer {
     switch (pk.kind) {
       case 'weapon':
         if (v.key !== pk.weaponId) {
-          // trocou de arma no chão: recria
           v.destroy();
           this.views.delete(pk.id);
           return this.syncPickup(pk, time);
         }
         v.glow.setPosition(pk.x, pk.y + 6).setDepth(pk.y - 2).setAlpha(0.35 + Math.sin(time / 200) * 0.12);
         v.img.setPosition(pk.x, pk.y - 4 + bob).setDepth(pk.y);
+        break;
+      case 'shop_item':
+        v.glow.setPosition(pk.x, pk.y + 6).setDepth(pk.y - 2);
+        v.img.setPosition(pk.x, pk.y - 4 + bob).setDepth(pk.y);
+        v.price.setDepth(pk.y + 1);
+        break;
+      case 'statue': {
+        v.img.setDepth(pk.y);
+        v.price.setDepth(pk.y + 1);
+        const mine = [...this.localIds].some((id) => pk.usedBy?.includes(id));
+        v.img.setTint(mine ? 0x9a9a9a : 0xffffff);
+        v.price.setAlpha(mine ? 0.4 : 1);
+        break;
+      }
+      case 'npc':
+        v.img.setDepth(pk.y); v.name.setDepth(pk.y + 1);
         break;
       case 'chest':
         v.img.setTexture(pk.opened ? 'chest_open' : 'chest_closed').setPosition(pk.x, pk.y).setDepth(pk.y);
@@ -352,18 +508,41 @@ export class WorldRenderer {
   }
 
   // ---------------------------------------------------------------- áreas e avisos
-  drawArea(a) {
+  drawArea(a, time) {
     const g = this.groundFx;
     const k = Math.min(1, a.t / a.life);
-    if (a.kind === 'toner_warning') {
-      g.fillStyle(0xff3d6e, 0.12 + 0.2 * k).fillCircle(a.x, a.y, a.r * k);
-      g.lineStyle(2, 0xff3d6e, 0.9).strokeCircle(a.x, a.y, a.r);
-      // sombra do toner caindo
-      g.fillStyle(0x2a1a3a, 0.5).fillEllipse(a.x, a.y - (1 - k) * 120, 18, 18);
-    } else if (a.kind === 'toner_puddle') {
-      const fade = a.life - a.t < 0.6 ? (a.life - a.t) / 0.6 : 1;
-      g.fillStyle(0x2a1a3a, 0.75 * fade).fillEllipse(a.x, a.y, a.r * 2, a.r * 1.4);
-      g.fillStyle(0x6a3a9a, 0.5 * fade).fillEllipse(a.x - 6, a.y - 4, a.r * 0.8, a.r * 0.5);
+    switch (a.kind) {
+      case 'toner_warning':
+        g.fillStyle(0xff3d6e, 0.12 + 0.2 * k).fillCircle(a.x, a.y, a.r * k);
+        g.lineStyle(2, 0xff3d6e, 0.9).strokeCircle(a.x, a.y, a.r);
+        g.fillStyle(0x2a1a3a, 0.5).fillEllipse(a.x, a.y - (1 - k) * 120, 18, 18);
+        break;
+      case 'toner_puddle': {
+        const fade = a.life - a.t < 0.6 ? (a.life - a.t) / 0.6 : 1;
+        g.fillStyle(0x2a1a3a, 0.75 * fade).fillEllipse(a.x, a.y, a.r * 2, a.r * 1.4);
+        g.fillStyle(0x6a3a9a, 0.5 * fade).fillEllipse(a.x - 6, a.y - 4, a.r * 0.8, a.r * 0.5);
+        break;
+      }
+      case 'gravity': {
+        const fade = a.life - a.t < 0.5 ? (a.life - a.t) / 0.5 : 1;
+        g.fillStyle(0x3a1a6a, 0.35 * fade).fillCircle(a.x, a.y, a.r);
+        for (let i = 0; i < 3; i++) {
+          const rr = ((time / 6 + i * 40) % a.r);
+          g.lineStyle(2, 0xb08aff, (1 - rr / a.r) * fade).strokeCircle(a.x, a.y, a.r - rr);
+        }
+        g.fillStyle(0x0d0b14, fade).fillCircle(a.x, a.y, 10);
+        g.lineStyle(2, 0xffffff, 0.8 * fade).strokeCircle(a.x, a.y, 12);
+        break;
+      }
+      case 'private_circle':
+        g.fillStyle(0xb07ad0, 0.12).fillCircle(a.x, a.y, a.r);
+        g.lineStyle(4, 0xe0b0ff, 0.6 + Math.sin(time / 100) * 0.3).strokeCircle(a.x, a.y, a.r);
+        break;
+      case 'cela':
+        g.fillStyle(0x000000, 0.4).fillRect(a.x - 30, a.y - 36, 60, 70);
+        break;
+      default:
+        break;
     }
   }
 
@@ -385,11 +564,8 @@ export class WorldRenderer {
   destroy() {
     for (const v of this.views.values()) v.destroy();
     this.views.clear();
-    this.tilemap?.destroy();
-    this.doors?.forEach((d) => d.sprite.destroy());
-    this.decor?.forEach((o) => o.destroy());
+    this.clearMapObjects();
     this.groundFx.destroy();
     this.fx.destroy();
   }
 }
-

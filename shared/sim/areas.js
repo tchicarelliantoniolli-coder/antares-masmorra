@@ -1,8 +1,8 @@
-import { hurtPlayer } from './combat.js';
+import { hurtPlayer, damageEnemy } from './combat.js';
 
-/** Áreas no chão: avisos de ataque, poças de toner, etc. */
+/** Áreas no chão: avisos de ataque, poças de toner, campo gravitacional, círculo da conversa, cela... */
 export function createArea(world, kind, x, y, opts = {}) {
-  const a = { id: world.newId(), kind, x, y, r: opts.r ?? 40, t: 0, life: opts.life ?? 1, dead: false, ...opts };
+  const a = { id: world.newId(), kind, x, y, r: opts.r ?? 40, t: 0, life: opts.life ?? 1, dead: false, tick: 0, ...opts };
   world.areas.push(a);
   return a;
 }
@@ -11,11 +11,45 @@ export function updateAreas(world, dt) {
   for (const a of world.areas) {
     if (a.dead) continue;
     a.t += dt;
-    if (a.kind === 'toner_puddle') {
-      for (const p of world.players) {
-        if (p.dead || p.downed || p.mods.tonerImmune) continue;
-        if (Math.hypot(p.x - a.x, p.y - a.y) < a.r) p.slowTimer = Math.max(p.slowTimer, 0.15);
+    switch (a.kind) {
+      case 'toner_puddle':
+        for (const p of world.players) {
+          if (p.dead || p.downed || p.mods.tonerImmune) continue;
+          if (Math.hypot(p.x - a.x, p.y - a.y) < a.r) p.slowTimer = Math.max(p.slowTimer, 0.15);
+        }
+        break;
+      case 'gravity': {
+        // Campo Gravitacional (Jean Paulo): puxa inimigos para o centro e causa dano
+        a.tick += dt;
+        const owner = world.players.find((p) => p.id === a.ownerId);
+        for (const e of world.enemies) {
+          if (e.dead || e.spawning > 0 || e.def.invulnerable) continue;
+          const d = Math.hypot(e.x - a.x, e.y - a.y);
+          if (d > a.r || d < 4) continue;
+          const pull = (e.def.boss ? 30 : 190) * dt;
+          world.map.moveBox(e, ((a.x - e.x) / d) * Math.min(pull, d), ((a.y - e.y) / d) * Math.min(pull, d));
+          if (a.tick >= 0.5) damageEnemy(world, e, 3, { source: owner, noMul: true });
+        }
+        if (a.tick >= 0.5) a.tick = 0;
+        break;
       }
+      case 'private_circle': {
+        // Conversa Particular (Katia): o alvo não sai do círculo e ninguém entra
+        for (const p of world.players) {
+          if (p.dead || p.jailTimer > 0) continue;
+          const d = Math.hypot(p.x - a.x, p.y - a.y) || 0.01;
+          if (p.id === a.targetId) {
+            const max = a.r - p.r;
+            if (d > max) { p.x = a.x + ((p.x - a.x) / d) * max; p.y = a.y + ((p.y - a.y) / d) * max; }
+          } else {
+            const min = a.r + p.r;
+            if (d < min) world.map.moveBox(p, ((p.x - a.x) / d) * (min - d), ((p.y - a.y) / d) * (min - d));
+          }
+        }
+        break;
+      }
+      default:
+        break;
     }
     if (a.t >= a.life) {
       a.dead = true;
