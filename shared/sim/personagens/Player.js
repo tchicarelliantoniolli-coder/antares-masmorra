@@ -1,7 +1,8 @@
 import {
   PLAYER_RADIUS, SHIELD_REGEN_DELAY, SHIELD_REGEN_INTERVAL, REVIVE_TIME, REVIVE_RADIUS, DEFAULT_AIM_DIST, MAX_AIM_DIST
 } from '../constants.js';
-import { updateWeapon } from '../armas/Weapons.js';
+import { updateWeapon, resetWeaponState } from '../armas/Weapons.js';
+import { updateDash } from '../armas/melee.js';
 import { castSkill } from './skills.js';
 import { applyPassive } from './passives.js';
 import { findInteractable, interact } from '../salas/Pickups.js';
@@ -59,6 +60,7 @@ function updatePlayer(world, p, inp, dt) {
   p.skillCd = Math.max(0, p.skillCd - dt);
   if (p.buffs.bubbleTimer > 0) p.buffs.bubbleTimer -= dt;
   if (p.buffs.hasteTimer > 0) p.buffs.hasteTimer -= dt;
+  if (p.downed || p.jailTimer > 0 || p.pull || p.signing > 0) clearAction(world, p);
   if (p.downed) {
     updateRevive(world, p, dt);
     return;
@@ -108,11 +110,15 @@ function updatePlayer(world, p, inp, dt) {
   p.moving = ml > 0.1;
   let speed = p.speed * p.mods.speedMul;
   if (p.buffs.hasteTimer > 0) speed *= 1.6;
+  if (p.wstate?.shielding) speed *= world.data.weapon(p.weapons[p.cur]).melee?.shield?.speedMul ?? 1;
   if (p.slowTimer > 0) { speed *= 0.55; p.slowTimer -= dt; }
   if (signing) speed *= 0.5;
-  p.vx = mx * speed;
-  p.vy = my * speed;
-  world.map.moveBox(p, p.vx * dt, p.vy * dt);
+  if (p.dash) updateDash(world, p, dt); // estocada: o movimento é da arma
+  else {
+    p.vx = mx * speed;
+    p.vy = my * speed;
+    world.map.moveBox(p, p.vx * dt, p.vy * dt);
+  }
 
   // Troca de arma (Q)
   if (inp.swap && p.weapons.length > 1 && !signing) {
@@ -161,6 +167,15 @@ function updatePlayer(world, p, inp, dt) {
     p.regenTimer += dt;
     if (p.regenTimer >= p.mods.regen) { p.regenTimer = 0; p.hp++; }
   }
+}
+
+/** Caiu, foi preso, puxado ou está assinando: para a estocada e solta carga/escudo/rajada. */
+function clearAction(world, p) {
+  const ws = p.wstate;
+  if (!p.dash && !(ws && (ws.shielding || ws.charge > 0 || ws.burstLeft > 0 || ws.spin > 0))) return;
+  p.dash = null;
+  p.prevFire = false;
+  resetWeaponState(p, world);
 }
 
 /** Jogador caído: um colega parado e sem atirar ao lado dele por REVIVE_TIME segundos o levanta. */

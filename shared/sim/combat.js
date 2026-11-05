@@ -153,7 +153,7 @@ export function killEnemy(world, e, src) {
 
 /** Dano em jogador: escudo primeiro, depois vida. */
 export function hurtPlayer(world, p, amount, opts = {}) {
-  if (p.dead || p.downed || p.invuln > 0 || p.jailTimer > 0 || world.state !== 'playing') return false;
+  if (p.dead || p.downed || p.invuln > 0 || p.dash || p.jailTimer > 0 || world.state !== 'playing') return false;
   let left = amount;
   if (p.shield > 0) {
     const a = Math.min(p.shield, left);

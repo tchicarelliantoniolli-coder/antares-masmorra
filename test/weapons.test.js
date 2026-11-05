@@ -376,3 +376,108 @@ test('trocar de andar com minas, órbitas, raio e arremesso no ar não dá erro'
   run(w, 1, { p1: { fire: true, aim: 0 } });
   assert.equal(w.floorNum, 2);
 });
+
+// ---------------------------------------------------------------- corpo a corpo
+import { hurtPlayer } from '../shared/sim/combat.js';
+
+const meleeDef = (style, extra = {}) => ({ type: 'melee', category: 'corpo', damage: 6, fireRate: 10, melee: { style, range: 50, arc: 110, knockback: 0, ...extra } });
+
+test('estocada avança, acerta o inimigo no caminho uma vez e para no fim', () => {
+  const { w, p } = arena();
+  withWeapon(w, { ...meleeDef('thrust', { thrust: { distance: 110, time: 0.16 } }), fireRate: 1 });
+  const e = dummy(w, p.x + 60, p.y, 9999);
+  const x0 = p.x;
+  run(w, 1 / 60, { p1: { fire: true, aim: 0 } });
+  assert.ok(p.dash, 'começou a estocada');
+  run(w, 0.3, { p1: { fire: true, aim: 0 } });
+  assert.equal(p.dash, null);
+  assert.ok(p.x - x0 > 90, `andou ${p.x - x0}`);
+  assert.equal(e.hp, 9999 - 6, 'um acerto só');
+});
+
+test('estocada para na parede e não entra nela', () => {
+  const { w, p } = arena();
+  withWeapon(w, { ...meleeDef('thrust'), fireRate: 1 });
+  const wx = p.x + 40;
+  for (let dy = -2; dy <= 2; dy++) w.map.set(Math.floor(wx / TILE), Math.floor(p.y / TILE) + dy, T.WALL);
+  run(w, 0.4, { p1: { fire: true, aim: 0 } });
+  assert.ok(!w.map.boxSolid(p.x - p.r, p.y - p.r, p.x + p.r, p.y + p.r), 'fora da parede');
+  assert.ok(p.x < Math.floor(wx / TILE) * TILE);
+});
+
+test('estocada deixa invulnerável durante o avanço', () => {
+  const { w, p } = arena();
+  withWeapon(w, { ...meleeDef('thrust'), fireRate: 1 });
+  run(w, 1 / 60, { p1: { fire: true, aim: 0 } });
+  const hp = p.hp, sh = p.shield;
+  assert.equal(hurtPlayer(w, p, 1), false);
+  assert.equal(p.hp, hp); assert.equal(p.shield, sh);
+});
+
+test('combo: o 3º golpe dá dano em dobro; parar 1 s volta ao 1º', () => {
+  const { w, p } = arena();
+  withWeapon(w, meleeDef('combo'));
+  const e = dummy(w, p.x + 30, p.y, 9999);
+  const hits = () => w.events.filter((ev) => ev.type === 'dmg' && ev.id === e.id).map((ev) => ev.amount);
+  for (let i = 0; i < 60 && hits().length < 3; i++) run(w, 1 / 60, { p1: { fire: true, aim: 0 } });
+  const [a, b, c] = hits();
+  assert.equal(a, 6); assert.equal(b, 6); assert.equal(c, 12);
+  run(w, 1, { p1: { fire: false, aim: 0 } });
+  const before = hits().length;
+  for (let i = 0; i < 30 && hits().length === before; i++) run(w, 1 / 60, { p1: { fire: true, aim: 0 } });
+  assert.equal(hits()[before], 6, 'voltou ao 1º golpe');
+});
+
+test('escudo bloqueia bala de frente e gasta energia; bala pelas costas acerta', () => {
+  const { w, p } = arena();
+  withWeapon(w, meleeDef('shield', { shield: { arc: 110, blockCost: 1 } }));
+  run(w, 2 / 60, { p1: { fire: true, aim: 0 } });
+  assert.equal(p.wstate.shielding, true);
+  const e0 = p.energy, sh = p.shield, hp = p.hp;
+  spawnProjectile(w, { team: 'enemy', x: p.x + 40, y: p.y, angle: Math.PI, speed: 300, damage: 1, range: 900, sprite: 'ebullet_paper' });
+  run(w, 0.3, { p1: { fire: true, aim: 0 } });
+  assert.equal(p.shield, sh); assert.equal(p.hp, hp);
+  assert.ok(p.energy < e0);
+  assert.equal(countEvents(w, 'block'), 1);
+  spawnProjectile(w, { team: 'enemy', x: p.x - 40, y: p.y, angle: 0, speed: 300, damage: 1, range: 900, sprite: 'ebullet_paper' });
+  run(w, 0.3, { p1: { fire: true, aim: 0 } });
+  assert.ok(p.shield < sh || p.hp < hp, 'acertou pelas costas');
+});
+
+test('escudo sem energia não bloqueia', () => {
+  const { w, p } = arena();
+  withWeapon(w, meleeDef('shield'));
+  p.energy = 0;
+  run(w, 2 / 60, { p1: { fire: true, aim: 0 } });
+  const sh = p.shield, hp = p.hp;
+  spawnProjectile(w, { team: 'enemy', x: p.x + 40, y: p.y, angle: Math.PI, speed: 300, damage: 1, range: 900, sprite: 'ebullet_paper' });
+  run(w, 0.3, { p1: { fire: true, aim: 0 } });
+  assert.ok(p.shield < sh || p.hp < hp);
+});
+
+test('escudo deixa o jogador mais lento', () => {
+  const a = arena(), b = arena();
+  withWeapon(a.w, meleeDef('shield', { shield: { speedMul: 0.5 } }));
+  withWeapon(b.w, meleeDef('shield', { shield: { speedMul: 0.5 } }));
+  const ax = a.p.x, bx = b.p.x;
+  run(a.w, 0.3, { p1: { fire: true, aim: 0, moveX: 1 } });
+  run(b.w, 0.3, { p1: { fire: false, aim: 0, moveX: 1 } });
+  assert.ok(a.p.x - ax < (b.p.x - bx) * 0.7);
+});
+
+test('cair no meio da estocada ou com escudo levantado limpa o estado', () => {
+  const { w, p } = arena();
+  withWeapon(w, meleeDef('shield'));
+  run(w, 2 / 60, { p1: { fire: true, aim: 0 } });
+  assert.ok(p.wstate.shielding);
+  p.shield = 0; hurtPlayer(w, p, 99);
+  run(w, 1 / 60, { p1: { fire: true, aim: 0 } });
+  assert.equal(p.wstate.shielding, false);
+  const t = arena();
+  withWeapon(t.w, { ...meleeDef('thrust', { thrust: { distance: 200, time: 0.5 } }), fireRate: 1 });
+  run(t.w, 1 / 60, { p1: { fire: true, aim: 0 } });
+  assert.ok(t.p.dash);
+  t.p.jailTimer = 2;
+  run(t.w, 1 / 60);
+  assert.equal(t.p.dash, null);
+});

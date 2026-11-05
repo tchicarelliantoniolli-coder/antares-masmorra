@@ -2,6 +2,7 @@ import { damageEnemy, explode, hurtPlayer } from '../combat.js';
 import { angleDiff } from '../math.js';
 import { propAt, damageProp } from '../salas/Props.js';
 import { createArea } from '../areas.js';
+import { shieldBlocks } from './melee.js';
 
 /**
  * Cria um projétil.
@@ -260,7 +261,8 @@ export function updateProjectiles(world, dt) {
       for (const pl of world.players) {
         if (pl.dead || pl.downed || pl.jailTimer > 0) continue;
         if (Math.hypot(pl.x - p.x, pl.y - p.y) > pl.r + p.r - 2) continue;
-        if (pl.invuln > 0) continue;
+        if (shieldBlocks(world, pl, p)) { p.dead = true; break; }
+        if (pl.invuln > 0 || pl.dash) continue;
         hurtPlayer(world, pl, p.damage, { slow: p.slow });
         impact(world, p);
         break;
