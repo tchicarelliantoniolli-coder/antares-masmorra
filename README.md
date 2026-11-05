@@ -5,8 +5,9 @@ Os heróis são os professores do Ensino Médio do Colégio Antares Americana, e
 Os sprites são caricaturas carinhosas inspiradas nas fotos públicas de <https://antaresamericana.com.br/ensino-medio/>
 (cabelo, óculos, barba e jaleco com a cor da gola).
 
-**Versão 0.3 (em andamento):** armas com mecânicas diferentes e revive novo no co-op. 3 andares, 6 professores liberados, modos solo,
-co-op local (2 a 4) e online com salas por código.
+**Versão 0.3:** inimigos novos com comportamentos, modificadores de elite e papéis nas ondas; 14 professores jogáveis;
+53 armas com mecânicas diferentes ([docs/ARMAS.md](docs/ARMAS.md)); dificuldade calibrada por bots
+([docs/BALANCO.md](docs/BALANCO.md)); revive novo no co-op. 3 andares, modos solo, co-op local (2 a 4) e online com salas por código.
 
 ## Como rodar
 
@@ -94,12 +95,15 @@ sem acesso: a primeira visita demora cerca de 1 minuto e as salas abertas se per
   - **Cantina:** a Tia da Cantina vende armas, maçã, suco e broche por moedas.
   - **Estátua:** paga moedas por uma bênção permanente (dano, escudo, velocidade, crítico ou recarga).
   - **Enfermaria:** cura o time.
-- **Inimigos:**
-  - Caderno Zumbi, Prova Voadora, Estojo Raivoso.
-  - Lousa Assombrada (torre que atira em 8 direções).
-  - Sinal do Recreio (anéis de som).
-  - Mochila-Bomba (corre e explode).
-  - **Inimigos de elite** (dourados, com o dobro de vida e mais tiros), mais comuns nos andares 2 e 3.
+- **Inimigos** (13 tipos comuns, cada um com um comportamento em `shared/sim/inimigos/behaviors.js`):
+  - Papéis que as ondas combinam: *tanque* (Caderno Zumbi, Estojo Raivoso, Grampeador que investe), *atirador*
+    (Prova Voadora, Lousa Assombrada, Sinal do Recreio, Régua de Mira que atira de longe), *pressão*
+    (Mochila-Bomba, Borracha que se divide, Apontador que cava e surge, Chamada que teletransporta) e
+    *suporte* (Monitor que chama reforços, Grêmio que fortalece os aliados).
+  - **Elites** (dourados, com o dobro de vida e mais tiros), mais comuns nos andares 2 e 3, ganham um **modificador**:
+    rápido, blindado, explosivo, vampiro ou duplicador.
+  - Todo ataque perigoso tem aviso visível antes de causar dano.
+  - Também aparecem os Alunos da Assembleia e a Diva (cura a Katia), que são parte dos chefes.
 - **14 professores jogáveis**, cada um com arma inicial, habilidade e passivo (detalhes na tela de seleção):
 
   | Professor | Matéria | Habilidade | Passivo |
@@ -128,9 +132,19 @@ sem acesso: a primeira visita demora cerca de 1 minuto e as salas abertas se per
   - Cada jogador carrega 2 armas: **Q** troca, **E** pega. Ao chegar perto de uma arma aparece um card com o modo e os atributos.
   - `node scripts/weapon-dps.mjs` mostra o dano por segundo de cada arma.
 - **Recursos:** vida, escudo que regenera, energia e moedas.
-  - Revive: no co-op, um jogador caído levanta se um colega ficar parado e sem atirar ao lado dele por 5 segundos.
-    Quem estiver caído também levanta ao passar pelo portal para o próximo andar.
+  - **Revive (co-op):** um colega fica parado, sem atirar, ao lado do caído por 5 segundos e ele levanta.
+    Quem estiver caído também levanta depois que o time passa pelo portal para o próximo andar.
   - A partida acaba quando todos caem.
+
+## Dificuldade e bot de balanceamento
+
+A dificuldade foi calibrada com um bot que joga partidas inteiras sem tela (`scripts/bot/`): a dupla "do dono e do amigo"
+vence só cerca de 5 a 15% das partidas, e um jogador experiente vence 25 a 40%. Os números ficam em `shared/data/enemies.json`
+(`difficulty` e `floors`). Detalhes, resultados e como recalibrar depois de jogar: [docs/BALANCO.md](docs/BALANCO.md).
+
+```bash
+node scripts/bot/run.mjs --root . --profile dupla --players 2 --runs 30
+```
 
 ## Como o código está organizado
 
@@ -173,6 +187,6 @@ docs/ARMAS.md           como criar armas novas pelo JSON
 
 - Mesa de laboratório (forja: combinar 2 armas) e itens passivos.
 - Reconectar no meio de uma partida online; hoje quem cai da conexão sai da partida.
-- Testar com controle de verdade e com pessoas jogando, para afinar o balanceamento (hoje foi calibrado com bots).
+- Testar com controle de verdade e com pessoas jogando, para afinar o balanceamento (hoje foi calibrado com bots; veja "como recalibrar" em docs/BALANCO.md).
 - Opções de volume e tela cheia.
 - Arte final: os sprites atuais são provisórios e podem ser trocados sem mexer no código.

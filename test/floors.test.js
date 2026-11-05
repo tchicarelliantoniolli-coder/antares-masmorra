@@ -150,6 +150,23 @@ test('Samara: se as restrições zeram todos os pesos, ainda escolhe um ataque',
   assert.ok(boss.lastAttack, 'escolheu ataque');
 });
 
+test('Samara: sem jogador livre nunca escolhe suspensão nem quebra (muitas sementes)', async () => {
+  const { bossSamara } = await import('../shared/sim/inimigos/chefes/samara.js');
+  const { createEnemy } = await import('../shared/sim/inimigos/Enemy.js');
+  for (let seed = 1; seed <= 40; seed++) {
+    const w = new World({ data, seed, floor: 3, players: [{ id: 'a', characterId: 'harilson' }] });
+    const [a] = w.players;
+    const boss = w.boss ?? createEnemy(w, 'samara', a.x + 200, a.y, w.bossRoomId, { spawnTime: 0 });
+    createEnemy(w, 'caderno_preto', a.x + 50, a.y, w.bossRoomId, { spawnTime: 0 });
+    a.jailTimer = 3; // nenhum jogador livre
+    for (let i = 0; i < 25; i++) {
+      boss.state = 'idle'; boss.phase = 1 + (i % 3); boss.t = 0; boss.lastAttack = 'advertencia';
+      assert.doesNotThrow(() => bossSamara(w, boss, 1 / 60, a), `semente ${seed}, rodada ${i}`);
+      assert.notEqual(boss.lastAttack, 'suspensao', `semente ${seed}, rodada ${i}`);
+    }
+  }
+});
+
 test('enfermaria cura só a fração da vida máxima definida em difficulty', () => {
   const w = new World({ data, seed: 21, players: [{ id: 'p1', characterId: 'harilson' }] });
   const p = w.players[0];

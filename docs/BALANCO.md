@@ -145,3 +145,37 @@ O perfil dupla já vencia só 3% sozinho na v0.2 (Tarefa 11) e morre no andar 2 
 
 ### Correção de bug (afeta só a v0.3)
 `samara.js choose()`: o recurso de emergência (restrições zeraram tudo) podia reabilitar "suspensao" sem jogador livre e quebrar (`v` indefinido). Agora mantém o peso 0 sem jogadores livres.
+
+## Confirmação com seeds novas (61-90)
+
+A Tarefa 12 ajustou tudo nas sementes 1-60. Para conferir sem viés, 30 partidas novas por linha (`--seed0 61`), sem reajustar nada:
+
+| Linha | Vitórias (61-90) | Andar médio | Alvo |
+|---|---|---|---|
+| dupla 2j | 2/30 (7%) | 2.17 | 5-15% ok |
+| experiente 1j | 6/30 (20%) | 2.37 | 25-40% um pouco abaixo (ruído de +-8 pontos; 8 partidas "travadas" contam como não vitória) |
+| experiente 2j | 17/30 (57%) | 2.60 | 25-40% acima (mesmo perfil deu 38% em 60 partidas e 27% a 50% em séries de 30) |
+
+A linha principal (dupla 2j) se confirmou. O experiente oscila para os dois lados com 30 partidas; nada foi retocado.
+
+## Como recalibrar depois que o dono jogar
+
+1. Anote o resultado real: venceu? Em que andar caiu e em qual sala/chefe? Foi fácil, injusto ou chato?
+2. Rode a linha de base com o bot antes de mexer (`--runs 60` reduz o ruído; 30 partidas variam +-8 pontos):
+
+   ```bash
+   node scripts/bot/run.mjs --root . --profile dupla --players 2 --runs 60
+   node scripts/bot/run.mjs --root . --profile experiente --players 1 --runs 60
+   ```
+
+   Opções úteis: `--seed0 N` (outras sementes), `--set reaction=0.5,aimError=14` (afinar o perfil sem editar o bot), `--players 1|2`.
+3. Se o jogo real foi **fácil demais** ou **difícil demais**, mexa em poucas alavancas por vez, sempre em `shared/data/enemies.json`:
+   - `difficulty.extraEnemies` e `difficulty.extraHp`: peso de cada jogador extra nos inimigos comuns (mais dupla = mais difícil).
+   - `difficulty.bossHpPerPlayer`: vida extra dos chefes por jogador extra.
+   - `difficulty.dropHealthChance`, `appleHeal`, `healStationFraction`: quanta cura o jogador recebe.
+   - `difficulty.priceMul`: preços da loja e da estátua (o bot não compra, então não aparece nas taxas dele).
+   - Por andar em `floors[]`: `hpScale` (vida), `bulletSpeedMul` (velocidade das balas, muito sensível no andar 3), `eliteChance`, `wavesPerRoom`, `enemiesPerWave`, `enemyPool` (pesos dos tipos) e a vida dos chefes em `enemies`.
+4. Rode de novo as quatro linhas (dupla 2j/1j, experiente 2j/1j) com as mesmas sementes e compare. Metas: dupla 2j 5-15%, experiente 1j 25-40%, experiente 2j 25-40%.
+5. Confirme com sementes novas (`--seed0 61`), `npm test` e `node scripts/weapon-dps.mjs` (0 armas fora da faixa) antes de commitar.
+
+Dica: o perfil `dupla` representa dois jogadores medianos; se o dono ganha com folga, aperte `bulletSpeedMul` do andar 2 ou 3; se morre no andar 1, alivie `hpScale`/`enemiesPerWave` do andar 1.

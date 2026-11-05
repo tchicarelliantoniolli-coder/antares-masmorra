@@ -42,7 +42,7 @@ export class MenuScene extends Phaser.Scene {
     ];
     this.list = new ButtonList(this, buttons);
 
-    this.add.text(8, GAME_H - 20, 'Uma homenagem aos professores do Ensino Médio do Colégio Antares Americana  •  v0.2', textStyle(16, '#8a83ad'));
+    this.add.text(8, GAME_H - 20, 'Uma homenagem aos professores do Ensino Médio do Colégio Antares Americana  •  v0.3', textStyle(16, '#8a83ad'));
 
     this.input.once('pointerdown', () => sound.unlock());
     this.input.keyboard.once('keydown', () => { sound.unlock(); sound.playMusic('menu'); });
