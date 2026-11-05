@@ -7,7 +7,7 @@ import { damagePropsInRadius } from './salas/Props.js';
  * Retorna o dano aplicado.
  */
 export function damageEnemy(world, e, amount, opts = {}) {
-  if (e.dead || e.spawning > 0) return 0;
+  if (e.dead || e.spawning > 0 || e.burrowed) return 0;
   if (e.def.invulnerable || e.shielded > 0) {
     world.emit('immune', { x: e.x, y: e.y - e.r });
     return 0;

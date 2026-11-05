@@ -42,6 +42,26 @@ export function nearestPlayer(world, e) {
   return best;
 }
 
+/** Alvo mais próximo do inimigo: jogador vivo ou aliado com provocação (taunt) e hp > 0. */
+export function nearestTarget(world, e) {
+  let best = nearestPlayer(world, e);
+  let bd = best ? Math.hypot(best.x - e.x, best.y - e.y) : Infinity;
+  for (const a of world.allies) {
+    if (a.dead || !a.taunt || !(a.hp > 0)) continue;
+    const d = Math.hypot(a.x - e.x, a.y - e.y);
+    if (d < bd) { bd = d; best = a; }
+  }
+  return best;
+}
+
+/** Ângulo para acertar onde o alvo estará (velocidade do alvo × tempo de voo × lead). Sem vx/vy = mira direta. */
+export function predictAim(e, target, bulletSpeed, lead = 1) {
+  const dx = target.x - e.x, dy = target.y - e.y;
+  if (target.vx === undefined || !bulletSpeed) return Math.atan2(dy, dx);
+  const t = (Math.hypot(dx, dy) / bulletSpeed) * lead;
+  return Math.atan2(dy + (target.vy || 0) * t, dx + (target.vx || 0) * t);
+}
+
 export function enemySpeed(e) {
   let s = e.def.speed * (e.speedMul || 1);
   if (e.status.slow > 0) s *= e.status.slowMul ?? 0.5;
@@ -101,7 +121,7 @@ export function updateEnemies(world, dt) {
     }
     e.contactCd = Math.max(0, e.contactCd - dt);
     if (e.status.stun > 0) { e.status.stun -= dt; continue; }
-    const target = nearestPlayer(world, e);
+    const target = nearestTarget(world, e);
     const fn = BEHAVIORS[e.def.behavior];
     if (fn) fn(world, e, dt, target);
     if (e.dead) continue;
@@ -111,7 +131,7 @@ export function updateEnemies(world, dt) {
     }
     // dano de contato
     const cdmg = e.contactOverride ?? e.def.contactDamage;
-    if (cdmg && e.contactCd <= 0) {
+    if (cdmg && e.contactCd <= 0 && !e.burrowed) {
       for (const p of world.players) {
         if (p.dead || p.downed || p.jailTimer > 0) continue;
         if (Math.hypot(p.x - e.x, p.y - e.y) < p.r + e.r - 2) {

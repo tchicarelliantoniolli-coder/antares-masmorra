@@ -165,7 +165,7 @@ export class WorldRenderer {
       tp.img.setVisible(tp.img.x > cam.x - 40 && tp.img.x < cam.right + 40 && tp.img.y > cam.y - 40 && tp.img.y < cam.bottom + 40);
     }
 
-    if (w.boss && !w.boss.dead && w.boss.telegraph) this.drawTelegraph(w.boss);
+    for (const e of w.enemies) if (!e.dead && e.telegraph) this.drawTelegraph(e);
   }
 
   view(id, factory) {
@@ -333,6 +333,15 @@ export class WorldRenderer {
       return;
     }
     v.spawn.setVisible(false);
+    if (e.burrowed) {
+      // enterrado: some o corpo e fica só um monte de terra que se mexe
+      v.body.setVisible(false); v.shadow.setAlpha(0);
+      const g = this.groundFx, wob = Math.sin(time / 90 + e.id) * 2;
+      g.fillStyle(0x4a3220, 0.9).fillEllipse(e.x, e.y + 4, e.r * 2 + wob, e.r * 1.2 - wob * 0.5);
+      g.fillStyle(0x6b4a30, 0.9).fillEllipse(e.x - 2, e.y + 1, e.r * 1.3, e.r * 0.7);
+      return;
+    }
+    v.body.setVisible(true);
     v.body.setAlpha(1).setScale(scale);
 
     if (e.type === 'maquina_xerox' && e.phase2 && !v.angry) {
@@ -615,6 +624,22 @@ export class WorldRenderer {
         g.lineStyle(2, 0xffffff, 0.8 * fade).strokeCircle(a.x, a.y, 12);
         break;
       }
+      case 'ink_trail': {
+        const fade = a.life - a.t < 0.6 ? (a.life - a.t) / 0.6 : 1;
+        g.fillStyle(0x14102a, 0.7 * fade).fillEllipse(a.x, a.y, a.r * 2, a.r * 1.4);
+        g.fillStyle(0x3a2a6a, 0.4 * fade).fillEllipse(a.x - 4, a.y - 3, a.r * 0.8, a.r * 0.5);
+        break;
+      }
+      case 'fire_ground': {
+        const fade = a.life - a.t < 0.6 ? (a.life - a.t) / 0.6 : 1;
+        g.fillStyle(0xd0401a, 0.55 * fade).fillEllipse(a.x, a.y, a.r * 2, a.r * 1.4);
+        g.fillStyle(0xffb030, (0.4 + Math.sin(time / 70 + a.id) * 0.15) * fade).fillEllipse(a.x, a.y - 2, a.r * 1.1, a.r * 0.7);
+        break;
+      }
+      case 'warn_circle':
+        g.fillStyle(0xff3d3d, 0.1 + 0.2 * k).fillCircle(a.x, a.y, a.r * k);
+        g.lineStyle(2, 0xff3d3d, 0.85).strokeCircle(a.x, a.y, a.r);
+        break;
       case 'private_circle':
         g.fillStyle(0xb07ad0, 0.12).fillCircle(a.x, a.y, a.r);
         g.lineStyle(4, 0xe0b0ff, 0.6 + Math.sin(time / 100) * 0.3).strokeCircle(a.x, a.y, a.r);
@@ -627,10 +652,16 @@ export class WorldRenderer {
     }
   }
 
+  /** Aviso de ataque de qualquer inimigo: faixa (line) ou círculo (circle). */
   drawTelegraph(b) {
     const t = b.telegraph;
-    if (t.type !== 'line') return;
     const g = this.groundFx;
+    if (t.type === 'circle') {
+      g.fillStyle(0xff3d3d, 0.2).fillCircle(t.x, t.y, t.r);
+      g.lineStyle(2, 0xff3d3d, 0.85).strokeCircle(t.x, t.y, t.r);
+      return;
+    }
+    if (t.type !== 'line') return;
     const cos = Math.cos(t.angle), sin = Math.sin(t.angle);
     const hw = t.width / 2;
     const nx = -sin * hw, ny = cos * hw;

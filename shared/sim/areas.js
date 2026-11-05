@@ -19,6 +19,29 @@ export function updateAreas(world, dt) {
           if (Math.hypot(p.x - a.x, p.y - a.y) < a.r) p.slowTimer = Math.max(p.slowTimer, 0.15);
         }
         break;
+      case 'ink_trail':
+        // trilha de tinta: jogador dentro anda a 55%
+        for (const p of world.players) {
+          if (p.dead || p.downed) continue;
+          if (Math.hypot(p.x - a.x, p.y - a.y) < a.r + p.r * 0.5) p.slowTimer = Math.max(p.slowTimer, 0.15);
+        }
+        break;
+      case 'fire_ground': {
+        // chão em chamas: dano a cada 0,6 s (se o golpe for barrado por invulnerabilidade, tenta de novo no próximo passo)
+        a.tick += dt;
+        if (a.tick < 0.6) break;
+        let any = false, hit = false;
+        for (const p of world.players) {
+          if (p.dead || p.downed) continue;
+          if (Math.hypot(p.x - a.x, p.y - a.y) >= a.r + p.r * 0.5) continue;
+          any = true;
+          if (hurtPlayer(world, p, a.damage ?? 1)) hit = true;
+        }
+        if (hit || !any) a.tick = 0;
+        break;
+      }
+      case 'warn_circle':
+        break; // só visual
       case 'gravity':
       case 'singularity': {
         // Campo Gravitacional (Jean Paulo) e buraco negro das armas: puxa inimigos para o centro e causa dano
