@@ -368,3 +368,20 @@ test('inimigo enterrado ou teleportando quando o andar troca não dá erro', () 
   assert.doesNotThrow(() => { w.completeFloor(); run(w, 1); });
   assert.equal(w.floorNum, 2);
 });
+
+test('monitor morto leva os invocados junto e a sala limpa', () => {
+  const { w, p, room } = arena();
+  p.invuln = 99;
+  room.state = 'active'; room.waves = [['monitor']]; room.waveIndex = 0;
+  w.activeRoom = room; w.map.locked.add(room.id);
+  const m = createEnemy(w, 'monitor', p.x + 250, p.y, room.id, { spawnTime: 0 });
+  m.cd = 0;
+  for (let i = 0; i < 60 * 3 && vivos(w, 'caderno_zumbi').length < 2; i++) w.step(1 / 60, {});
+  assert.ok(vivos(w, 'caderno_zumbi').length >= 2, 'monitor invocou');
+  killEnemy(w, m, null);
+  run(w, 1);
+  assert.equal(vivos(w, 'caderno_zumbi').length, 0, 'invocados somem com o monitor');
+  assert.equal(room.state, 'cleared');
+  assert.ok(!w.map.locked.has(room.id), 'portas destravadas');
+  assert.equal(w.enemies.filter((e) => e.roomId === room.id && !e.dead).length, 0);
+});

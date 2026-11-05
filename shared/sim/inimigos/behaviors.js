@@ -383,6 +383,15 @@ function summoner(world, e, dt, target) {
   if (e.cd <= 0) { e.state = 'windup'; e.t = S.warn; }
 }
 
+/** Monitor morto: os cadernos que ele chamou somem junto (a sala não fica com sobras). */
+function summonerDeath(world, e) {
+  for (const m of world.enemies) {
+    if (m.summonerId !== e.id || m.dead) continue;
+    m.dead = true;
+    world.emit('enemy_vanish', { x: m.x, y: m.y, id: m.id, enemyType: m.type });
+  }
+}
+
 /** Grêmio Estudantil: foge do jogador e, a cada `interval`, cura (20%) um aliado ferido ou dá escudo de 1 golpe. */
 function buffer(world, e, dt, target) {
   const B = e.def.buff;
@@ -518,5 +527,6 @@ export const BEHAVIORS = {
 
 /** Ganchos de comportamento chamados por killEnemy (ao morrer). */
 export const BEHAVIOR_HOOKS = {
-  splitter: { onDeath: splitterDeath }
+  splitter: { onDeath: splitterDeath },
+  summoner: { onDeath: summonerDeath }
 };
