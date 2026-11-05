@@ -16,7 +16,7 @@ export const PICKUP_MAGNET_RADIUS = 90;
 export const INVULN_TIME = 0.8;
 export const SHIELD_REGEN_DELAY = 4;
 export const SHIELD_REGEN_INTERVAL = 0.8;
-export const REVIVE_TIME = 3;
+export const REVIVE_TIME = 5;        // colega parado e sem atirar por 5 s levanta quem caiu
 export const REVIVE_RADIUS = 48;
 export const SPAWN_TIME = 0.9;      // tempo do "portal de invocação" dos inimigos
 

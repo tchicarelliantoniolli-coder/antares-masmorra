@@ -1,4 +1,4 @@
-import { TILE, T } from '/shared/sim/constants.js';
+import { TILE, T, REVIVE_TIME } from '/shared/sim/constants.js';
 import { trapState } from '/shared/sim/salas/Props.js';
 import { BLESSINGS } from '/shared/sim/salas/Pickups.js';
 import { TILESET_COLS, TILE_KIND } from './tileArt.js';
@@ -209,7 +209,7 @@ export class WorldRenderer {
     v.cage.setVisible(p.jailTimer > 0).setPosition(p.x, p.y - 8).setDepth(depth + 3);
     if (p.jailTimer > 0) v.status.setText('SUSPENSO ' + Math.ceil(p.jailTimer) + 's').setColor('#ff9a9a');
     else if (p.signing > 0) v.status.setText('assinando... (sem atacar)').setColor('#ffd0d0');
-    else if (p.downed) v.status.setText(this.world.players.length > 1 ? 'CAÍDO! ajude!' : '').setColor('#ff8a8a');
+    else if (p.downed) v.status.setText(this.world.players.length > 1 ? 'CAÍDO! fique parado perto' : '').setColor('#ff8a8a');
     else v.status.setText('');
     v.status.setPosition(p.x, by - (v.label ? 40 : 28)).setDepth(depth + 4);
 
@@ -220,7 +220,7 @@ export class WorldRenderer {
       v.body.anims.stop();
       v.weapon.setVisible(false);
       v.buff.setVisible(false);
-      const prog = p.reviveProgress / 3;
+      const prog = p.reviveProgress / REVIVE_TIME;
       this.fx.lineStyle(3, 0x000000, 0.5).strokeCircle(p.x, p.y - 4, 22);
       if (prog > 0) {
         this.fx.lineStyle(3, 0x5ee05e, 1);

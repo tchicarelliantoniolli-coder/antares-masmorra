@@ -1,5 +1,5 @@
 import { GAME_W, GAME_H, COLORS, textStyle, titleStyle } from '../config.js';
-import { THEME_LABELS } from '/shared/sim/constants.js';
+import { THEME_LABELS, REVIVE_RADIUS } from '/shared/sim/constants.js';
 import { energyCost } from '/shared/sim/armas/Weapons.js';
 import { BLESSINGS } from '/shared/sim/salas/Pickups.js';
 import { hexToInt } from '../render/pixel.js';
@@ -259,7 +259,11 @@ export class HudScene extends Phaser.Scene {
       }
       card.hide();
       let msg = this.promptFor(world, p, tgt, key);
-      if (!msg && p.downed && world.players.length > 1) msg = 'Caído! Um colega precisa ficar perto de você por 3 s';
+      if (!msg && p.downed && world.players.length > 1) msg = 'Caído! Um colega precisa ficar parado e sem atirar perto de você por 5 s';
+      if (!msg && !p.downed) {
+        const fallen = world.players.find((q) => q !== p && q.downed && !q.dead && Math.hypot(q.x - p.x, q.y - p.y) < REVIVE_RADIUS);
+        if (fallen) msg = `Fique parado e sem atirar para levantar ${fallen.name}`;
+      }
       if (!msg && p.signing > 0 && world.players.length > 1) msg = 'Assinando! Um colega perto te liberta';
       if (this.multiLocal) {
         if (!msg) continue;

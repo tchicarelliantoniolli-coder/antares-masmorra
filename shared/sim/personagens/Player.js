@@ -52,6 +52,7 @@ export function updatePlayers(world, dt, inputs) {
 
 function updatePlayer(world, p, inp, dt) {
   if (p.dead) return;
+  p.firing = !!inp.fire; // usado pelo revive (quem ajuda não pode atirar)
   p.invuln = Math.max(0, p.invuln - dt);
   p.skillCd = Math.max(0, p.skillCd - dt);
   if (p.buffs.bubbleTimer > 0) p.buffs.bubbleTimer -= dt;
@@ -160,10 +161,10 @@ function updatePlayer(world, p, inp, dt) {
   }
 }
 
-/** Jogador caído: um colega perto dele por 3 segundos o levanta. */
+/** Jogador caído: um colega parado e sem atirar ao lado dele por REVIVE_TIME segundos o levanta. */
 function updateRevive(world, p, dt) {
-  const helper = world.players.find((q) => q !== p && !q.downed && !q.dead &&
-    Math.hypot(q.x - p.x, q.y - p.y) < REVIVE_RADIUS);
+  const helper = world.players.find((q) => q !== p && !q.downed && !q.dead && !(q.signing > 0) && !(q.jailTimer > 0) &&
+    !q.moving && !q.firing && Math.hypot(q.x - p.x, q.y - p.y) < REVIVE_RADIUS);
   if (helper) {
     p.reviveProgress += dt;
     if (p.reviveProgress >= REVIVE_TIME) {
@@ -174,6 +175,6 @@ function updateRevive(world, p, dt) {
       world.emit('player_revive', { id: p.id, by: helper.id, x: p.x, y: p.y });
     }
   } else {
-    p.reviveProgress = Math.max(0, p.reviveProgress - dt * 0.5);
+    p.reviveProgress = 0;
   }
 }

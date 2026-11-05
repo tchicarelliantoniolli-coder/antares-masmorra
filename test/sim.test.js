@@ -107,22 +107,36 @@ test('Equação (Harilson): próximo acerto causa dano x5', () => {
   assert.equal(p.buffs.nextHitMul, 1);
 });
 
-test('co-op: jogador caído é revivido por colega perto por 3 s; todos caídos = derrota', () => {
+test('co-op: colega parado e sem atirar por 5 s levanta quem caiu; todos caídos = derrota', () => {
   const w = new World({ data, seed: 5, players: [{ id: 'a', characterId: 'harilson' }, { id: 'b', characterId: 'ana_claudia' }] });
   const [a, b] = w.players;
-  a.shield = 0;
-  hurtPlayer(w, a, 99);
+  a.shield = 0; hurtPlayer(w, a, 99);
   assert.ok(a.downed);
   b.x = a.x + 20; b.y = a.y;
-  run(w, 3.2);
+  run(w, 4.5);
+  assert.ok(a.downed, 'ainda não: precisa de 5 s');
+  run(w, 0.7);
   assert.ok(!a.downed, 'deveria ter levantado');
   assert.ok(a.hp > 0);
-  a.invuln = b.invuln = 0;
-  a.shield = b.shield = 0;
-  hurtPlayer(w, a, 99);
-  hurtPlayer(w, b, 99);
+  a.invuln = b.invuln = 0; a.shield = b.shield = 0;
+  hurtPlayer(w, a, 99); hurtPlayer(w, b, 99);
   run(w, 0.1);
   assert.equal(w.state, 'defeat');
+});
+
+test('revive zera se o colega se mexer ou atirar', () => {
+  const w = new World({ data, seed: 5, players: [{ id: 'a', characterId: 'harilson' }, { id: 'b', characterId: 'ana_claudia' }] });
+  const [a, b] = w.players;
+  a.shield = 0; hurtPlayer(w, a, 99);
+  b.x = a.x + 20; b.y = a.y;
+  run(w, 3);
+  assert.ok(a.downed && a.reviveProgress > 2.5, `progresso ${a.reviveProgress}`);
+  run(w, 0.1, { b: { fire: true, aim: Math.PI } });
+  assert.equal(a.reviveProgress, 0, 'atirou: zera');
+  run(w, 3);
+  assert.ok(a.downed && a.reviveProgress > 2.5, `progresso ${a.reviveProgress}`);
+  run(w, 0.05, { b: { moveX: 0.01, moveY: 1 } });
+  assert.equal(a.reviveProgress, 0, 'mexeu: zera');
 });
 
 test('derrotar o chefe abre o portal; no último andar, entrar nele = vitória', () => {
