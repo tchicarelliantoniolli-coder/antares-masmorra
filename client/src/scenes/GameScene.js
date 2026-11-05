@@ -126,7 +126,7 @@ export class GameScene extends Phaser.Scene {
     const max = w.mode === 'lob' ? w.lob.maxRange : w.mode === 'rain' ? w.rain.maxRange : w.mode === 'deploy' ? 60 : 0;
     if (!max) return;
     const a = Math.atan2(wp.y - (p.y - 4), wp.x - p.x);
-    const r = this.world.map.raycast(p.x, p.y, a, Math.min(max, Math.hypot(wp.x - p.x, wp.y - (p.y - 4))));
+    const r = this.world.map.groundRaycast(p.x, p.y, a, Math.min(max, Math.hypot(wp.x - p.x, wp.y - (p.y - 4))));
     const rad = w.mode === 'rain' ? w.rain.radius + w.rain.hitRadius : w.mode === 'lob' ? (w.projectile.explode?.radius || w.lob.pool?.r || 16) : 14;
     g.lineStyle(2, 0xffd23f, 0.55).strokeCircle(r.x, r.y, rad);
     g.fillStyle(0xffd23f, 0.12).fillCircle(r.x, r.y, rad);

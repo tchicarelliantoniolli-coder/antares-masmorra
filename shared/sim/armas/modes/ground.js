@@ -4,9 +4,9 @@ import { createArea } from '../../areas.js';
 import { spawnShot } from '../shots.js';
 import { tryPay, startCooldown, emitShoot, critChanceOf } from '../common.js';
 
-/** Ponto mirado no chão: até maxRange na direção da mira, parando antes de paredes. */
+/** Ponto mirado no chão: até maxRange na direção da mira, passando por cima de obstáculos e parando antes de paredes. */
 export function aimPoint(world, p, maxRange, angle = p.aim) {
-  const r = world.map.raycast(p.x, p.y, angle, Math.min(p.aimDist, maxRange));
+  const r = world.map.groundRaycast(p.x, p.y, angle, Math.min(p.aimDist, maxRange));
   return { x: r.x, y: r.y };
 }
 
@@ -19,7 +19,7 @@ export const lob = {
     const shots = spawnShot(world, p, w, { proj: { ...w.projectile, ghost: true, homing: 0, boomerang: false, bounce: 0 } });
     for (const q of shots) {
       const a = Math.atan2(q.vy, q.vx);
-      const t = world.map.raycast(p.x, p.y, a, dist);
+      const t = world.map.groundRaycast(p.x, p.y, a, dist);
       q.lob = { sx: q.x, sy: q.y, tx: t.x, ty: t.y, t: 0, flight: L.flightTime, peak: L.peak, bounces: L.bounces, fuse: L.fuse, waiting: 0 };
       q.z = 0;
       q.range = Infinity;

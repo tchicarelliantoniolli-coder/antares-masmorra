@@ -553,3 +553,28 @@ test('órbita lança os projéteis em direção ao ponto mirado', () => {
   run(w, 0.6, { p1: { fire: false, aim: 0, aimDist: 140 } });
   assert.ok(9999 - e.hp >= 15, `acertou ${9999 - e.hp} (4 projéteis de 5)`);
 });
+
+// ---------------------------------------------------------------- arremesso/chuva passam por cima de obstáculos
+for (const [nome, tile] of [['obstáculo', T.OBSTACLE], ['caixa', T.PROP]]) {
+  test(`lob passa por cima de ${nome} e cai no ponto mirado`, () => {
+    const { w, p } = arena();
+    withWeapon(w, { mode: 'lob', damage: 1, fireRate: 1, projectile: { explode: { radius: 30, damage: 10 } }, lob: { maxRange: 400, flightTime: 0.4 } });
+    const tx = Math.floor(p.x / TILE), ty = Math.floor(p.y / TILE);
+    w.map.set(tx + 2, ty, tile);
+    const e = dummy(w, p.x + 4 * TILE, p.y, 9999);
+    run(w, 1 / 60, { p1: { fire: true, aim: 0, aimDist: 4 * TILE } });
+    run(w, 0.8);
+    assert.ok(e.hp < 9999, 'explodiu atrás do ' + nome);
+  });
+
+  test(`rain passa por cima de ${nome}`, () => {
+    const { w, p } = arena();
+    withWeapon(w, { mode: 'rain', damage: 5, fireRate: 1, rain: { count: 5, radius: 10, delay: 0.3, hitRadius: 40 } });
+    const tx = Math.floor(p.x / TILE), ty = Math.floor(p.y / TILE);
+    w.map.set(tx + 2, ty, tile);
+    const e = dummy(w, p.x + 4 * TILE, p.y, 9999);
+    run(w, 1 / 60, { p1: { fire: true, aim: 0, aimDist: 4 * TILE } });
+    run(w, 0.8);
+    assert.ok(e.hp < 9999, 'choveu atrás do ' + nome);
+  });
+}

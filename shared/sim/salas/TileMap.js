@@ -128,6 +128,30 @@ export class TileMap {
     return { x: x + cx * d, y: y + cy * d, dist: d };
   }
 
+  /** Tile que bloqueia arremesso/chuva: parede, vazio, fora do mapa ou porta trancada (obstáculos e caixas não). */
+  blocksGround(tx, ty) {
+    if (!this.inBounds(tx, ty)) return true;
+    const i = ty * this.w + tx;
+    const t = this.tiles[i];
+    if (t === T.FLOOR || t === T.OBSTACLE || t === T.PROP) return false;
+    if (t === T.DOOR) return this.locked.has(this.owner[i]);
+    return true;
+  }
+
+  /**
+   * Raio "de chão": passa por cima de obstáculos e caixas, parando só em parede, vazio ou porta trancada.
+   * Se o ponto final cair em obstáculo/caixa, recua pela linha até o último ponto de chão livre.
+   */
+  groundRaycast(x, y, angle, maxDist, step = 4) {
+    const cx = Math.cos(angle), cy = Math.sin(angle);
+    const at = (d) => this.blocksGround(Math.floor((x + cx * d) / TILE), Math.floor((y + cy * d) / TILE));
+    let d = 0;
+    while (d + step <= maxDist && !at(d + step)) d += step;
+    while (d > 0 && this.solidAt(x + cx * d, y + cy * d)) d -= step;
+    d = Math.max(0, d);
+    return { x: x + cx * d, y: y + cy * d, dist: d };
+  }
+
   /** Linha de visão simples (amostragem a cada meio tile). */
   lineOfSight(x0, y0, x1, y1) {
     const d = Math.hypot(x1 - x0, y1 - y0);
