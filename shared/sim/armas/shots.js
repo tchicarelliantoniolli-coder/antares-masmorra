@@ -40,7 +40,7 @@ export function spawnShot(world, p, w, opts = {}) {
       explode: pr.explode, explodeOnExpire: pr.explodeOnExpire,
       ghost: pr.ghost,
       effect,
-      knockback: p.mods.knockback,
+      knockback: p.mods.knockback + pr.knockback,
       sprite: pr.spriteKey || 'proj_' + w.id, glyph,
       split, singularity: w.mode === 'singularity' ? w.singularity : null, pool: pr.pool || null,
       growOnReturn: pr.growOnReturn

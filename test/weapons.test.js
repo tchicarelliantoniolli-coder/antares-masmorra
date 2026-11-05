@@ -624,3 +624,20 @@ test('estilingue_elastico: ricochete só na carga cheia', () => {
   run(w, 1 / 60, { p1: { fire: false, aim: 0 } });
   assert.equal(w.projectiles[0].bounce, 2);
 });
+
+// ---------------------------------------------------------------- empurrão do projétil
+test('projétil com knockback empurra o inimigo; sem knockback não', () => {
+  for (const [kb, empurra] of [[200, true], [0, false]]) {
+    const { w, p } = arena();
+    withWeapon(w, { mode: 'shot', damage: 1, fireRate: 2, inaccuracy: 0, projectile: { speed: 400, knockback: kb } });
+    const e = dummy(w, p.x + 60, p.y, 9999);
+    run(w, 0.5, { p1: { fire: true, aim: 0 } });
+    assert.ok(e.hp < 9999, 'acertou');
+    assert.equal(e.x > p.x + 61, empurra, `knockback ${kb}: x ${e.x - p.x}`);
+  }
+});
+
+test('boliche da bolas_esportes tem knockback', () => {
+  const v = data.weapon('bolas_esportes').variants.list.find((x) => x.sprite.shape === 'bowling');
+  assert.equal(v.knockback, 220);
+});

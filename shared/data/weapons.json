@@ -658,6 +658,7 @@
             "pierce": 3,
             "spin": 6,
             "damageMul": 1.6,
+            "knockback": 220,
             "sprite": {
               "shape": "bowling",
               "color": "#2b2b5a",

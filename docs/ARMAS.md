@@ -42,6 +42,7 @@ Se algum campo estiver errado, o jogo mostra o erro na tela de carregamento (e `
 | `explode` | — | **Explosão** ao acertar: `{ "radius": 60, "damage": 10 }`. |
 | `explodeOnExpire` | false | Também explode ao fim do alcance. |
 | `spin` | 0 | Gira enquanto voa (só visual). |
+| `knockback` | 0 | **Empurrão** do projétil no inimigo (soma ao do jogador). Ex.: boliche = 220. |
 | `glyphs` | — | Texto com caracteres sorteados a cada tiro (ex.: `"0123456789+-×÷"`). |
 | `glyphBonus` | — | Multiplicador de dano por caractere (ex.: `{ "×": 2 }`). |
 | `sprite` | orb | Aparência: `{ "shape", "color", "accent" }`. |

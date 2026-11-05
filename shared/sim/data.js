@@ -5,7 +5,7 @@ const PROJECTILE_DEFAULTS = {
   speed: 450, radius: 5, range: 500, count: 1, spread: 0, pierce: 0, bounce: 0,
   homing: 0, boomerang: false, spin: 0, explode: null, explodeOnExpire: false,
   glyphs: null, glyphBonus: null, ghost: false,
-  pool: null, glyphSplit: null, growOnReturn: 1,
+  pool: null, glyphSplit: null, growOnReturn: 1, knockback: 0,
   sprite: { shape: 'orb', color: '#ffffff', accent: '#cccccc' }
 };
 const MELEE_DEFAULTS = { range: 50, arc: 110, knockback: 150, deflect: false, reflect: false };
