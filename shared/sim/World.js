@@ -31,6 +31,7 @@ export class World {
     this.pickups = [];
     this.areas = [];
     this.allies = [];
+    this.beams = [];          // raios contínuos ativos neste passo (recriados a cada passo)
     this.events = [];
     this.state = 'playing'; // playing | victory | defeat
     this.endTimer = 0;
@@ -64,6 +65,7 @@ export class World {
     this.pickups = [];
     this.areas = [];
     this.allies = [];
+    this.beams = [];
     this.boss = null;
     setupRoomContents(this);
     const start = rooms[startRoomId];
@@ -110,6 +112,7 @@ export class World {
     }
     this.time += dt;
     this.stats.time = this.time;
+    this.beams = [];
     updatePlayers(this, dt, inputs);
     updateRooms(this, dt);
     updateEnemies(this, dt);

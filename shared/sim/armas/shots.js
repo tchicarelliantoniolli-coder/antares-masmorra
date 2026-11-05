@@ -4,10 +4,10 @@ import { critChanceOf } from './common.js';
 
 /**
  * Cria os projéteis de um disparo (leque, imprecisão, sinais, crítico, efeito, empurrão).
- * opts: { angle, proj, damageMul, speedMul, extraPierce, countOverride, critMul }
+ * opts: { angle, proj, damageMul, speedMul, extraPierce, countOverride, critMul, effect, inaccuracy }
  */
 export function spawnShot(world, p, w, opts = {}) {
-  const { angle = p.aim, proj = w.projectile, damageMul = 1, speedMul = 1, extraPierce = 0, countOverride, critMul = 1 } = opts;
+  const { angle = p.aim, proj = w.projectile, damageMul = 1, speedMul = 1, extraPierce = 0, countOverride, critMul = 1, effect = w.effect || null, inaccuracy = w.inaccuracy } = opts;
   const pr = proj;
   const count = countOverride ?? pr.count;
   const spread = count > 1 && pr.spread === 0 && countOverride ? 24 : pr.spread;
@@ -20,7 +20,7 @@ export function spawnShot(world, p, w, opts = {}) {
   for (let i = 0; i < count; i++) {
     let a = angle;
     if (count > 1) a += (-spread / 2 + (spread * i) / (count - 1)) * DEG;
-    a += world.rng.range(-w.inaccuracy, w.inaccuracy) * DEG;
+    a += world.rng.range(-inaccuracy, inaccuracy) * DEG;
     let damage = w.damage * damageMul * (pr.damageMul ?? 1);
     let glyph = null;
     let crit = world.rng.chance(critChance);
@@ -39,7 +39,7 @@ export function spawnShot(world, p, w, opts = {}) {
       homing: pr.homing, boomerang: pr.boomerang, spin: pr.spin,
       explode: pr.explode, explodeOnExpire: pr.explodeOnExpire,
       ghost: pr.ghost,
-      effect: w.effect || null,
+      effect,
       knockback: p.mods.knockback,
       sprite: pr.spriteKey || 'proj_' + w.id, glyph,
       split, singularity: w.mode === 'singularity' ? w.singularity : null, pool: pr.pool || null,

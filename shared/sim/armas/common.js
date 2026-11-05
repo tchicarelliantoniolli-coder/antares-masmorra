@@ -34,7 +34,7 @@ export function critChanceOf(p, w) {
 
 /** Estado da arma na mão (zera ao trocar ou pegar outra arma). */
 export function newWeaponState(weaponId) {
-  return { weaponId, charge: 0, chargeFull: false, spin: 0, burstLeft: 0, burstT: 0, combo: 0, comboT: 0, shielding: false };
+  return { weaponId, charge: 0, chargeFull: false, spin: 0, burstLeft: 0, burstT: 0, combo: 0, comboT: 0, shielding: false, beamAcc: 0, beamT: 0 };
 }
 
 /** Avisa o renderizador/sons que a arma disparou. */

@@ -130,3 +130,80 @@ test('variants: 30 disparos usam pelo menos 2 variantes', () => {
   for (let i = 0; i < 60; i++) { run(w, 1 / 60, { p1: { fire: true, aim: 0 } }); for (const q of w.projectiles) keys.add(q.sprite); }
   assert.ok(keys.size >= 2, [...keys].join(','));
 });
+
+// ---------------------------------------------------------------- modos contínuos
+import { T, TILE } from '../shared/sim/constants.js';
+
+/** Põe uma coluna de parede 3 tiles de altura em x (px), na altura do jogador. */
+function wallAt(w, p, x) {
+  const tx = Math.floor(x / TILE), ty = Math.floor(p.y / TILE);
+  for (let dy = -1; dy <= 1; dy++) w.map.set(tx, ty + dy, T.WALL);
+}
+
+test('beam acerta inimigo na linha e não acerta atrás da parede', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'beam', beam: { dps: 20, tick: 0.1, range: 600, pierce: true, energyPerSec: 0 } });
+  const a = dummy(w, p.x + 100, p.y, 9999);
+  wallAt(w, p, p.x + 170);
+  const b = dummy(w, p.x + 260, p.y, 9999);
+  run(w, 1, { p1: { fire: true, aim: 0 } });
+  assert.ok(a.hp < 9999 - 15, `a perdeu ${9999 - a.hp}`);
+  assert.equal(b.hp, 9999);
+  assert.equal(w.beams.length, 1);
+  assert.ok(w.beams[0].x2 < p.x + 170, 'raio para na parede');
+});
+
+test('beam sem pierce para no primeiro inimigo', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'beam', beam: { dps: 20, range: 600, energyPerSec: 0 } });
+  const a = dummy(w, p.x + 100, p.y, 9999);
+  const b = dummy(w, p.x + 160, p.y, 9999);
+  run(w, 0.5, { p1: { fire: true, aim: 0 } });
+  assert.ok(a.hp < 9999);
+  assert.equal(b.hp, 9999);
+});
+
+test('beam sem energia não liga e avisa; energia nunca fica negativa', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'beam', beam: { energyPerSec: 6 } });
+  p.energy = 0;
+  run(w, 0.5, { p1: { fire: true, aim: 0 } });
+  assert.equal(w.beams.length, 0);
+  assert.ok(countEvents(w, 'no_energy') >= 1);
+  assert.ok(p.energy >= 0);
+});
+
+test('beam gasta energia por segundo e para quando acaba', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'beam', beam: { energyPerSec: 10 } });
+  p.energy = 5;
+  run(w, 0.3, { p1: { fire: true, aim: 0 } });
+  assert.equal(w.beams.length, 1);
+  assert.ok(p.energy < 5);
+  run(w, 1, { p1: { fire: true, aim: 0 } });
+  assert.equal(w.beams.length, 0, 'acabou a energia');
+  assert.ok(p.energy >= 0);
+});
+
+test('beam some quando solta o botão', () => {
+  const { w } = arena();
+  withWeapon(w, { mode: 'beam', beam: { energyPerSec: 0 } });
+  run(w, 0.2, { p1: { fire: true, aim: 0 } });
+  assert.equal(w.beams.length, 1);
+  run(w, 1 / 60, { p1: { fire: false, aim: 0 } });
+  assert.equal(w.beams.length, 0);
+});
+
+test('flame acerta vários inimigos no cone e não passa da parede', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'flame', damage: 1, fireRate: 12, flame: { range: 140, arc: 40, particles: 2 } });
+  const near = [dummy(w, p.x + 70, p.y - 15, 9999), dummy(w, p.x + 90, p.y + 15, 9999)];
+  run(w, 1, { p1: { fire: true, aim: 0 } });
+  for (const e of near) assert.ok(e.hp < 9999, 'queimou no cone');
+  const { w: w2, p: p2 } = arena();
+  withWeapon(w2, { mode: 'flame', damage: 1, fireRate: 12, flame: { range: 140, arc: 40, particles: 2 } });
+  wallAt(w2, p2, p2.x + 50);
+  const hidden = dummy(w2, p2.x + 100, p2.y, 9999);
+  run(w2, 1, { p1: { fire: true, aim: 0 } });
+  assert.equal(hidden.hp, 9999);
+});

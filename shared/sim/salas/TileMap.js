@@ -120,6 +120,14 @@ export class TileMap {
     return { hitX, hitY };
   }
 
+  /** Anda em linha reta a partir de (x, y) até achar sólido ou maxDist. Devolve o último ponto livre. */
+  raycast(x, y, angle, maxDist, step = 4) {
+    const cx = Math.cos(angle), cy = Math.sin(angle);
+    let d = 0;
+    while (d + step <= maxDist && !this.solidAt(x + cx * (d + step), y + cy * (d + step))) d += step;
+    return { x: x + cx * d, y: y + cy * d, dist: d };
+  }
+
   /** Linha de visão simples (amostragem a cada meio tile). */
   lineOfSight(x0, y0, x1, y1) {
     const d = Math.hypot(x1 - x0, y1 - y0);

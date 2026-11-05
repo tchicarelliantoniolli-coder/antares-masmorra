@@ -1,8 +1,9 @@
 import { shot, burst, charge, spinup, variants } from './discrete.js';
+import { beam, flame } from './continuous.js';
 
 /** Todos os modos de disparo. Interface: { hold(world, p, w, dt), idle?(world, p, w, dt), release?(world, p, w) } */
 export const MODES = {
-  shot, burst, charge, spinup, variants,
+  shot, burst, charge, spinup, variants, beam, flame,
   split: shot,        // o projétil se divide ao bater (shots.js põe "split" no projétil)
   singularity: shot   // o projétil vira buraco negro ao bater
 };
