@@ -4,6 +4,7 @@ import { RoomManager } from '../server/RoomManager.js';
 import { decodeSnapshot, buildMirrorMap, serializeWorld } from '../shared/net/snapshot.js';
 import { arena } from './helpers.js';
 import { createArea } from '../shared/sim/areas.js';
+import { spawnProjectile } from '../shared/sim/armas/Projectiles.js';
 import { data } from './helpers.js';
 
 function fakeConn() {
@@ -128,4 +129,12 @@ test('estilo da poça sobrevive ao snapshot', () => {
   const a = dec.areas.find((x) => x.kind === 'pool');
   assert.ok(a);
   assert.equal(a.style, 'acid');
+});
+
+test('raio do projétil sobrevive ao snapshot (globo bumerangue cresce na volta)', () => {
+  const { w, p } = arena();
+  const pr = spawnProjectile(w, { team: 'player', x: p.x + 40, y: p.y, angle: 0, speed: 10, damage: 1, range: 900, sprite: 'proj_globo_bumerangue', owner: p });
+  pr.r = 12.5;
+  const dec = decodeSnapshot(data, JSON.parse(JSON.stringify(serializeWorld(w))));
+  assert.equal(dec.projectiles.find((q) => q.id === pr.id).r, 12.5);
 });

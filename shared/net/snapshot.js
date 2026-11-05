@@ -57,7 +57,7 @@ export function serializeWorld(world, acks = {}) {
         e.state, st, e.phase || (e.phase2 ? 2 : 1), e.telegraph || 0, e.elite ? 1 : 0, e.minion ? 1 : 0, e.healTarget || 0, r1(e.r)];
     }),
     proj: world.projectiles.filter((p) => !p.dead).map((p) => [p.id, p.team === 'player' ? 1 : 0, r1(p.x), r1(p.y), r1(p.vx), r1(p.vy), p.sprite, p.glyph || 0, p.spin || 0,
-      r1(p.z || 0), p.lob ? [r1(p.lob.tx), r1(p.lob.ty)] : 0]),
+      r1(p.z || 0), p.lob ? [r1(p.lob.tx), r1(p.lob.ty)] : 0, r1(p.r)]),
     beams: (world.beams || []).map((b) => [b.ownerId, r1(b.x1), r1(b.y1), r1(b.x2), r1(b.y2), b.width, b.color]),
     pickups: world.pickups.filter((k) => !k.dead).map((k) => [k.id, k.kind, r1(k.x), r1(k.y), pickupExtra(k)]),
     areas: world.areas.filter((a) => !a.dead).map((a) => [a.id, a.kind, r1(a.x), r1(a.y), a.r, r1(a.t), a.life, a.targetId || 0, a.style || 0]),
@@ -95,8 +95,8 @@ export function decodeSnapshot(data, s) {
     status: { burn: !!(st & 1), poison: !!(st & 2), slow: st & 4 ? 1 : 0, frozen: st & 8 ? 1 : 0, stun: st & 16 ? 1 : 0 },
     phase, phase2: phase >= 2, telegraph: telegraph || null, elite: !!elite, minion: !!minion, healTarget, r, dead: false
   }));
-  const projectiles = s.proj.map(([id, team, x, y, vx, vy, sprite, glyph, spin, z, lobTarget]) => ({
-    id, team: team ? 'player' : 'enemy', x, y, vx, vy, sprite, glyph: glyph || null, spin, age: 0, r: 5, z: z || 0, lobTarget: lobTarget || null
+  const projectiles = s.proj.map(([id, team, x, y, vx, vy, sprite, glyph, spin, z, lobTarget, r]) => ({
+    id, team: team ? 'player' : 'enemy', x, y, vx, vy, sprite, glyph: glyph || null, spin, age: 0, r: r || 5, z: z || 0, lobTarget: lobTarget || null
   }));
   const beams = (s.beams || []).map(([ownerId, x1, y1, x2, y2, width, color]) => ({ ownerId, x1, y1, x2, y2, width, color }));
   const players = s.players.map((p) => ({

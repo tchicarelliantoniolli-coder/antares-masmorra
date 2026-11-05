@@ -456,10 +456,12 @@ export class WorldRenderer {
       const img = s.add.image(pr.x, pr.y, key).setDepth(DEPTH_PROJ);
       if (pr.sprite === 'proj_nota_mil') img.setDepth(DEPTH_PROJ + 10);
       if (pr.team === 'player' && pr.sprite?.startsWith('ebullet')) img.setTint(0x9fffd0); // bala rebatida pelo taco
-      const objs = { img, rot: 0, age: 0, destroy: () => img.destroy() };
+      const objs = { img, rot: 0, age: 0, r0: pr.r, rLast: pr.r, destroy: () => img.destroy() };
       return objs;
     });
     v.age += dt;
+    // raio mudou (globo bumerangue cresce na volta): escala a imagem
+    if (pr.r !== v.rLast && v.r0) { v.rLast = pr.r; v.img.setScale(pr.r / v.r0); }
     const z = pr.z || 0;
     v.img.setPosition(pr.x, pr.y - z);
     const target = pr.lobTarget || (pr.lob ? [pr.lob.tx, pr.lob.ty] : null);
