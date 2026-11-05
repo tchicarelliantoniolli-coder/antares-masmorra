@@ -136,3 +136,16 @@ test('os 14 professores são jogáveis com armas iniciais válidas', () => {
   for (const c of playable) assert.ok(data.hasWeapon(c.starterWeapon), c.id);
   assert.ok(data.weapons.size >= 28);
 });
+
+test('Samara: se as restrições zeram todos os pesos, ainda escolhe um ataque', async () => {
+  const { bossSamara } = await import('../shared/sim/inimigos/chefes/samara.js');
+  const { createEnemy } = await import('../shared/sim/inimigos/Enemy.js');
+  const w = new World({ data, seed: 3, floor: 3, players: [{ id: 'a', characterId: 'harilson' }] });
+  const [a] = w.players;
+  const boss = w.boss ?? createEnemy(w, 'samara', a.x + 200, a.y, w.bossRoomId, { spawnTime: 0 });
+  createEnemy(w, 'caderno_preto', a.x + 50, a.y, w.bossRoomId, { spawnTime: 0 });
+  a.jailTimer = 3;
+  boss.state = 'idle'; boss.phase = 1; boss.t = 0; boss.lastAttack = 'advertencia';
+  assert.doesNotThrow(() => bossSamara(w, boss, 1 / 60, a));
+  assert.ok(boss.lastAttack, 'escolheu ataque');
+});

@@ -59,13 +59,19 @@ export function bossSamara(world, b, dt, target) {
 }
 
 function choose(world, b) {
-  const pool = { ...(b.phase === 3 ? P3 : b.phase === 2 ? P2 : P1) };
+  const base = b.phase === 3 ? P3 : b.phase === 2 ? P2 : P1;
+  const pool = { ...base };
   if (b.lastAttack && b.lastAttack !== 'combo') pool[b.lastAttack] = 0;
   const notebook = world.enemies.some((e) => e.type === 'caderno_preto' && !e.dead);
   if (notebook) pool.caderno = 0;
   const free = targetablePlayers(world);
   if (!free.length || world.players.some((p) => p.jailTimer > 0)) pool.suspensao = 0;
   if (minionCount(world) >= 2) pool.provas = 0;
+  // Se as restrições zeraram tudo, volta aos pesos da fase (menos o último ataque); sem nada, advertência.
+  if (!Object.values(pool).some((w) => w > 0)) {
+    for (const k of Object.keys(base)) pool[k] = k === b.lastAttack ? 0 : base[k];
+    if (!Object.values(pool).some((w) => w > 0)) pool.advertencia = 1;
+  }
   const atk = world.rng.weighted(pool);
   b.lastAttack = atk;
   world.emit('boss_attack', { id: b.id, attack: atk });

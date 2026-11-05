@@ -21,20 +21,25 @@ for (let i = 0; i < runs; i++) {
   const t0 = Date.now();
   const r = runMatch({ World, data, seed: seed0 + i, players, profile });
   res.push(r);
-  if (r.error) console.error(`seed ${seed0 + i}: erro na simulação: ${r.error}`);
+  if (r.error) console.error(`seed ${seed0 + i}: erro na simulação: ${r.stack || r.error}`);
   if (args.verbose) console.log(`seed ${seed0 + i}: ${r.reason} andar ${r.floor} ${r.seconds.toFixed(0)}s (${Date.now() - t0} ms)`);
 }
-const wins = res.filter((r) => r.victory).length;
-const avg = (f) => res.reduce((s, r) => s + f(r), 0) / res.length;
+const errors = res.filter((r) => r.reason === 'error').length;
+const valid = res.filter((r) => r.reason !== 'error'); // erros de simulação ficam fora das médias
+const wins = valid.filter((r) => r.victory).length;
+const avg = (f) => (valid.length ? valid.reduce((s, r) => s + f(r), 0) / valid.length : NaN);
 const reasons = {};
-for (const r of res) reasons[r.reason] = (reasons[r.reason] || 0) + 1;
+for (const r of valid) reasons[r.reason] = (reasons[r.reason] || 0) + 1;
 const byFloor = {};
-for (const r of res.filter((x) => !x.victory)) byFloor[`${r.reason}@${r.floor}`] = (byFloor[`${r.reason}@${r.floor}`] || 0) + 1;
+for (const r of valid.filter((x) => !x.victory)) byFloor[`${r.reason}@${r.floor}`] = (byFloor[`${r.reason}@${r.floor}`] || 0) + 1;
 console.log(`root=${root} perfil=${profileName} jogadores=${players} partidas=${runs}`);
 console.table({
-  'vitórias': `${wins}/${runs} (${((100 * wins) / runs).toFixed(0)}%)`,
+  'partidas válidas': `${valid.length}/${runs}`,
+  'erros de simulação': errors,
+  'vitórias': `${wins}/${valid.length} (${valid.length ? ((100 * wins) / valid.length).toFixed(0) : 0}%)`,
   'andar médio': avg((r) => r.floor).toFixed(2),
   'tempo médio (s)': avg((r) => r.seconds).toFixed(0),
   'motivos': JSON.stringify(reasons),
   'derrotas (motivo@andar)': JSON.stringify(byFloor)
 });
+if (errors) process.exit(1);

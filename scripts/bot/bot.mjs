@@ -121,7 +121,7 @@ export function createBot(world, playerId, profile, rng = Math.random) {
     const held = Math.max(...p.weapons.map((id) => rarityOf(world, id)));
     for (const k of world.pickups) {
       if (k.dead || k.kind !== 'weapon' || rarityOf(world, k.weaponId) <= held) continue;
-      cands.push({ kind: 'pk', pk: k, key: 'w' + k.id, rank: -rarityOf(world, k.weaponId) });
+      cands.push({ kind: 'pk', pk: k, key: 'w' + k.id });
     }
     for (const k of world.pickups) if (!k.dead && k.kind === 'chest' && !k.opened) cands.push({ kind: 'pk', pk: k, key: 'c' + k.id });
     if (p.hp < p.maxHp) {
@@ -163,7 +163,7 @@ export function createBot(world, playerId, profile, rng = Math.random) {
       if (b.dead || b.team !== 'enemy') continue;
       const rx = p.x - b.x, ry = p.y - b.y, dist = Math.hypot(rx, ry);
       const sp = Math.hypot(b.vx, b.vy) || 1;
-      if (dist > Math.max(40, reach * sp / 260 * 1.0 + 30)) continue;
+      if (dist > Math.max(40, reach * sp / 260 + 30)) continue;
       const along = (b.vx * rx + b.vy * ry) / sp; // distância ao longo da trajetória
       if (along <= 0) continue;
       const side = (b.vx * ry - b.vy * rx) / sp; // desvio lateral da trajetória
@@ -172,7 +172,7 @@ export function createBot(world, playerId, profile, rng = Math.random) {
       if (dec === undefined) { dec = rng() < profile.dodge; st.dodging.set(b.id, dec); }
       if (!dec) continue;
       const s = side >= 0 ? 1 : -1; // foge para o lado em que já está
-      vx += (-b.vy / sp) * s * -1; vy += (b.vx / sp) * s * -1;
+      vx += (b.vy / sp) * s; vy -= (b.vx / sp) * s;
     }
     if (st.dodging.size > 400) st.dodging.clear();
     return (vx || vy) ? [vx, vy] : null;
@@ -224,7 +224,8 @@ export function createBot(world, playerId, profile, rng = Math.random) {
         const ahead = Math.atan2(my, mx);
         if (world.map.solidAt(p.x + Math.cos(ahead) * 28, p.y + Math.sin(ahead) * 28)) { st.strafe *= -1; st.strafeUntil = world.time + 1; mx = -mx; my = -my; }
         inp.moveX = mx; inp.moveY = my;
-        // arma que não causa dano (ex.: armadilha contra voador): troca
+        // Troca de arma automática: 4 s lutando sem causar dano indica arma inútil contra este alvo
+        // (ex.: armadilha de chão contra inimigo voador), então o bot passa para a outra arma.
         if (world.stats.damage > st.dmg) { st.dmg = world.stats.damage; st.dmgAt = world.time; }
         else if (world.time - st.dmgAt > 4 && p.weapons.length > 1) { inp.swap = true; st.dmgAt = world.time; }
         if (profile.useSkill && st.skillCd <= 0 && td < 320) { inp.skill = true; st.skillCd = 0.6; }
@@ -274,7 +275,7 @@ export function runMatch({ World, data, seed, players = 1, profile, maxSeconds =
     const inputs = {};
     list.forEach((pl, i) => { inputs[pl.id] = bots[i].think(dt); });
     try { world.step(dt, inputs); } catch (err) {
-      return { victory: false, floor: world.floorNum, seconds: world.time, reason: 'error', error: err.message };
+      return { victory: false, floor: world.floorNum, seconds: world.time, reason: 'error', error: err.message, stack: String(err.stack).split('\n').slice(0, 3).join('\n') };
     }
     world.drainEvents();
     // travado: 20 s sem mudar de sala nem causar dano

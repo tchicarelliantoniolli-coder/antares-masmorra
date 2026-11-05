@@ -22,3 +22,9 @@ GREEN: `node --test test/bot.test.js` -> pass 2, fail 0, ~0,4 s. `npm test` -> 1
 3. Perfis sao chute; bot nao usa loja/estatuas/dinheiro. Vitorias ainda raras (bot pode estar fraco), calibrar na Tarefa 11.
 4. Nao verifiquei contra codigo v0.2 de fato (sem worktree); so comparei APIs por `git show`.
 5. `stuck` pode ser disparado por luta longa sem dano; a troca de arma mitiga.
+
+## Fix round 1
+1. run.mjs: linhas "partidas válidas" e "erros de simulação"; médias/vitórias/motivos só com partidas válidas; stderr mostra as 3 primeiras linhas da stack (runMatch devolve `stack`); exit 1 se houve erro.
+2. Samara (`samara.js` choose()): se todos os pesos zeram, restaura os pesos-base da fase (menos lastAttack); se ainda zero, usa 'advertencia'. Teste em `test/floors.test.js` (lastAttack=advertencia + caderno vivo + jogador preso): RED (TypeError) sem o fix, GREEN com ele. rng.weighted continua estrito.
+3. bot.mjs: removidos `rank`, `* 1.0` e o `* -1` duplo (sinais equivalentes); comentário explicando a troca automática de arma.
+Resultado: npm test 161/161; `run.mjs dupla --players 2 --runs 10`: 10/10 válidas, 0 erros, 2/10 vitórias, exit 0.
