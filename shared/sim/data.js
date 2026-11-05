@@ -26,7 +26,7 @@ export const MODE_LABELS = {
 export const MODE_DEFAULTS = {
   shot: {},
   burst: { count: 3, interval: 0.07 },
-  charge: { time: 1.0, minMul: 0.4, maxMul: 2.5, fullPierce: 0, fullCount: 1 },
+  charge: { time: 1.0, minMul: 0.4, maxMul: 2.5, fullPierce: 0, fullCount: 1, fullBounce: 0 },
   spinup: { startMul: 0.35, maxMul: 1.6, rampTime: 1.4 },
   beam: { dps: 20, tick: 0.1, range: 420, width: 6, pierce: false, ghost: false, energyPerSec: 6 },
   flame: { range: 130, arc: 40, particles: 2 },

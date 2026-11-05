@@ -422,7 +422,7 @@
         "speed": 560,
         "radius": 5,
         "range": 520,
-        "bounce": 2,
+        "bounce": 0,
         "sprite": {
           "shape": "paperball",
           "color": "#f2f2e6",
@@ -434,12 +434,13 @@
         "color": "#b5743c",
         "accent": "#e8c84a"
       },
-      "description": "Puxe o elástico (segure) e solte. A bolinha ricocheteia 2 vezes.",
+      "description": "Puxe o elástico (segure) e solte. Com a carga cheia, a bolinha ricocheteia 2 vezes.",
       "mode": "charge",
       "charge": {
         "time": 0.45,
         "minMul": 0.5,
-        "maxMul": 2.2
+        "maxMul": 2.2,
+        "fullBounce": 2
       }
     },
     {

@@ -90,7 +90,7 @@ dentro do bloco é acusado na tela de carregamento.
 |---|---|---|
 | `shot` | Tiro normal (o de sempre). | — |
 | `burst` | Cada disparo solta vários tiros seguidos; paga energia uma vez. | `count` (3), `interval` (0.07 s) |
-| `charge` | Segure para carregar; solte para atirar. Mais carga = mais dano. | `time` (1 s), `minMul` (0.4), `maxMul` (2.5), `fullPierce` (0), `fullCount` (1) |
+| `charge` | Segure para carregar; solte para atirar. Mais carga = mais dano. | `time` (1 s), `minMul` (0.4), `maxMul` (2.5), `fullPierce` (0), `fullCount` (1), `fullBounce` (0, ricochetes extras na carga cheia) |
 | `spinup` | A cadência começa baixa e sobe enquanto segura. | `startMul` (0.35), `maxMul` (1.6), `rampTime` (1.4 s) |
 | `beam` | Laser contínuo até a parede ou o primeiro inimigo. Gasta energia por segundo. | `dps` (20), `tick` (0.1), `range` (420), `width` (6), `pierce` (false), `ghost` (false, atravessa paredes), `energyPerSec` (6) |
 | `flame` | Cone curto e contínuo de partículas que atravessam inimigos. | `range` (130), `arc` (40°), `particles` (2) |

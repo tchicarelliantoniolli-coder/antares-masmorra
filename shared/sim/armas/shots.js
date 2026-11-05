@@ -4,10 +4,10 @@ import { critChanceOf } from './common.js';
 
 /**
  * Cria os projéteis de um disparo (leque, imprecisão, sinais, crítico, efeito, empurrão).
- * opts: { angle, proj, damageMul, speedMul, extraPierce, countOverride, critMul, effect, inaccuracy }
+ * opts: { angle, proj, damageMul, speedMul, extraPierce, extraBounce, countOverride, critMul, effect, inaccuracy }
  */
 export function spawnShot(world, p, w, opts = {}) {
-  const { angle = p.aim, proj = w.projectile, damageMul = 1, speedMul = 1, extraPierce = 0, countOverride, critMul = 1, effect = w.effect || null, inaccuracy = w.inaccuracy } = opts;
+  const { angle = p.aim, proj = w.projectile, damageMul = 1, speedMul = 1, extraPierce = 0, extraBounce = 0, countOverride, critMul = 1, effect = w.effect || null, inaccuracy = w.inaccuracy } = opts;
   const pr = proj;
   const count = countOverride ?? pr.count;
   const spread = count > 1 && pr.spread === 0 && countOverride ? 24 : pr.spread;
@@ -35,7 +35,7 @@ export function spawnShot(world, p, w, opts = {}) {
       x: sx, y: sy, angle: a,
       speed: pr.speed * speedMul * world.rng.range(0.95, 1.05),
       radius: pr.radius, damage, crit,
-      range: pr.range, pierce: pr.pierce + extraPierce, bounce: pr.bounce,
+      range: pr.range, pierce: pr.pierce + extraPierce, bounce: pr.bounce + extraBounce,
       homing: pr.homing, boomerang: pr.boomerang, spin: pr.spin,
       explode: pr.explode, explodeOnExpire: pr.explodeOnExpire,
       ghost: pr.ghost,

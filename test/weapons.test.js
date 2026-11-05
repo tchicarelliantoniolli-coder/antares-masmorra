@@ -595,3 +595,32 @@ for (const [nome, set] of [['assinando', (p) => { p.signing = 2; }], ['preso', (
     assert.equal(w.projectiles.filter((q) => q.orbit && !q.dead && q.orbit.ownerId === p.id).length, 0);
   });
 }
+
+// ---------------------------------------------------------------- ricochete só na carga cheia
+test('charge: fullBounce só vale na carga cheia', () => {
+  const { w, p } = arena();
+  withWeapon(w, { mode: 'charge', fireRate: 2, projectile: { bounce: 0 }, charge: { time: 1, fullBounce: 2 } });
+  run(w, 0.2, { p1: { fire: true, aim: 0 } });
+  run(w, 1 / 60, { p1: { fire: false, aim: 0 } });
+  assert.equal(w.projectiles.length, 1);
+  assert.equal(w.projectiles[0].bounce, 0, 'parcial sem ricochete');
+  p.fireCd = 0;
+  w.projectiles = [];
+  run(w, 1.1, { p1: { fire: true, aim: 0 } });
+  run(w, 1 / 60, { p1: { fire: false, aim: 0 } });
+  assert.equal(w.projectiles[0].bounce, 2, 'cheia com ricochete');
+});
+
+test('estilingue_elastico: ricochete só na carga cheia', () => {
+  const { w, p } = arena();
+  p.weapons = ['estilingue_elastico'];
+  p.cur = 0;
+  run(w, 0.1, { p1: { fire: true, aim: 0 } });
+  run(w, 1 / 60, { p1: { fire: false, aim: 0 } });
+  assert.equal(w.projectiles[0].bounce, 0);
+  p.fireCd = 0;
+  w.projectiles = [];
+  run(w, 1, { p1: { fire: true, aim: 0 } });
+  run(w, 1 / 60, { p1: { fire: false, aim: 0 } });
+  assert.equal(w.projectiles[0].bounce, 2);
+});

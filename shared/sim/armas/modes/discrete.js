@@ -66,6 +66,7 @@ export const charge = {
       damageMul: c.minMul + (c.maxMul - c.minMul) * level,
       speedMul: 0.8 + 0.4 * level,
       extraPierce: full ? c.fullPierce : 0,
+      extraBounce: full ? c.fullBounce : 0,
       countOverride: full && c.fullCount > 1 ? c.fullCount : undefined
     });
     startCooldown(p, w);
