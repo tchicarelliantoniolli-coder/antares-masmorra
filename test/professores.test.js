@@ -274,3 +274,108 @@ test('Paleta Viva: poça da Gabriela P. tem efeito', () => {
   const outro = arenaDe('harilson');
   assert.equal(createArea(outro.w, 'pool', 0, 0, { ownerId: 'p1', effect: null }).effect, null);
 });
+
+test('Linha do Tempo volta posição e vida de 3 s atrás', () => {
+  const { w, p } = arenaDe('gabriela_simonetti');
+  run(w, 1);
+  const x0 = p.x, y0 = p.y;
+  const sh = p.shield;
+  run(w, 2.5);
+  p.x += 200; p.y += 10; p.hp = 1; p.shield = 0;
+  run(w, 0.4);
+  assert.ok(SKILLS.linha_do_tempo(w, p));
+  assert.ok(Math.abs(p.x - x0) < 5 && Math.abs(p.y - y0) < 5, 'posição');
+  assert.equal(p.hp, p.maxHp);
+  assert.equal(p.shield, sh);
+  assert.ok(w.events.some((e) => e.type === 'rewind'));
+});
+
+test('Linha do Tempo levanta colega que caiu nesses 3 s', () => {
+  const w = new World({ data, seed: 1234, players: [{ id: 'p1', characterId: 'gabriela_simonetti' }, { id: 'p2', characterId: 'harilson' }] });
+  const [p, q] = w.players;
+  const room = w.rooms.find((r) => r.type === 'combat');
+  room.state = 'cleared';
+  run(w, 2);
+  q.downed = true; q.hp = 0;
+  run(w, 1);
+  const longe = w.players.length && q;
+  assert.ok(longe.downed);
+  assert.ok(SKILLS.linha_do_tempo(w, p));
+  assert.equal(q.downed, false);
+  assert.ok(q.hp > 0);
+  q.dead = true;
+  q.downed = true;
+  SKILLS.linha_do_tempo(w, p);
+  assert.ok(q.downed, 'quem saiu da partida não volta');
+});
+
+test('Linha do Tempo no primeiro segundo não dá erro', () => {
+  const { w, p } = arenaDe('gabriela_simonetti');
+  run(w, 0.3);
+  p.hp = 1;
+  assert.ok(SKILLS.linha_do_tempo(w, p));
+  assert.equal(p.hp, p.maxHp);
+  const w2 = new World({ data, seed: 1, players: [{ id: 'p1', characterId: 'gabriela_simonetti' }] });
+  assert.doesNotThrow(() => SKILLS.linha_do_tempo(w2, w2.players[0]));
+});
+
+test('Reação em Cadeia: um acerto derruba um grupo encostado', () => {
+  const { w, p } = arenaDe('rosana');
+  const grupo = [0, 1, 2, 3].map((i) => dummy(w, p.x + 200 + i * 40, p.y, 5));
+  const longe = dummy(w, p.x + 200, p.y + 300, 5);
+  assert.ok(SKILLS.reacao_em_cadeia(w, p));
+  assert.equal(p.buffs.chainReaction, 6);
+  damageEnemy(w, grupo[0], 1, { source: p });
+  assert.ok(grupo.every((e) => e.hp < 5 || e.dead), 'todos do grupo atingidos');
+  assert.ok(grupo.every((e) => e.chainBoomed));
+  assert.equal(longe.hp, 5);
+  // sem o buff, nada
+  p.buffs.chainReaction = 0;
+  const a = dummy(w, p.x - 200, p.y, 50), b = dummy(w, p.x - 220, p.y, 50);
+  damageEnemy(w, a, 1, { source: p });
+  assert.equal(b.hp, 50);
+});
+
+test('Alta Voltagem dá choque às vezes', () => {
+  const { w, p } = arenaDe('vinicius');
+  const alvo = dummy(w, p.x + 200, p.y, 99999);
+  const viz = dummy(w, p.x + 250, p.y, 99999);
+  let choques = 0;
+  for (let i = 0; i < 200; i++) {
+    const antes = viz.hp;
+    damageEnemy(w, alvo, 1, { source: p });
+    if (viz.hp < antes) choques++;
+  }
+  assert.ok(choques > 10 && choques < 60, String(choques));
+  // dano secundário não dispara
+  const antes = viz.hp;
+  for (let i = 0; i < 200; i++) damageEnemy(w, alvo, 1, { source: p, noChain: true });
+  assert.equal(viz.hp, antes);
+});
+
+test('Memória Histórica regenera escudo mais rápido', () => {
+  const tempo = (id) => {
+    const { w, p } = arenaDe(id);
+    p.shield = 0; p.shieldDelay = 0;
+    let t = 0;
+    while (p.shield < 1 && t < 10) { run(w, 1 / 60); t += 1 / 60; }
+    return t;
+  };
+  assert.ok(arenaDe('gabriela_simonetti').p.mods.shieldRegenMul === 0.6);
+  assert.ok(tempo('gabriela_simonetti') < tempo('harilson') * 0.7);
+});
+
+test('Bilíngue: Andréia com Balões de Fala dispara mais que sem o passivo', () => {
+  const contar = (sem) => {
+    const { w, p } = arenaDe('andreia');
+    if (sem) p.mods.doubleShot = 0;
+    p.weapons = ['baloes_ingles']; p.cur = 0;
+    let tiros = 0;
+    for (let i = 0; i < 60 * 20; i++) {
+      w.step(1 / 60, { p1: { fire: true, aim: 0 } });
+      for (const ev of w.drainEvents()) if (ev.type === 'shoot') tiros++;
+    }
+    return tiros;
+  };
+  assert.ok(contar(false) > contar(true) * 1.05);
+});

@@ -10,6 +10,9 @@ import { updateAreas } from './areas.js';
 import { updateAllies } from './personagens/Allies.js';
 import { updateTraps } from './salas/Props.js';
 
+const HISTORY_STEP = 0.1;
+const HISTORY_KEEP = 3.2;
+
 /**
  * O "mundo" da partida: toda a lógica do jogo, sem nenhuma dependência do Phaser.
  * - No modo solo/co-op local, roda no navegador.
@@ -31,6 +34,8 @@ export class World {
     this.pickups = [];
     this.areas = [];
     this.allies = [];
+    this.history = [];        // registro do time a cada 0,1 s (Linha do Tempo)
+    this.nextHistory = 0;
     this.beams = [];          // raios contínuos ativos neste passo (recriados a cada passo)
     this.events = [];
     this.state = 'playing'; // playing | victory | defeat
@@ -66,6 +71,8 @@ export class World {
     this.areas = [];
     this.allies = [];
     this.beams = [];
+    this.history = [];
+    this.nextHistory = 0;
     this.boss = null;
     setupRoomContents(this);
     const start = rooms[startRoomId];
@@ -121,6 +128,7 @@ export class World {
     updateAllies(this, dt);
     updateTraps(this);
     updatePickups(this, dt);
+    this.recordHistory();
 
     // limpeza
     if (this.enemies.some((e) => e.dead)) this.enemies = this.enemies.filter((e) => !e.dead);
@@ -134,6 +142,17 @@ export class World {
       this.state = 'defeat';
       this.emit('defeat');
     }
+  }
+
+  /** Guarda a foto do time a cada 0,1 s, mantendo 3,2 s (usada pela Linha do Tempo). */
+  recordHistory() {
+    if (this.time < this.nextHistory) return;
+    this.nextHistory = this.time + HISTORY_STEP;
+    this.history.push({
+      t: this.time,
+      players: this.players.filter((p) => !p.dead).map((p) => ({ id: p.id, x: p.x, y: p.y, hp: p.hp, shield: p.shield, downed: p.downed }))
+    });
+    while (this.history.length && this.history[0].t < this.time - HISTORY_KEEP) this.history.shift();
   }
 
   /** Chamado quando os jogadores entram no portal depois do chefe. */

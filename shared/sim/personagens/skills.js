@@ -137,9 +137,37 @@ export const SKILLS = {
     createArea(world, 'painting', c.x, c.y, { r: 140, life: 6, slowMul: 0.3, ownerId: p.id });
     world.emit('skill', { playerId: p.id, skill: 'obra_prima', x: c.x, y: c.y });
     return true;
+  },
+
+  // Gabriela S. — volta o time para como estava 3 s antes (posição, vida, escudo); quem caiu nesse tempo levanta.
+  linha_do_tempo(world, p) {
+    const alvo = world.time - 3;
+    let snap = world.history[0];
+    for (const h of world.history) if (h.t <= alvo) snap = h;
+    if (snap) {
+      for (const q of world.players) {
+        if (q.dead) continue;
+        const r = snap.players.find((x) => x.id === q.id);
+        if (!r) continue;
+        q.x = r.x; q.y = r.y;
+        if (q.downed && r.downed) continue; // já estava caído naquela hora: continua caído
+        q.hp = Math.max(1, r.hp);
+        q.shield = r.shield;
+        if (q.downed) { q.downed = false; q.reviveProgress = 0; q.invuln = 2; }
+      }
+    }
+    world.emit('rewind', { playerId: p.id, x: p.x, y: p.y });
+    world.emit('skill', { playerId: p.id, skill: 'linha_do_tempo', x: p.x, y: p.y });
+    return true;
+  },
+
+  // Rosana — por 6 s, cada inimigo que ela acerta explode e os vizinhos explodem também (uma vez cada).
+  reacao_em_cadeia(world, p) {
+    p.buffs.chainReaction = 6;
+    world.emit('skill', { playerId: p.id, skill: 'reacao_em_cadeia', x: p.x, y: p.y });
+    return true;
   }
 };
-
 
 export function castSkill(world, p) {
   const fn = SKILLS[p.skillId];

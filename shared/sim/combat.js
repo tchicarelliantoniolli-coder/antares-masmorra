@@ -55,9 +55,28 @@ export function damageEnemy(world, e, amount, opts = {}) {
     e.ky += Math.sin(opts.angle) * kb;
   }
   if (opts.effect && world.rng.chance(opts.effect.chance ?? 1)) applyEffect(world, e, opts.effect, src);
+  // Alta Voltagem (Vinícius): dano direto às vezes dá choque (secundário não dispara)
+  if (src && !opts.noChain && src.mods.shockChance && world.rng.chance(src.mods.shockChance)) {
+    applyEffect(world, e, { type: 'choque', chains: 2, power: 3 }, src);
+  }
   if (e.hp <= 0) killEnemy(world, e, src);
   else if (e.affix) AFFIXES[e.affix]?.onDamaged?.(world, e);
+  // Reação em Cadeia (Rosana): o inimigo atingido explode uma vez e as explosões se espalham
+  if (src && !opts.noChain && src.buffs.chainReaction > 0) chainBoom(world, e, src);
   return dmg;
+}
+
+const CHAIN_BOOM = { radius: 60, damage: 6 };
+
+/** Reação em Cadeia (Rosana): explode "e" (uma vez só) e espalha para os vizinhos encostados. */
+function chainBoom(world, e, src) {
+  if (e.chainBoomed || e.def.boss) return;
+  e.chainBoomed = true;
+  const { radius, damage } = CHAIN_BOOM;
+  const vizinhos = world.enemies.filter((o) => o !== e && !o.chainBoomed && !o.dead && !(o.spawning > 0) && !o.burrowed &&
+    Math.hypot(o.x - e.x, o.y - e.y) < radius + o.r);
+  explode(world, e.x, e.y, radius, damage, { source: src, noChain: true });
+  for (const o of vizinhos) chainBoom(world, o, src);
 }
 
 export function applyEffect(world, e, eff, src) {
@@ -111,21 +130,21 @@ export function chainFrom(world, first, { chains = 2, radius = 130, damage = 3, 
     hit.add(next.id);
     points.push([next.x, next.y]);
     dmg *= falloff;
-    damageEnemy(world, next, dmg, { source, noMul: true, effect: effect && effect.type !== 'choque' ? effect : null });
+    damageEnemy(world, next, dmg, { source, noMul: true, noChain: true, effect: effect && effect.type !== 'choque' ? effect : null });
     cur = next;
   }
   return points;
 }
 
 /** Explosão em área (dano em inimigos; opcionalmente nos jogadores). */
-export function explode(world, x, y, radius, damage, { source = null, effect = null, hurtsPlayers = false, style = 'chalk', playerDamage = 1 } = {}) {
+export function explode(world, x, y, radius, damage, { source = null, effect = null, hurtsPlayers = false, style = 'chalk', playerDamage = 1, noChain = false } = {}) {
   world.emit('explosion', { x, y, radius, style });
   damagePropsInRadius(world, x, y, radius * 0.8, damage);
   for (const e of world.enemies) {
     if (e.dead || e.spawning > 0 || e.burrowed) continue;
     const d = Math.hypot(e.x - x, e.y - y);
     if (d < radius + e.r) {
-      damageEnemy(world, e, damage, { source, effect, knockback: 160, angle: Math.atan2(e.y - y, e.x - x), noMul: true });
+      damageEnemy(world, e, damage, { source, effect, knockback: 160, angle: Math.atan2(e.y - y, e.x - x), noMul: true, noChain });
     }
   }
   if (hurtsPlayers) {

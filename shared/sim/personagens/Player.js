@@ -33,8 +33,8 @@ export function createPlayer(world, { id, characterId, name, slot = 0 }) {
     downed: false, dead: false, reviveProgress: 0,
     roomId: -1,
     coins: 0, kills: 0, damageDealt: 0, damageTaken: 0,
-    mods: { critBonus: 0, energyCostMul: 1, damageMul: 1, fireRateMul: 1, speedMul: 1, knockback: 0, skillCdMul: 1, regen: 0, allyLifeMul: 1 },
-    buffs: { nextHitMul: 1, nextHitTimer: 0, hasteTimer: 0, bubbleTimer: 0, quakeNext: 'terremoto' },
+    mods: { critBonus: 0, energyCostMul: 1, damageMul: 1, fireRateMul: 1, speedMul: 1, knockback: 0, skillCdMul: 1, shieldRegenMul: 1, regen: 0, allyLifeMul: 1 },
+    buffs: { chainReaction: 0, nextHitMul: 1, nextHitTimer: 0, hasteTimer: 0, bubbleTimer: 0, quakeNext: 'terremoto' },
     regenTimer: 0,
     interactTarget: null,
     blessings: [],
@@ -60,6 +60,7 @@ function updatePlayer(world, p, inp, dt) {
   p.skillCd = Math.max(0, p.skillCd - dt);
   if (p.buffs.bubbleTimer > 0) p.buffs.bubbleTimer -= dt;
   if (p.buffs.hasteTimer > 0) p.buffs.hasteTimer -= dt;
+  if (p.buffs.chainReaction > 0) p.buffs.chainReaction = Math.max(0, p.buffs.chainReaction - dt);
   if (p.downed || p.jailTimer > 0 || p.pull || p.signing > 0) clearAction(world, p);
   if (p.downed) {
     updateRevive(world, p, dt);
@@ -151,9 +152,9 @@ function updatePlayer(world, p, inp, dt) {
   }
   // Escudo regenera depois de alguns segundos sem levar dano
   p.shieldDelay += dt;
-  if (p.shieldDelay >= SHIELD_REGEN_DELAY && p.shield < p.maxShield) {
+  if (p.shieldDelay >= SHIELD_REGEN_DELAY * p.mods.shieldRegenMul && p.shield < p.maxShield) {
     p.shieldTick += dt;
-    if (p.shieldTick >= SHIELD_REGEN_INTERVAL) {
+    if (p.shieldTick >= SHIELD_REGEN_INTERVAL * p.mods.shieldRegenMul) {
       p.shieldTick = 0;
       p.shield++;
       world.emit('shield_regen', { id: p.id });

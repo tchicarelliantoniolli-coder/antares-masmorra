@@ -169,6 +169,7 @@ export class Effects {
         case 'wave_start': if (ev.wave > 1) hud?.toast(`Onda ${ev.wave}/${ev.total}`); break;
         case 'no_energy': if (this.local.has(ev.playerId)) { sound.play('no_energy', 0.3); this.floatText(ev.x, ev.y - 30, 'Sem energia!', '#7fb8ff', 20); } break;
         case 'quake': this.shake(600, 0.01); this.ring(ev.x, ev.y, 260, 0xc9a24a, 600); break;
+        case 'rewind': this.scene.cameras.main.flash(450, 90, 140, 255); this.ring(ev.x, ev.y, 200, 0x7fb8ff, 600); break;
         case 'skill_not_ready': if (this.local.has(ev.playerId)) sound.play('not_ready', 0.2); break;
         case 'skill':
           sound.play('skill');
@@ -180,6 +181,8 @@ export class Effects {
           if (ev.skill === 'exercito_historico') { this.ring(ev.x, ev.y, 70, 0xc9a24a, 500); this.floatText(ev.x, ev.y - 34, 'EXÉRCITO HISTÓRICO!', '#e8c24a', 24, 900); }
           if (ev.skill === 'translate') { this.ring(ev.x, ev.y, 180, 0xffe45e, 600); this.floatText(ev.x, ev.y - 34, 'TRANSLATE!', '#ffe45e', 26, 900); }
           if (ev.skill === 'circuito') { this.ring(ev.x, ev.y, 220, 0x7fd8ff, 500); this.floatText(ev.x, ev.y - 34, 'CIRCUITO!', '#7fd8ff', 26, 900); }
+          if (ev.skill === 'linha_do_tempo') this.floatText(ev.x, ev.y - 34, 'LINHA DO TEMPO!', '#9ac4ff', 24, 900);
+          if (ev.skill === 'reacao_em_cadeia') { this.ring(ev.x, ev.y, 90, 0xffb02e, 500); this.floatText(ev.x, ev.y - 34, 'REAÇÃO EM CADEIA!', '#ffb02e', 24, 900); }
           if (ev.skill === 'terremoto') this.floatText(ev.x, ev.y - 34, 'TERREMOTO!', '#c9a24a', 28, 900);
           if (ev.skill === 'vulcao') { this.ring(ev.x, ev.y, 90, 0xff7a2a, 600); this.floatText(ev.x, ev.y - 34, 'VULCÃO!', '#ff7a2a', 28, 900); }
           if (ev.skill === 'obra_prima') { this.ring(ev.x, ev.y, 140, 0xe04ad0, 600); this.floatText(ev.x, ev.y - 34, 'OBRA-PRIMA!', '#ff9ae8', 26, 900); }

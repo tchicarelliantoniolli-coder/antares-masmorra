@@ -1,6 +1,6 @@
 import { createAlly, countAllies } from '../../personagens/Allies.js';
 import { spawnShot } from '../shots.js';
-import { tryPay, startCooldown, emitShoot } from '../common.js';
+import { tryPay, fireCooldown, emitShoot } from '../common.js';
 import { aimPoint } from './ground.js';
 
 /** Coloca no chão uma mina ou torreta; com o máximo atingido, some a mais antiga. */
@@ -19,7 +19,7 @@ export const deploy = {
       ownerId: p.id, weaponId: w.id, life: D.life, damage: D.damage, radius: D.radius, fireRate: D.fireRate,
       range: D.range, triggerRadius: D.triggerRadius, sprite: 'proj_' + w.id, cd: 0.4, r: D.kind === 'mine' ? 8 : 12
     });
-    startCooldown(p, w);
+    fireCooldown(world, p, w);
     world.emit('deploy', { kind: D.kind, x, y, playerId: p.id });
     emitShoot(world, p, w);
   }
@@ -59,7 +59,7 @@ export const orbit = {
     const n = orbiters(world, p).length;
     if (n >= O.max) {
       launchOrbiters(world, p);
-      startCooldown(p, w);
+      fireCooldown(world, p, w);
       emitShoot(world, p, w);
       return;
     }
@@ -69,7 +69,7 @@ export const orbit = {
       q.range = Infinity;
       q.hitTimes = new Map();
     }
-    startCooldown(p, w);
+    fireCooldown(world, p, w);
     emitShoot(world, p, w);
   }
 };

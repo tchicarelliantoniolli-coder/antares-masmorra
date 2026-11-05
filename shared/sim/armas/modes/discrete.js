@@ -1,12 +1,11 @@
 import { spawnShot } from '../shots.js';
-import { tryPay, startCooldown, emitShoot, fireRateMul } from '../common.js';
+import { tryPay, fireCooldown, emitShoot, fireRateMul } from '../common.js';
 
 /** Dispara um tiro normal se a recarga e a energia deixarem. Devolve true se disparou. */
 export function basicFire(world, p, w, opts) {
   if (p.fireCd > 0 || !tryPay(world, p, w)) return false;
   spawnShot(world, p, w, opts);
-  startCooldown(p, w);
-  if (p.mods.doubleShot && world.rng.chance(p.mods.doubleShot)) p.fireCd *= 0.35; // passivo Bilíngue
+  fireCooldown(world, p, w);
   emitShoot(world, p, w);
   return true;
 }
@@ -27,7 +26,7 @@ function burstTick(world, p, w, dt) {
     ws.burstLeft--;
     ws.burstT += w.burst.interval;
   }
-  if (ws.burstLeft <= 0) startCooldown(p, w);
+  if (ws.burstLeft <= 0) fireCooldown(world, p, w);
 }
 export const burst = {
   hold(world, p, w, dt) {
@@ -38,7 +37,7 @@ export const burst = {
     emitShoot(world, p, w);
     ws.burstLeft = w.burst.count - 1;
     ws.burstT = w.burst.interval;
-    if (ws.burstLeft <= 0) startCooldown(p, w);
+    if (ws.burstLeft <= 0) fireCooldown(world, p, w);
   },
   idle(world, p, w, dt) { burstTick(world, p, w, dt); }
 };
@@ -69,7 +68,7 @@ export const charge = {
       extraBounce: full ? c.fullBounce : 0,
       countOverride: full && c.fullCount > 1 ? c.fullCount : undefined
     });
-    startCooldown(p, w);
+    fireCooldown(world, p, w);
     emitShoot(world, p, w, { charge: level });
     world.emit('charge_release', { playerId: p.id, level, x: p.x, y: p.y });
   }
@@ -83,7 +82,7 @@ export const spinup = {
     ws.spin = Math.min(1, ws.spin + dt / s.rampTime);
     if (p.fireCd > 0 || !tryPay(world, p, w)) return;
     spawnShot(world, p, w);
-    startCooldown(p, w, 1 / (s.startMul + (s.maxMul - s.startMul) * ws.spin));
+    fireCooldown(world, p, w, 1 / (s.startMul + (s.maxMul - s.startMul) * ws.spin));
     emitShoot(world, p, w);
   },
   idle(world, p, w, dt) {

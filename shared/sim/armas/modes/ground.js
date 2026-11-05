@@ -2,7 +2,7 @@ import { angleDiff } from '../../math.js';
 import { damageEnemy, chainFrom } from '../../combat.js';
 import { createArea } from '../../areas.js';
 import { spawnShot } from '../shots.js';
-import { tryPay, startCooldown, emitShoot, critChanceOf } from '../common.js';
+import { tryPay, fireCooldown, emitShoot, critChanceOf } from '../common.js';
 
 /** Ponto mirado no chão: até maxRange na direção da mira, passando por cima de obstáculos e parando antes de paredes. */
 export function aimPoint(world, p, maxRange, angle = p.aim) {
@@ -25,7 +25,7 @@ export const lob = {
       q.range = Infinity;
       if (L.pool) q.pool = L.pool;
     }
-    startCooldown(p, w);
+    fireCooldown(world, p, w);
     emitShoot(world, p, w);
   }
 };
@@ -49,7 +49,7 @@ export const rain = {
         effect: w.effect, ownerId: p.id, sprite: 'proj_' + w.id
       });
     }
-    startCooldown(p, w);
+    fireCooldown(world, p, w);
     emitShoot(world, p, w);
   }
 };
@@ -70,7 +70,7 @@ export const chain = {
       if (!world.map.lineOfSight(mx, my, e.x, e.y)) continue;
       best = e; bestA = da;
     }
-    startCooldown(p, w);
+    fireCooldown(world, p, w);
     if (!best) {
       world.emit('chain', { points: [[mx, my], [mx + Math.cos(p.aim) * 60, my + Math.sin(p.aim) * 60]] });
       return;

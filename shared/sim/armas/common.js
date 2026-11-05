@@ -28,6 +28,12 @@ export function startCooldown(p, w, mul = 1) {
   p.fireCd = mul / (w.fireRate * fireRateMul(p));
 }
 
+/** Recarga de um disparo de arma de longe; o passivo Bilíngue às vezes encurta a espera (quase um segundo tiro). */
+export function fireCooldown(world, p, w, mul = 1) {
+  startCooldown(p, w, mul);
+  if (p.mods.doubleShot && world.rng.chance(p.mods.doubleShot)) p.fireCd *= 0.35;
+}
+
 export function critChanceOf(p, w) {
   return w.critChance + p.mods.critBonus;
 }
