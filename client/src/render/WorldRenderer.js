@@ -428,6 +428,11 @@ export class WorldRenderer {
     v.shadow.setPosition(a.x, a.y + 10).setDepth(a.y - 1);
     v.body.setPosition(a.x, a.y - 8).setDepth(a.y).setFlipX(Math.cos(a.aim || 0) < 0).setAlpha(fading ? 0.5 : 1);
     if (a.kind === 'turret') v.body.setRotation(0);
+    if (a.maxHp > 0 && a.hp < a.maxHp) {
+      const x = a.x - 11, y = a.y - 28;
+      this.fx.fillStyle(0x000000, 0.7).fillRect(x - 1, y - 1, 24, 5);
+      this.fx.fillStyle(0x5ad66a, 1).fillRect(x, y, Math.max(1, (22 * a.hp) / a.maxHp), 3);
+    }
   }
 
   // ---------------------------------------------------------------- armas: raios e estados

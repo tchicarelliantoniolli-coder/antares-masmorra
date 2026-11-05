@@ -124,6 +124,22 @@ export function explode(world, x, y, radius, damage, { source = null, effect = n
     for (const p of world.players) {
       if (Math.hypot(p.x - x, p.y - y) < radius + p.r) hurtPlayer(world, p, playerDamage);
     }
+    // explosão de inimigo também fere os aliados com vida
+    for (const a of world.allies) {
+      if (a.dead || !(a.hp > 0)) continue;
+      if (Math.hypot(a.x - x, a.y - y) < radius + a.r) hurtAlly(world, a, playerDamage);
+    }
+  }
+}
+
+/** Dano em aliado com vida (hp); ao chegar a 0 ele some. Aliado sem hp é indestrutível. */
+export function hurtAlly(world, a, amount) {
+  if (a.dead || !(a.hp > 0)) return;
+  a.hp = Math.max(0, a.hp - amount);
+  a.flash = 0.1;
+  if (a.hp <= 0) {
+    a.dead = true;
+    world.emit('ally_end', { x: a.x, y: a.y, kind: a.kind });
   }
 }
 

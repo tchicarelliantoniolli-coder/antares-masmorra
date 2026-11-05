@@ -1,4 +1,4 @@
-import { damageEnemy, explode, hurtPlayer } from '../combat.js';
+import { damageEnemy, explode, hurtPlayer, hurtAlly } from '../combat.js';
 import { AFFIXES } from '../inimigos/affixes.js';
 import { angleDiff } from '../math.js';
 import { propAt, damageProp } from '../salas/Props.js';
@@ -267,6 +267,13 @@ export function updateProjectiles(world, dt) {
         if (pl.buffs?.bubbleTimer > 0 && !pl.downed && Math.hypot(pl.x - p.x, pl.y - p.y) < pl.r + 26) { blocked = true; break; }
       }
       if (blocked) { p.dead = true; world.emit('deflect', { x: p.x, y: p.y }); continue; }
+      for (const al of world.allies) {
+        if (al.dead || !(al.hp > 0) || Math.hypot(al.x - p.x, al.y - p.y) > al.r + p.r) continue;
+        hurtAlly(world, al, p.damage);
+        impact(world, p);
+        break;
+      }
+      if (p.dead) continue;
       for (const pl of world.players) {
         if (pl.dead || pl.downed || pl.jailTimer > 0) continue;
         if (Math.hypot(pl.x - p.x, pl.y - p.y) > pl.r + p.r - 2) continue;

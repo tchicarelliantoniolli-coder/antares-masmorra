@@ -23,7 +23,7 @@ test('nearestTarget prefere aliado com taunt mais perto que o jogador', () => {
   const { w, p } = arena();
   const e = createEnemy(w, 'caderno_zumbi', p.x + 200, p.y, -1, { spawnTime: 0 });
   assert.equal(nearestTarget(w, e), p);
-  const naoTaunt = createAlly(w, 'planta', e.x - 20, e.y, { hp: 10, ownerId: p.id, life: 10 });
+  const naoTaunt = createAlly(w, 'planta', e.x - 20, e.y, { hp: 10, taunt: false, ownerId: p.id, life: 10 });
   assert.equal(nearestTarget(w, e), p, 'aliado sem taunt é ignorado');
   naoTaunt.dead = true;
   const a = createAlly(w, 'planta', e.x - 50, e.y, { taunt: true, hp: 10, ownerId: p.id, life: 10 });

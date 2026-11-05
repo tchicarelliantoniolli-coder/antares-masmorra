@@ -1,5 +1,5 @@
 
-import { damageEnemy, hurtPlayer } from '../combat.js';
+import { damageEnemy, hurtPlayer, hurtAlly } from '../combat.js';
 import { spawnProjectile } from '../armas/Projectiles.js';
 import { BEHAVIORS } from './behaviors.js';
 import { AFFIXES, rollAffix } from './affixes.js';
@@ -145,6 +145,16 @@ export function updateEnemies(world, dt) {
             e.contactCd = 0.8;
             if (e.affix) AFFIXES[e.affix]?.onHit?.(world, e, p);
           }
+        }
+      }
+    }
+    if (cdmg && e.contactCd <= 0 && !e.burrowed) {
+      for (const a of world.allies) {
+        if (a.dead || !(a.hp > 0)) continue;
+        if (Math.hypot(a.x - e.x, a.y - e.y) < a.r + e.r - 2) {
+          hurtAlly(world, a, cdmg);
+          e.contactCd = 0.8;
+          break;
         }
       }
     }
