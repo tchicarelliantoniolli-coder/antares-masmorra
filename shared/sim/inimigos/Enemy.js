@@ -119,11 +119,11 @@ function tickStatus(world, e, dt) {
     st.tick += dt;
     if (st.tick >= 0.5) {
       st.tick = 0;
-      damageEnemy(world, e, Math.max(1, st.dps * 0.5), { source: st.src, noMul: true });
+      damageEnemy(world, e, Math.max(1, st.dps * 0.5), { source: st.src, noMul: true, tick: true });
     }
     if (st.t <= 0) s[k] = null;
   }
-  if (s.slow > 0) s.slow -= dt;
+  if (s.slow > 0) { s.slow -= dt; if (s.slow <= 0) s.slowMul = undefined; }
   if (s.frozen > 0) s.frozen -= dt;
   if (s.confused > 0) s.confused -= dt;
   if (e.linked && e.linked.until <= world.time) e.linked = null;

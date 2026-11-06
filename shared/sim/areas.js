@@ -92,7 +92,7 @@ export function updateAreas(world, dt) {
           if (e.dead || e.spawning > 0 || e.def.invulnerable) continue;
           const d = Math.hypot(e.x - a.x, e.y - a.y);
           if (d > a.r) continue;
-          if (a.tick >= 0.5) damageEnemy(world, e, dps * 0.5, { source: owner, noMul: true, carry: 'grav' + a.id });
+          if (a.tick >= 0.5) damageEnemy(world, e, dps * 0.5, { source: owner, noMul: true, carry: 'grav' + a.id, tick: true });
           if (d < 4) continue;
           const pull = (e.def.boss ? pullBase * 0.16 : pullBase) * dt;
           world.map.moveBox(e, ((a.x - e.x) / d) * Math.min(pull, d), ((a.y - e.y) / d) * Math.min(pull, d));
@@ -130,7 +130,7 @@ export function updateAreas(world, dt) {
           e.poolHits = e.poolHits || {};
           if (world.time - (e.poolHits[key] ?? -1) < 0.45) continue;
           e.poolHits[key] = world.time;
-          damageEnemy(world, e, a.dps * 0.5, { source: owner, noMul: true, effect: a.effect, carry: 'pool' + key });
+          damageEnemy(world, e, a.dps * 0.5, { source: owner, noMul: true, effect: a.effect, carry: 'pool' + key, tick: true });
         }
         if (pulse) a.tick = 0;
         break;

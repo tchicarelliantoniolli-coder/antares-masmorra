@@ -56,13 +56,14 @@ export function damageEnemy(world, e, amount, opts = {}) {
   }
   if (opts.effect && world.rng.chance(opts.effect.chance ?? 1)) applyEffect(world, e, opts.effect, src);
   // Alta Voltagem (Vinícius): dano direto às vezes dá choque (secundário não dispara)
-  if (src && !opts.noChain && src.mods.shockChance && world.rng.chance(src.mods.shockChance)) {
+  // (dano periódico — fogo, veneno, poça, gravidade — não dispara; raio contínuo rola com metade da chance)
+  if (src && !opts.noChain && !opts.tick && src.mods.shockChance && world.rng.chance(src.mods.shockChance * (opts.continuous ? 0.5 : 1))) {
     applyEffect(world, e, { type: 'choque', chains: 2, power: 3 }, src);
   }
   if (e.hp <= 0) killEnemy(world, e, src);
   else if (e.affix) AFFIXES[e.affix]?.onDamaged?.(world, e);
   // Reação em Cadeia (Rosana): o inimigo atingido explode uma vez e as explosões se espalham
-  if (src && !opts.noChain && src.buffs.chainReaction > 0) chainBoom(world, e, src);
+  if (src && !opts.noChain && !opts.tick && src.buffs.chainReaction > 0) chainBoom(world, e, src);
   return dmg;
 }
 

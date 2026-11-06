@@ -577,3 +577,24 @@ test('grêmio: não põe escudo de golpe em Estojo aberto', () => {
   run(w, 0.1);
   assert.equal(est.shieldHit, false, 'estojo ao fechar limpa shieldHit');
 });
+
+test('Alta Voltagem: dano direto choca, fogo (dano periódico) não', () => {
+  const { w, p } = arena();
+  p.mods.shockChance = 1;
+  const a = dummy(w, p.x + 200, p.y, 500), b = dummy(w, p.x + 240, p.y, 500);
+  damageEnemy(w, a, 5, { source: p });
+  assert.ok(b.hp < 500, 'golpe direto encadeia o choque');
+  b.hp = 500;
+  a.status.burn = { t: 3, dps: 4, tick: 0, src: p };
+  run(w, 2);
+  assert.equal(b.hp, 500, 'queimadura não encadeia choque');
+});
+
+test('lentidão: slowMul volta ao normal quando a lentidão acaba', () => {
+  const { w } = arena();
+  const e = dummy(w, 300, 300, 50);
+  e.status.slow = 0.2; e.status.slowMul = 0.3;
+  run(w, 0.5);
+  assert.ok(!(e.status.slow > 0));
+  assert.equal(e.status.slowMul, undefined);
+});

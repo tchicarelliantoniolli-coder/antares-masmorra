@@ -93,7 +93,7 @@ export const SKILLS = {
   translate(world, p) {
     for (const e of world.enemies) {
       if (e.dead || e.def.invulnerable || Math.hypot(e.x - p.x, e.y - p.y) > 180) continue;
-      if (e.def.boss) { e.status.slow = Math.max(e.status.slow || 0, 2); e.status.slowMul = 0.6; }
+      if (e.def.boss) { e.status.slow = Math.max(e.status.slow || 0, 2); e.status.slowMul = Math.min(e.status.slowMul ?? 1, 0.6); }
       else e.status.confused = 4;
     }
     world.emit('skill', { playerId: p.id, skill: 'translate', x: p.x, y: p.y });
