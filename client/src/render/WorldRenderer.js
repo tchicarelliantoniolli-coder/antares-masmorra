@@ -687,10 +687,13 @@ export class WorldRenderer {
         g.lineStyle(3, 0xffb030, 0.8 * fade).strokeCircle(a.x, a.y, a.r);
         break;
       }
-      case 'warn_circle':
-        g.fillStyle(0xff3d3d, 0.1 + 0.2 * k).fillCircle(a.x, a.y, a.r * k);
-        g.lineStyle(2, 0xff3d3d, 0.85).strokeCircle(a.x, a.y, a.r);
+      case 'warn_circle': {
+        // lava do Vulcão do jogador: laranja (o vermelho é aviso de inimigo)
+        const col = a.style === 'lava' ? 0xff9a2a : 0xff3d3d;
+        g.fillStyle(col, 0.1 + 0.2 * k).fillCircle(a.x, a.y, a.r * k);
+        g.lineStyle(2, col, 0.85).strokeCircle(a.x, a.y, a.r);
         break;
+      }
       case 'private_circle':
         g.fillStyle(0xb07ad0, 0.12).fillCircle(a.x, a.y, a.r);
         g.lineStyle(4, 0xe0b0ff, 0.6 + Math.sin(time / 100) * 0.3).strokeCircle(a.x, a.y, a.r);

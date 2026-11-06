@@ -76,7 +76,7 @@ export function updateAreas(world, dt) {
             const ang = world.rng.range(0, Math.PI * 2), d = Math.sqrt(world.rng.next()) * a.r;
             const x = a.x + Math.cos(ang) * d, y = a.y + Math.sin(ang) * d;
             if (world.map.solidAt(x, y)) continue;
-            createArea(world, 'warn_circle', x, y, { r: 26, life: 0.4, lava: { damage: 6, ownerId: a.ownerId } });
+            createArea(world, 'warn_circle', x, y, { r: 26, life: 0.4, style: 'lava', lava: { damage: 6, ownerId: a.ownerId } });
             break;
           }
         }

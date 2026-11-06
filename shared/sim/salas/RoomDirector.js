@@ -142,7 +142,7 @@ export function spawnWave(world, room, index) {
   room.waveIndex = index;
   const types = coverRoles(world, [...room.waves[index]]);
   // Mais jogadores = mais inimigos
-  const extra = Math.round(types.length * (world.data.difficulty?.extraEnemies ?? 0.4) * Math.max(0, world.players.length - 1));
+  const extra = Math.round(types.length * (world.data.difficulty?.extraEnemies ?? 0.4) * Math.max(0, world.players.filter((p) => !p.dead).length - 1));
   for (let i = 0; i < extra; i++) types.push(world.rng.pick(room.waves[index]));
   const cells = freeCells(world, room, 2);
   const players = world.alivePlayers();

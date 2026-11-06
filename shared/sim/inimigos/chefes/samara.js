@@ -67,12 +67,8 @@ function choose(world, b) {
   const free = targetablePlayers(world);
   if (!free.length || world.players.some((p) => p.jailTimer > 0)) pool.suspensao = 0;
   if (minionCount(world) >= 2) pool.provas = 0;
-  // Se as restrições zeraram tudo, volta aos pesos da fase (menos o último ataque); sem nada, advertência.
-  if (!Object.values(pool).some((w) => w > 0)) {
-    for (const k of Object.keys(base)) pool[k] = k === b.lastAttack ? 0 : base[k];
-    if (!free.length) pool.suspensao = 0; // sem jogador livre não dá para prender ninguém
-    if (!Object.values(pool).some((w) => w > 0)) pool.advertencia = 1;
-  }
+  // Se as restrições zeraram tudo, vai direto para a advertência (não repete caderno nem prende de novo).
+  if (!Object.values(pool).some((w) => w > 0)) pool.advertencia = 1;
   const atk = world.rng.weighted(pool);
   b.lastAttack = atk;
   world.emit('boss_attack', { id: b.id, attack: atk });
