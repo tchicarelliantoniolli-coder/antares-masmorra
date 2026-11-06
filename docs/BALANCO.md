@@ -158,6 +158,18 @@ A Tarefa 12 ajustou tudo nas sementes 1-60. Para conferir sem viés, 30 partidas
 
 A linha principal (dupla 2j) se confirmou. O experiente oscila para os dois lados com 30 partidas; nada foi retocado.
 
+## Após a revisão final
+
+Correções da revisão final (Linha do Tempo em sala trancada, filhotes da Borracha, Alta Voltagem em dano periódico, slowMul, escala de ondas, Samara) não mexeram em números de `enemies.json`.
+
+| Linha | Vitórias | Andar médio | Observação |
+|---|---|---|---|
+| dupla 2j, sementes 1-30 | 2/30 (7%) | 2.07 | 1 partida travada (semente 23, já travava antes das correções) |
+| dupla 2j, sementes 31-60 | 1/30 (3%) | 2.07 | sem travadas |
+| dupla 2j, 60 partidas | 3/60 (5%) | 2.07 | dentro de 0-20% |
+
+Varredura dos 14 professores (6 sementes, dupla com Harilson): nenhuma travada por Linha do Tempo (jogadores sempre dentro da sala ativa) nem por Borracha; as 4 restantes são do bot (jogador caído, Régua escondida, Caderno Preto invulnerável).
+
 ## Como recalibrar depois que o dono jogar
 
 1. Anote o resultado real: venceu? Em que andar caiu e em qual sala/chefe? Foi fácil, injusto ou chato?
