@@ -2,6 +2,7 @@ import { spawnProjectile } from '../armas/Projectiles.js';
 import { createArea } from '../areas.js';
 import { createAlly } from './Allies.js';
 import { aimPoint } from '../armas/modes/ground.js';
+import { isInsideRoom } from '../salas/RoomDirector.js';
 import { damageEnemy, applyEffect } from '../combat.js';
 
 
@@ -149,7 +150,11 @@ export const SKILLS = {
         if (q.dead) continue;
         const r = snap.players.find((x) => x.id === q.id);
         if (!r) continue;
-        q.x = r.x; q.y = r.y;
+        // Não tira ninguém de uma sala trancada nem mexe em quem está na Suspensão
+        const sala = world.activeRoom;
+        const trancado = sala && (!isInsideRoom(sala, r.x, r.y, q.r + 2) || !isInsideRoom(sala, q.x, q.y, 0));
+        if (!(q.jailTimer > 0) && !trancado) { q.x = r.x; q.y = r.y; }
+        q.dash = null; q.pull = null;
         if (q.downed && r.downed) continue; // já estava caído naquela hora: continua caído
         q.hp = Math.max(1, r.hp);
         q.shield = r.shield;

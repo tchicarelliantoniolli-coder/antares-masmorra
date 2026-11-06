@@ -6,6 +6,7 @@ import { createEnemy, nearestTarget } from '../shared/sim/inimigos/Enemy.js';
 import { createAlly } from '../shared/sim/personagens/Allies.js';
 import { spawnProjectile } from '../shared/sim/armas/Projectiles.js';
 import { hurtAlly } from '../shared/sim/combat.js';
+import { isInsideRoom } from '../shared/sim/salas/RoomDirector.js';
 import { serializeWorld, decodeSnapshot } from '../shared/net/snapshot.js';
 
 test('inimigo mira no aliado com taunt mais perto', () => {
@@ -288,6 +289,34 @@ test('Linha do Tempo volta posição e vida de 3 s atrás', () => {
   assert.equal(p.hp, p.maxHp);
   assert.equal(p.shield, sh);
   assert.ok(w.events.some((e) => e.type === 'rewind'));
+});
+
+test('Linha do Tempo não tira o time de uma sala trancada', () => {
+  const { w, p } = arenaDe('gabriela_simonetti');
+  const room = w.rooms.find((r) => r.type === 'combat');
+  const fora = { x: p.x, y: p.y };
+  p.x = (room.x0 - 3) * 32; p.y = (room.cy + 0.5) * 32; // corredor fora da sala
+  run(w, 1);
+  p.x = fora.x; p.y = fora.y; // a sala ativa e puxa o jogador para dentro
+  room.state = 'active'; w.activeRoom = room; w.map.locked.add(room.id);
+  run(w, 0.3);
+  p.hp = 1;
+  p.dash = { t: 1 }; p.pull = { x: 0, y: 0, t: 1 };
+  assert.ok(SKILLS.linha_do_tempo(w, p));
+  assert.ok(isInsideRoom(room, p.x, p.y, 0), 'continua dentro da sala');
+  assert.equal(p.hp, p.maxHp, 'vida volta mesmo assim');
+  assert.equal(p.dash, null);
+  assert.equal(p.pull, null);
+});
+
+test('Linha do Tempo não move jogador na Suspensão', () => {
+  const { w, p } = arenaDe('gabriela_simonetti');
+  run(w, 1);
+  p.x += 100;
+  const x = p.x;
+  p.jailTimer = 5;
+  SKILLS.linha_do_tempo(w, p);
+  assert.equal(p.x, x);
 });
 
 test('Linha do Tempo levanta colega que caiu nesses 3 s', () => {
