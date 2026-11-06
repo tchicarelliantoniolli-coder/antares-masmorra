@@ -186,8 +186,22 @@ Varredura dos 14 professores (6 sementes, dupla com Harilson): nenhuma travada p
    - `difficulty.bossHpPerPlayer`: vida extra dos chefes por jogador extra.
    - `difficulty.dropHealthChance`, `appleHeal`, `healStationFraction`: quanta cura o jogador recebe.
    - `difficulty.priceMul`: preços da loja e da estátua (o bot não compra, então não aparece nas taxas dele).
+   - `difficulty.roomWeaponChance`: chance de arma ao limpar sala (mais armas = partidas mais fáceis e variadas).
    - Por andar em `floors[]`: `hpScale` (vida), `bulletSpeedMul` (velocidade das balas, muito sensível no andar 3), `eliteChance`, `wavesPerRoom`, `enemiesPerWave`, `enemyPool` (pesos dos tipos) e a vida dos chefes em `enemies`.
 4. Rode de novo as quatro linhas (dupla 2j/1j, experiente 2j/1j) com as mesmas sementes e compare. Metas: dupla 2j 5-15%, experiente 1j 25-40%, experiente 2j 25-40%.
 5. Confirme com sementes novas (`--seed0 61`), `npm test` e `node scripts/weapon-dps.mjs` (0 armas fora da faixa) antes de commitar.
 
 Dica: o perfil `dupla` representa dois jogadores medianos; se o dono ganha com folga, aperte `bulletSpeedMul` do andar 2 ou 3; se morre no andar 1, alivie `hpScale`/`enemiesPerWave` do andar 1.
+
+## v0.3.1 — armas roubadas de perto e drops sem repetir
+
+- `weapon-dps.mjs` agora mede também cada arma **encostada/dentro de um alvo do tamanho de um chefe** e falha se passar de
+  1,5× o teto da faixa. O Sinal do Recreio dava ~196 de dano/s encostado (13 ondas acertando juntas); com `sharedHit`
+  (cada inimigo leva uma onda por toque) e dano 14, dá ~23 de longe e de perto. Também ajustados: Arco de Régua
+  (`sharedHit`, carga 2,6×), Escopeta de Clipes (5 clipes), Canhão de Confete (4 por leque), Bico de Bunsen
+  (7,6 disparos/s) e Extintor (11,8/s). Resultado: 53 armas, 0 fora da faixa, 0 roubadas encostado.
+- Drops: as armas não se repetem na mesma partida (baú, loja, chefe, inimigo e sala pulam as que já apareceram e as que
+  estão na mão; quando todas já saíram, recomeça). Nova alavanca `difficulty.roomWeaponChance` (0,35): chance de uma
+  arma no chão ao limpar sala de combate (~1 arma a mais por andar).
+- Bot depois das mudanças: dupla 2j 1/60 (2%: 0/30 nas sementes 1-30, 1/30 nas 31-60), experiente 2j 16/30 (53%).
+  A dupla ficou um pouco mais difícil que antes (3/60) porque as armas de perto perderam força.

@@ -33,6 +33,23 @@ function scatter(world, kind, x, y, n, extra = {}) {
 export const dropEnergy = (world, x, y, n) => scatter(world, 'energy', x, y, n, { amount: 4 });
 export const dropCoins = (world, x, y, n) => scatter(world, 'coin', x, y, n, { amount: 1 });
 
+/**
+ * Sorteia uma arma para esta partida sem repetir: pula as que já apareceram (chão, baú, loja, chefe)
+ * e as que algum jogador está carregando. Quando todas já saíram, volta a sortear qualquer uma.
+ */
+export function rollRunWeapon(world, weights, minRarity = null) {
+  const held = new Set();
+  for (const p of world.players) for (const id of p.weapons || []) held.add(id);
+  let id = world.data.rollWeapon(world.rng, weights, minRarity, new Set([...world.seenWeapons, ...held]));
+  if (world.seenWeapons.has(id) || held.has(id)) {
+    // todas já saíram: começa um novo ciclo (só evita as que estão na mão)
+    world.seenWeapons.clear();
+    id = world.data.rollWeapon(world.rng, weights, minRarity, held);
+  }
+  world.seenWeapons.add(id);
+  return id;
+}
+
 export function dropWeapon(world, weaponId, x, y) {
   return createPickup(world, 'weapon', x, y, { weaponId });
 }
@@ -119,7 +136,7 @@ export function interact(world, p, pk) {
   } else if (pk.kind === 'chest') {
     pk.opened = true;
     const weights = world.floorDef.chestRarityWeights;
-    const weaponId = world.data.rollWeapon(world.rng, weights);
+    const weaponId = rollRunWeapon(world, weights);
     dropWeapon(world, weaponId, pk.x, pk.y + 28);
     dropEnergy(world, pk.x, pk.y, 4);
     if (world.rng.chance(0.5)) dropCoins(world, pk.x, pk.y, world.rng.int(2, 5));

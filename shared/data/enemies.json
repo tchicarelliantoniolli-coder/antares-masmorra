@@ -1,14 +1,15 @@
 {
   "_doc": "Inimigos e configuração dos andares. 'behavior' escolhe a IA (chaser, shooter, fan_shooter, turret, ringer, kamikaze, boss_xerox, boss_katia, boss_samara, splitter, charger, sniper, burrower, summoner, buffer, blinker...). Os números podem ser ajustados livremente.",
   "difficulty": {
-    "_doc": "Alavancas de dificuldade (calibradas por bots, veja docs/BALANCO.md). extraEnemies/extraHp: por jogador além do primeiro, nos inimigos comuns. dropHealthChance: chance de maçã ao limpar sala. appleHeal: vida da maçã da loja. healStationFraction: parte da vida máxima que a enfermaria cura. priceMul: multiplica preços da loja e da estátua. bossHpPerPlayer: vida extra dos chefes por jogador além do primeiro.",
+    "_doc": "Alavancas de dificuldade (calibradas por bots, veja docs/BALANCO.md). extraEnemies/extraHp: por jogador além do primeiro, nos inimigos comuns. dropHealthChance: chance de maçã ao limpar sala. appleHeal: vida da maçã da loja. healStationFraction: parte da vida máxima que a enfermaria cura. priceMul: multiplica preços da loja e da estátua. bossHpPerPlayer: vida extra dos chefes por jogador além do primeiro. roomWeaponChance: chance de uma arma no chão ao limpar sala de combate (as armas não se repetem na mesma partida).",
     "extraEnemies": 0.6,
     "extraHp": 0.3,
     "bossHpPerPlayer": 1.0,
     "dropHealthChance": 0.12,
     "appleHeal": 2,
     "healStationFraction": 0.5,
-    "priceMul": 1.3
+    "priceMul": 1.3,
+    "roomWeaponChance": 0.35
   },
   "enemies": {
     "caderno_zumbi": {

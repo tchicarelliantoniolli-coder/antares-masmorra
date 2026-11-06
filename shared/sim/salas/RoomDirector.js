@@ -1,6 +1,6 @@
 import { TILE, T, SPAWN_TIME } from '../constants.js';
 import { createEnemy } from '../inimigos/Enemy.js';
-import { createPickup, dropEnergy, BLESSINGS, SHOP_PRICES } from './Pickups.js';
+import { createPickup, dropEnergy, dropWeapon, rollRunWeapon, BLESSINGS, SHOP_PRICES } from './Pickups.js';
 
 /** Coloca baús, enfermarias e placas nas salas especiais. */
 export function setupRoomContents(world) {
@@ -27,7 +27,7 @@ function setupShop(world, r) {
   const weights = { comum: 10, incomum: 35, rara: 35, epica: 15, lendaria: 5 };
   const items = [];
   for (let i = 0; i < 2; i++) {
-    const weaponId = world.data.rollWeapon(world.rng, weights);
+    const weaponId = rollRunWeapon(world, weights);
     const w = world.data.weapon(weaponId);
     items.push({ item: 'weapon', weaponId, price: Math.round(SHOP_PRICES[w.rarity] * mult * priceMul(world)) });
   }
@@ -183,6 +183,10 @@ function clearRoom(world, room) {
   if (room.type === 'combat') {
     dropEnergy(world, cx, cy, world.rng.int(3, 6));
     if (world.rng.chance(world.data.difficulty?.dropHealthChance ?? 0.25)) createPickup(world, 'health', cx + 10, cy, {});
+    // às vezes a sala deixa uma arma (sorteada sem repetir na partida, raridade do andar)
+    if (world.rng.chance(world.data.difficulty?.roomWeaponChance ?? 0)) {
+      dropWeapon(world, rollRunWeapon(world, world.floorDef.chestRarityWeights), cx - 14, cy);
+    }
   }
 }
 

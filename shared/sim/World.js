@@ -42,6 +42,7 @@ export class World {
     this.endTimer = 0;
     this.stats = { kills: 0, damage: 0, coins: 0, roomsCleared: 0, time: 0, shots: 0 };
     this.roomCountOverride = roomCount;
+    this.seenWeapons = new Set(); // armas que já apareceram nesta partida (sorteio sem repetir)
     this.setupFloor(floor);
     for (const p of players) this.addPlayer(p);
   }

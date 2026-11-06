@@ -1,5 +1,5 @@
 import { INVULN_TIME, TILE } from './constants.js';
-import { dropEnergy, dropCoins, dropWeapon, createPickup } from './salas/Pickups.js';
+import { dropEnergy, dropCoins, dropWeapon, createPickup, rollRunWeapon } from './salas/Pickups.js';
 import { damagePropsInRadius } from './salas/Props.js';
 import { BEHAVIOR_HOOKS } from './inimigos/behaviors.js';
 import { AFFIXES } from './inimigos/affixes.js';
@@ -193,7 +193,7 @@ export function killEnemy(world, e, src) {
     // chefe: arma rara ou melhor + portal
     const room = world.rooms[e.roomId];
     room.bossDefeated = true;
-    const weaponId = world.data.rollWeapon(world.rng, null, 'rara');
+    const weaponId = rollRunWeapon(world, null, 'rara');
     dropWeapon(world, weaponId, e.x - 30, e.y + 10);
     createPickup(world, 'health', e.x + 30, e.y + 10, {});
     const px = (room.cx + 0.5) * TILE, py = (room.cy + 2.5) * TILE;
@@ -206,7 +206,7 @@ export function killEnemy(world, e, src) {
     for (const p of world.players) { p.signing = 0; p.jailTimer = Math.min(p.jailTimer || 0, 0.01); }
     world.emit('boss_defeated', { x: e.x, y: e.y, name: e.def.name });
   } else if (world.rng.chance(e.elite ? 0.12 : 0.03)) {
-    dropWeapon(world, world.data.rollWeapon(world.rng, world.floorDef.chestRarityWeights), e.x, e.y);
+    dropWeapon(world, rollRunWeapon(world, world.floorDef.chestRarityWeights), e.x, e.y);
   }
 }
 

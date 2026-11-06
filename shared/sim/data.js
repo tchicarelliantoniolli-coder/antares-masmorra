@@ -174,22 +174,29 @@ export class GameData {
   droppableWeapons(rarity) {
     return [...this.weapons.values()].filter((w) => !w.starterOnly && (!rarity || w.rarity === rarity));
   }
-  /** Sorteia uma arma usando os pesos de raridade; minRarity garante raridade mínima. */
-  rollWeapon(rng, weights, minRarity = null) {
+  /**
+   * Sorteia uma arma usando os pesos de raridade; minRarity garante raridade mínima.
+   * exclude (Set de ids) tira armas do sorteio; se não sobrar nenhuma, sorteia sem excluir.
+   */
+  rollWeapon(rng, weights, minRarity = null, exclude = null) {
     const minOrder = minRarity ? this.rarities[minRarity].order : 0;
     const w = {};
     for (const [k, r] of Object.entries(this.rarities)) {
       if (r.order >= minOrder) w[k] = weights?.[k] ?? r.weight;
     }
-    let rarity = rng.weighted(w);
-    // Se não existir arma daquela raridade, desce até achar.
-    const order = Object.entries(this.rarities).sort((a, b) => b[1].order - a[1].order).map(([k]) => k);
-    let idx = order.indexOf(rarity);
-    while (idx < order.length) {
-      const pool = this.droppableWeapons(order[idx]);
+    const rarity = rng.weighted(w);
+    // raridades permitidas, da mais alta para a mais baixa
+    const order = Object.entries(this.rarities).filter(([, r]) => r.order >= minOrder)
+      .sort((a, b) => b[1].order - a[1].order).map(([k]) => k);
+    const pick = (r) => this.droppableWeapons(r).filter((x) => !exclude?.has(x.id));
+    // sem arma livre na raridade sorteada, desce até achar; se não houver abaixo, sobe
+    const start = order.indexOf(rarity);
+    const tries = [...order.slice(start), ...order.slice(0, start).reverse()];
+    for (const r of tries) {
+      const pool = pick(r);
       if (pool.length) return rng.pick(pool).id;
-      idx++;
     }
+    if (exclude) return this.rollWeapon(rng, weights, minRarity, null);
     return rng.pick(this.droppableWeapons()).id;
   }
 }
