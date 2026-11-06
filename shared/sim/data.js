@@ -6,6 +6,7 @@ const PROJECTILE_DEFAULTS = {
   homing: 0, boomerang: false, spin: 0, explode: null, explodeOnExpire: false,
   glyphs: null, glyphBonus: null, ghost: false,
   pool: null, glyphSplit: null, growOnReturn: 1, knockback: 0,
+  sharedHit: false, // projéteis do mesmo disparo acertam cada inimigo uma vez só (anel)
   sprite: { shape: 'orb', color: '#ffffff', accent: '#cccccc' }
 };
 const MELEE_DEFAULTS = { range: 50, arc: 110, knockback: 150, deflect: false, reflect: false };

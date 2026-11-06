@@ -17,6 +17,7 @@ export function spawnShot(world, p, w, opts = {}) {
   const critChance = critChanceOf(p, w) * critMul;
   const glyphs = pr.glyphs ? [...pr.glyphs] : null;
   const out = [];
+  const shared = pr.sharedHit ? new Set() : null; // anel: o disparo inteiro conta como um acerto por inimigo
   for (let i = 0; i < count; i++) {
     let a = angle;
     if (count > 1) a += (-spread / 2 + (spread * i) / (count - 1)) * DEG;
@@ -43,7 +44,7 @@ export function spawnShot(world, p, w, opts = {}) {
       knockback: p.mods.knockback + pr.knockback,
       sprite: pr.spriteKey || 'proj_' + w.id, glyph,
       split, singularity: w.mode === 'singularity' ? w.singularity : null, pool: pr.pool || null,
-      growOnReturn: pr.growOnReturn
+      growOnReturn: pr.growOnReturn, hit: shared
     }));
   }
   return out;

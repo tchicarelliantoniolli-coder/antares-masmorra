@@ -641,3 +641,27 @@ test('boliche da bolas_esportes tem knockback', () => {
   const v = data.weapon('bolas_esportes').variants.list.find((x) => x.sprite.shape === 'bowling');
   assert.equal(v.knockback, 220);
 });
+
+// ---------------------------------------------------------------- anel: um acerto por inimigo por disparo
+test('sharedHit: anel encostado num alvo grande acerta só uma vez por disparo', () => {
+  const { w, p } = arena();
+  withWeapon(w, { damage: 10, fireRate: 1, critChance: 0, inaccuracy: 0, projectile: { count: 13, spread: 332.3, pierce: 99, range: 260, speed: 300, radius: 8, sharedHit: true } });
+  const e = dummy(w, p.x, p.y, 9999);
+  e.r = 26; // tamanho de chefe
+  run(w, 0.5, { p1: { fire: true, aim: 0 } });
+  assert.equal(9999 - e.hp, 10, 'o anel inteiro deve contar como 1 acerto');
+  const a2 = (332.3 / 12) * 2 * Math.PI / 180; // ângulo de outra onda do anel
+  const longe = dummy(w, p.x + Math.cos(a2) * 120, p.y + Math.sin(a2) * 120, 9999);
+  const perto = dummy(w, p.x + 120, p.y, 9999);
+  run(w, 1.2, { p1: { fire: true, aim: 0 } });
+  assert.ok(9999 - longe.hp >= 10 && 9999 - perto.hp >= 10, `longe ${9999 - longe.hp} perto ${9999 - perto.hp} centro ${9999 - e.hp}: ` + 'cada inimigo em volta ainda leva o seu acerto');
+});
+
+test('sem sharedHit o leque continua acertando com cada projétil', () => {
+  const { w, p } = arena();
+  withWeapon(w, { damage: 10, fireRate: 1, critChance: 0, inaccuracy: 0, projectile: { count: 5, spread: 20, pierce: 0, speed: 400 } });
+  const e = dummy(w, p.x + 40, p.y, 9999);
+  e.r = 26;
+  run(w, 0.5, { p1: { fire: true, aim: 0 } });
+  assert.equal(9999 - e.hp, 50);
+});

@@ -48,7 +48,7 @@ export function spawnProjectile(world, o) {
     lob: null,                     // arremesso em arco (modo lob): { sx, sy, tx, ty, t, flight, peak, ... }
     z: 0,                          // altura do arremesso (só visual)
     orbit: null,                   // girando em volta do dono (modo orbit)
-    hit: new Set(),
+    hit: o.hit || new Set(),
     dead: false,
     age: 0
   };

@@ -43,6 +43,7 @@ Se algum campo estiver errado, o jogo mostra o erro na tela de carregamento (e `
 | `explodeOnExpire` | false | Também explode ao fim do alcance. |
 | `spin` | 0 | Gira enquanto voa (só visual). |
 | `knockback` | 0 | **Empurrão** do projétil no inimigo (soma ao do jogador). Ex.: boliche = 220. |
+| `sharedHit` | false | **Um acerto por disparo**: os projéteis do mesmo disparo acertam cada inimigo só uma vez (anel do Sinal do Recreio, flechas do Arco de Régua). Evita que encostar num chefe faça todos acertarem juntos. |
 | `glyphs` | — | Texto com caracteres sorteados a cada tiro (ex.: `"0123456789+-×÷"`). |
 | `glyphBonus` | — | Multiplicador de dano por caractere (ex.: `{ "×": 2 }`). |
 | `sprite` | orb | Aparência: `{ "shape", "color", "accent" }`. |
@@ -120,7 +121,9 @@ Outros campos novos do `projectile`: `glyphSplit` (o caractere que se divide, ex
 | `shield` | Segure para bloquear balas de frente (gasta energia); solte para empurrar. | `shield`: `arc` (110), `blockCost` (1), `speedMul` (0.6), `bashKnockback` (320) |
 
 Para conferir o equilíbrio, rode `node scripts/weapon-dps.mjs`: ele mostra o dano por segundo de cada arma contra
-um alvo parado e marca as que saem da faixa da raridade.
+um alvo parado a 120 px e marca as que saem da faixa da raridade. A coluna **encostado** mede a arma grudada (ou
+dentro) de um alvo do tamanho de um chefe; ela pode passar do teto da faixa (leques e lança-chamas são melhores de
+perto), mas no máximo 1,5 vez. Acima disso a arma aparece como **ROUBADA ENCOSTADO**.
 
 ## Exemplo completo
 

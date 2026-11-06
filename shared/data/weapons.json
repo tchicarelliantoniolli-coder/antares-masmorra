@@ -213,8 +213,8 @@
         "speed": 470,
         "radius": 4,
         "range": 300,
-        "count": 6,
-        "spread": 34,
+        "count": 5,
+        "spread": 28,
         "sprite": {
           "shape": "clip",
           "color": "#dfe6ee",
@@ -226,7 +226,7 @@
         "color": "#8a5a3a",
         "accent": "#c0c8d0"
       },
-      "description": "Seis clipes de uma vez. Ótima de perto."
+      "description": "Cinco clipes de uma vez. Ótima de perto."
     },
     {
       "id": "rifle_lapis",
@@ -529,7 +529,7 @@
       "rarity": "epica",
       "type": "ranged",
       "damage": 2,
-      "fireRate": 13,
+      "fireRate": 11.8,
       "energyCost": 0.5,
       "critChance": 0.03,
       "inaccuracy": 18,
@@ -917,19 +917,20 @@
           "shape": "pencil",
           "color": "#cfe8ff",
           "accent": "#3a6fd8"
-        }
+        },
+        "sharedHit": true
       },
       "sprite": {
         "shape": "bow",
         "color": "#cfe8ff",
         "accent": "#3a6fd8"
       },
-      "description": "Segure para carregar. Com carga cheia, solta 3 flechas que atravessam 4 inimigos.",
+      "description": "Segure para carregar. Com carga cheia, solta 3 flechas em leque que atravessam 4 inimigos (cada inimigo leva uma flecha).",
       "mode": "charge",
       "charge": {
         "time": 0.8,
         "minMul": 0.4,
-        "maxMul": 2.2,
+        "maxMul": 2.6,
         "fullCount": 3,
         "fullPierce": 4
       }
@@ -979,7 +980,7 @@
       "category": "especial",
       "rarity": "epica",
       "type": "ranged",
-      "damage": 9,
+      "damage": 14,
       "fireRate": 1.6,
       "energyCost": 5,
       "critChance": 0.05,
@@ -995,7 +996,8 @@
           "shape": "wave",
           "color": "#e0b0ff",
           "accent": "#7a3fd0"
-        }
+        },
+        "sharedHit": true
       },
       "effect": {
         "type": "atordoar",
@@ -1007,7 +1009,7 @@
         "color": "#f2c94c",
         "accent": "#7a4a22"
       },
-      "description": "Toca o sinal: um anel de ondas sonoras em todas as direções que atravessa tudo."
+      "description": "Toca o sinal: um anel de ondas sonoras em todas as direções que atravessa tudo. Cada inimigo leva uma onda por toque."
     },
     {
       "id": "projetor_slides",
@@ -1424,7 +1426,7 @@
       "inaccuracy": 0,
       "mode": "flame",
       "damage": 2,
-      "fireRate": 12,
+      "fireRate": 7.6,
       "energyCost": 0.5,
       "flame": {
         "range": 120,
@@ -1869,8 +1871,8 @@
         "speed": 460,
         "radius": 4,
         "range": 360,
-        "count": 5,
-        "spread": 30,
+        "count": 4,
+        "spread": 24,
         "sprite": {
           "shape": "confetti",
           "color": "#ff6b9a",
