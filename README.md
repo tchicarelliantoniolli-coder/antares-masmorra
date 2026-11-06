@@ -138,8 +138,10 @@ sem acesso: a primeira visita demora cerca de 1 minuto e as salas abertas se per
 
 ## Dificuldade e bot de balanceamento
 
-A dificuldade foi calibrada com um bot que joga partidas inteiras sem tela (`scripts/bot/`): a dupla "do dono e do amigo"
-vence só cerca de 5 a 15% das partidas, e um jogador experiente vence 25 a 40%. Os números ficam em `shared/data/enemies.json`
+A dificuldade foi calibrada com um bot que joga partidas inteiras sem tela (`scripts/bot/`). Metas: a dupla "do dono e do amigo"
+vencer só 5 a 15% das partidas e um jogador experiente 25 a 40%. Medido em 90 partidas (sementes 1 a 90):
+dupla com 2 jogadores **~7%** (alvo atingido); experiente sozinho **~26%** e experiente em dupla **~44%**
+(este fica um pouco acima da meta; com 30 partidas o ruído é de +-8 pontos). Os números ficam em `shared/data/enemies.json`
 (`difficulty` e `floors`). Detalhes, resultados e como recalibrar depois de jogar: [docs/BALANCO.md](docs/BALANCO.md).
 
 ```bash

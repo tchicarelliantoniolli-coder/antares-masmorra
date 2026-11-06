@@ -146,7 +146,11 @@ SCENARIOS['professores'] = async (browser) => {
     await page.keyboard.press('Space');
     await page.mouse.down();
     await page.waitForTimeout(1000);
+    // arma de carregar só atira ao soltar: espera haver carga (o navegador pode estar lento) antes de soltar
+    await page.waitForFunction(() => { const p = window.__game.scene.getScene('Game').world.players[0]; return p.wstate.charge === undefined || p.wstate.charge > 0.1 || window.__game.scene.getScene('Game').world.stats.shots > 0; }, null, { timeout: 5000 }).catch(() => {});
     await page.mouse.up();
+    // e espera o passo da simulação que processa o disparo
+    await page.waitForFunction(() => window.__game.scene.getScene('Game').world.stats.shots > 0, null, { timeout: 3000 }).catch(() => {});
     const r = await page.evaluate(() => { const w = window.__game.scene.getScene('Game').world; return { shots: w.stats.shots, cd: w.players[0].skillCd }; });
     if (!(r.shots > 0)) errors.push(id + ': nenhum tiro');
     if (!(r.cd > 0)) errors.push(id + ': habilidade não entrou em recarga');

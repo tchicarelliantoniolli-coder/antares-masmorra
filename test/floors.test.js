@@ -161,7 +161,9 @@ test('Samara: sem jogador livre nunca escolhe suspensão nem quebra (muitas seme
     a.jailTimer = 3; // nenhum jogador livre
     for (let i = 0; i < 25; i++) {
       boss.state = 'idle'; boss.phase = 1 + (i % 3); boss.t = 0; boss.lastAttack = 'advertencia';
+      const antes = w.events.filter((e) => e.type === 'boss_attack').length;
       assert.doesNotThrow(() => bossSamara(w, boss, 1 / 60, a), `semente ${seed}, rodada ${i}`);
+      assert.equal(w.events.filter((e) => e.type === 'boss_attack').length, antes + 1, `escolheu um ataque (semente ${seed}, rodada ${i})`);
       assert.notEqual(boss.lastAttack, 'suspensao', `semente ${seed}, rodada ${i}`);
     }
   }
