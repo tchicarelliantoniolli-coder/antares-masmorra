@@ -545,3 +545,35 @@ test('onda do andar 3 tem pelo menos um de cada papel quando cabe', () => {
   }
   assert.ok(exercitadas > 0, 'nenhuma semente exercitou o teste');
 });
+
+test('borracha: filhotes nascem em chão livre, mesmo colada na parede', () => {
+  const { w, p } = arena();
+  const room = w.rooms.find((r) => r.type === 'combat');
+  for (const [px, py] of [[(room.x0 + 1) * 32 + 12, (room.cy + 0.5) * 32], [(room.x0 + 1) * 32 + 12, (room.y0 + 1) * 32 + 12]]) {
+    const pai = createEnemy(w, 'borracha', px, py, room.id, { spawnTime: 0 });
+    const antes = w.enemies.length;
+    pai.hp = 0; killEnemy(w, pai, null);
+    const filhos = w.enemies.filter((e) => !e.dead && e.gen === 1);
+    assert.ok(w.enemies.length > antes && filhos.length >= 2);
+    for (const f of filhos) {
+      assert.ok(!w.map.boxSolid(f.x - f.r, f.y - f.r, f.x + f.r, f.y + f.r), 'filhote dentro de parede');
+      f.dead = true;
+    }
+  }
+});
+
+test('grêmio: não põe escudo de golpe em Estojo aberto', () => {
+  const { w, p } = arena();
+  p.invuln = 99;
+  const g = createEnemy(w, 'gremio', p.x + 150, p.y, -1, { spawnTime: 0 });
+  g.cd = 0;
+  const est = createEnemy(w, 'estojo', g.x + 60, g.y, -1, { spawnTime: 0 });
+  est.state = 'open'; est.shielded = 0; est.cd = 999;
+  run(w, 0.2);
+  assert.ok(!est.shieldHit, 'sem marca de escudo de golpe');
+  // fecha o Estojo: a invulnerabilidade dele dura mais de um golpe
+  est.shielded = 1; est.shieldHit = true; // estado ruim herdado
+  est.state = 'move';
+  run(w, 0.1);
+  assert.equal(est.shieldHit, false, 'estojo ao fechar limpa shieldHit');
+});

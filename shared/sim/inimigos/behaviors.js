@@ -106,7 +106,7 @@ function shooter(world, e, dt, target) {
  */
 function fanShooter(world, e, dt, target) {
   const atk = e.def.attack;
-  if (e.state === 'move') { e.state = 'closed'; e.shielded = 1; }
+  if (e.state === 'move') { e.state = 'closed'; e.shielded = 1; e.shieldHit = false; }
   if (target) e.facing = target.x > e.x ? 1 : -1;
   if (e.state === 'open') {
     e.t -= dt;
@@ -116,7 +116,7 @@ function fanShooter(world, e, dt, target) {
       e.warn -= dt;
       if (e.warn <= 0) { enemyShoot(world, e, e.aim, atk); e.fanFired = true; e.telegraph = null; }
     }
-    if (e.t <= 0) { e.state = 'closed'; e.shielded = 1; e.fanFired = false; e.telegraph = null; e.cd = atk.interval * e.atkMul * world.rng.range(0.85, 1.15); }
+    if (e.t <= 0) { e.state = 'closed'; e.shielded = 1; e.shieldHit = false; e.fanFired = false; e.telegraph = null; e.cd = atk.interval * e.atkMul * world.rng.range(0.85, 1.15); }
     return;
   }
   if (!target) return wander(world, e, dt);
@@ -238,10 +238,17 @@ function splitterDeath(world, e) {
   if (!S || gen >= S.maxGen) return;
   for (let i = 0; i < S.count; i++) {
     const a = world.rng.range(0, Math.PI * 2);
-    const f = createEnemy(world, e.type, e.x + Math.cos(a) * 8, e.y + Math.sin(a) * 8, e.roomId, { spawnTime: 0.3, gen: gen + 1 });
-    f.r = e.r * S.size;
+    const r = e.r * S.size;
+    // ponto livre ao redor (com o raio do filhote); sem vaga, nasce no lugar do pai
+    let x = e.x, y = e.y, ang = a;
+    for (let k = 0; k < 8; k++) {
+      const b = a + (k * Math.PI) / 4, cx = e.x + Math.cos(b) * 8, cy = e.y + Math.sin(b) * 8;
+      if (!world.map.boxSolid(cx - r, cy - r, cx + r, cy + r)) { x = cx; y = cy; ang = b; break; }
+    }
+    const f = createEnemy(world, e.type, x, y, e.roomId, { spawnTime: 0.3, gen: gen + 1 });
+    f.r = r;
     f.maxHp = f.hp = Math.max(1, Math.round(e.maxHp / 2));
-    f.kx = Math.cos(a) * 140; f.ky = Math.sin(a) * 140; // pulam para os lados
+    f.kx = Math.cos(ang) * 140; f.ky = Math.sin(ang) * 140; // pulam para os lados
   }
 }
 
@@ -413,7 +420,7 @@ function buffer(world, e, dt, target) {
     const d = Math.hypot(o.x - e.x, o.y - e.y);
     if (d > B.range) continue;
     if (o.hp < o.maxHp * 0.9 && d < hd) { hd = d; hurt = o; }
-    if (!o.shielded && d < bd) { bd = d; bare = o; }
+    if (!o.shielded && o.def.behavior !== 'fan_shooter' && d < bd) { bd = d; bare = o; }
   }
   const alvo = hurt || bare;
   if (!alvo) return; // ninguém por perto: tenta de novo no próximo passo
