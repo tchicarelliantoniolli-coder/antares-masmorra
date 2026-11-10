@@ -100,6 +100,9 @@ O gerador usa o primeiro que passa na verificação de conectividade; `aberto` �
    `c.hw` / `c.hh` (meia largura/altura do interior). `tipo` padrão é `T.OBSTACLE`; use `T.WALL` para parede.
    As posições que caem na boca das portas, na borda da sala ou em cima de parede são recusadas sozinhas.
 3. Deixe o centro livre (o teste exige, exceto no layout `centro`) e prefira corredores de 2 tiles ou mais.
+   Cobertura demais atrapalha: inimigos andam em linha reta (sem caminho) e o bot dos testes de balanceamento
+   fica rodando em volta de quinas. Por isso `put` recusa "pinças" (dois blocos que só se tocam pela quina,
+   com chão nos outros dois cantos) e os layouts mais densos foram afinados.
 4. Use o nome em `themes.json` → `combatLayouts` de algum tema, com um peso.
 5. Rode `npm test`: `test/rooms.test.js` confere que o layout existe, que não bloqueia o centro nem as portas e
    que todos os temas usam pelo menos 2 dos seus layouts.
@@ -120,5 +123,6 @@ O gerador usa o primeiro que passa na verificação de conectividade; `aberto` �
 - `generateFloor({ rng, floorDef, data })`: `data` é o `GameData` (usa `data.themes` e `data.roomShapes`). Também
   aceita `themes` e `shapes` soltos. Sem esses dados o gerador usa retângulos, os layouts geométricos e caixas.
 - Em testes, `limparSala(world, sala)` (`test/helpers.js`) deixa a sala só com chão; `arena()` já faz isso.
-- `RoomDirector.freeCells` só devolve `T.FLOOR` e, em salas com forma, tira os tiles colados nas paredes dos cortes.
+- `RoomDirector.freeCells` só devolve `T.FLOOR` **alcançável a pé a partir das portas** (caixas e móveis bloqueiam: ninguém
+  nasce num bolsão fechado) e, em salas com forma, tira os tiles colados nas paredes dos cortes.
   `isInsideRoom` continua valendo o retângulo envolvente: os cortes são parede e as portas ficam dentro dele.
