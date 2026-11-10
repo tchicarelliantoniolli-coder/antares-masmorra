@@ -14,6 +14,7 @@ export function loadGameDataNode() {
   return new GameData({
     weapons: readJson('weapons.json'),
     characters: readJson('characters.json'),
-    enemies: readJson('enemies.json')
+    enemies: readJson('enemies.json'),
+    themes: readJson('themes.json')
   });
 }

@@ -1,0 +1,98 @@
+{
+  "_doc": "Cenários da escola. Cada tema define como as salas dele são montadas (layouts, objetos quebráveis, decoração de parede) e como ficam na tela (luz, partículas, decalques no chão). Os nomes de layouts, formas, objetos, decorações, partículas e decalques são fixos no código; aqui você escolhe quais cada tema usa e com que peso. 'shapes' sorteia a forma das salas de combate.",
+  "shapes": {
+    "combat": { "retangulo": 3, "cantos_cortados": 3, "L": 2, "cruz": 2, "T": 2 }
+  },
+  "themes": {
+    "sala_aula": {
+      "label": "Sala de aula",
+      "combatLayouts": { "carteiras": 4, "carteiras_u": 2, "pilares": 1, "xadrez": 1, "aberto": 1 },
+      "props": { "mochila": 3, "pilha_livros": 1, "caixa": 1 },
+      "wallDecor": ["lousa", "cartaz", "relogio", "janela", "lampada", "mapa_mundi", "quadro_avisos"],
+      "ambient": { "color": "#2b2236", "alpha": 0.22 },
+      "particles": "poeira",
+      "decals": ["giz", "papeis", "manchas", "pegadas"]
+    },
+    "laboratorio": {
+      "label": "Laboratório",
+      "combatLayouts": { "bancadas": 4, "ilhas": 2, "centro": 1, "trincheiras": 1, "pilares6": 1 },
+      "props": { "caixa_tubos": 3, "caixa": 1 },
+      "wallDecor": ["tabela_periodica", "cartaz_dna", "relogio", "lampada", "extintor", "quadro_avisos"],
+      "ambient": { "color": "#10303a", "alpha": 0.26 },
+      "particles": "bolhas",
+      "decals": ["derramado", "poca", "rachaduras", "papeis"]
+    },
+    "quadra": {
+      "label": "Quadra",
+      "combatLayouts": { "quadra": 4, "cantos": 1, "aberto": 1, "trincheiras": 1 },
+      "props": { "cesto_bolas": 3, "caixa": 1 },
+      "wallDecor": ["placar", "cesta", "bandeira", "trofeus", "lampada"],
+      "ambient": { "color": "#1c2a4a", "alpha": 0.18 },
+      "particles": "poeira",
+      "decals": ["marcas_quadra", "pegadas", "manchas"]
+    },
+    "biblioteca": {
+      "label": "Biblioteca",
+      "combatLayouts": { "estantes": 4, "colunas": 2, "sala_dupla": 1, "cantos": 1 },
+      "props": { "pilha_livros": 3, "caixa": 1 },
+      "wallDecor": ["estante_parede", "quadro", "lampada", "mapa_mundi", "relogio"],
+      "ambient": { "color": "#2a1a10", "alpha": 0.3 },
+      "particles": "poeira",
+      "decals": ["tapete", "papeis", "manchas"]
+    },
+    "patio": {
+      "label": "Pátio",
+      "combatLayouts": { "canteiros": 4, "pilares": 1, "colunas": 1, "centro": 1, "xadrez": 1 },
+      "props": { "vaso": 3, "caixa": 1 },
+      "wallDecor": ["janela", "bandeira", "lampada", "cartaz"],
+      "ambient": { "color": "#1a2a30", "alpha": 0.12 },
+      "particles": "folhas",
+      "decals": ["amarelinha", "folhas", "rachaduras", "poca", "pegadas"]
+    },
+    "secretaria": {
+      "label": "Secretaria",
+      "combatLayouts": { "mesas_longas": 3, "centro": 1, "aberto": 1 },
+      "props": { "pilha_papeis": 3, "caixa": 1 },
+      "wallDecor": ["mural", "relogio", "lampada", "quadro_avisos", "extintor"],
+      "ambient": { "color": "#201c2e", "alpha": 0.26 },
+      "particles": "papeis",
+      "decals": ["tapete", "papeis", "manchas"]
+    },
+    "corredor": {
+      "label": "Corredor",
+      "combatLayouts": { "aberto": 1 },
+      "props": { "caixa": 1 },
+      "wallDecor": ["lampada", "extintor", "quadro_avisos"],
+      "ambient": { "color": "#24201a", "alpha": 0.2 },
+      "particles": null,
+      "decals": ["pegadas", "manchas"]
+    },
+    "orientacao": {
+      "label": "Orientação",
+      "combatLayouts": { "canteiros": 2, "centro": 1, "aberto": 1 },
+      "props": { "vaso": 2, "pilha_livros": 1, "caixa": 1 },
+      "wallDecor": ["quadro", "mural", "lampada", "trofeus"],
+      "ambient": { "color": "#2e1f3a", "alpha": 0.22 },
+      "particles": "poeira",
+      "decals": ["tapete", "papeis"]
+    },
+    "coordenacao": {
+      "label": "Coordenação",
+      "combatLayouts": { "mesas_longas": 2, "pilares": 1, "aberto": 1 },
+      "props": { "pilha_papeis": 3, "caixa": 1 },
+      "wallDecor": ["quadro", "relogio", "mural", "lampada", "bandeira", "trofeus"],
+      "ambient": { "color": "#2a0e12", "alpha": 0.3 },
+      "particles": "brasas",
+      "decals": ["tapete", "papeis", "manchas"]
+    },
+    "cantina": {
+      "label": "Cantina",
+      "combatLayouts": { "mesas_longas": 2, "aberto": 1 },
+      "props": { "bandeja": 3, "caixa": 1 },
+      "wallDecor": ["cardapio", "lampada", "relogio"],
+      "ambient": { "color": "#32201a", "alpha": 0.16 },
+      "particles": "vapor",
+      "decals": ["migalhas", "manchas", "derramado"]
+    }
+  }
+}

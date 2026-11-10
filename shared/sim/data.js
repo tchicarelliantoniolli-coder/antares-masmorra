@@ -137,7 +137,7 @@ export function normalizeWeapon(w) {
 }
 
 export class GameData {
-  constructor({ weapons, characters, enemies }) {
+  constructor({ weapons, characters, enemies, themes = null }) {
     const errors = validateWeapons(weapons);
     if (errors.length) throw new Error('Erros em weapons.json:\n' + errors.join('\n'));
     this.rarities = weapons.rarities;
@@ -150,6 +150,8 @@ export class GameData {
     this.enemies = enemies.enemies;
     this.floors = enemies.floors;
     this.difficulty = enemies.difficulty || {};
+    this.themes = themes?.themes || {};   // cenários: layouts, objetos, decoração, luz (themes.json)
+    this.roomShapes = themes?.shapes || {};
   }
   weapon(id) {
     const w = this.weapons.get(id);

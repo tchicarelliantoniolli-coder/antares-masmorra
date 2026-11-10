@@ -105,3 +105,17 @@ test('validador exige deploy.max inteiro >= 1', () => {
   assert.deepEqual(check({ type: 'ranged', mode: 'deploy', deploy: { max: 1 } }), []);
   assert.deepEqual(check({ type: 'ranged', mode: 'deploy' }), []);
 });
+
+// ---------------------------------------------------------------- cenários (themes.json)
+import { THEMES } from '../shared/sim/constants.js';
+
+test('themes.json tem um cenário para cada tema do jogo, com os campos que o gerador e o cliente usam', () => {
+  for (const t of THEMES) {
+    const c = data.themes[t];
+    assert.ok(c, `falta o tema ${t} em themes.json`);
+    for (const campo of ['combatLayouts', 'props', 'wallDecor', 'ambient', 'decals']) assert.ok(c[campo] !== undefined, `${t}: falta ${campo}`);
+    assert.ok(Object.keys(c.combatLayouts).length > 0, `${t}: combatLayouts vazio`);
+    assert.ok(c.ambient.alpha >= 0 && c.ambient.alpha <= 0.4, `${t}: ambient.alpha fora de 0–0,4`);
+  }
+  assert.ok(Object.keys(data.roomShapes.combat).length >= 4, 'formas de sala de combate');
+});

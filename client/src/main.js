@@ -33,10 +33,10 @@ async function start() {
     document.fonts.load('16px "Press Start 2P"'),
     document.fonts.load('20px "VT323"')
   ]);
-  const [weapons, characters, enemies] = await Promise.all([
-    loadJson('weapons.json'), loadJson('characters.json'), loadJson('enemies.json')
+  const [weapons, characters, enemies, themes] = await Promise.all([
+    loadJson('weapons.json'), loadJson('characters.json'), loadJson('enemies.json'), loadJson('themes.json')
   ]);
-  const data = new GameData({ weapons, characters, enemies });
+  const data = new GameData({ weapons, characters, enemies, themes });
   patchLigatures();
   document.getElementById('loading').remove();
 
