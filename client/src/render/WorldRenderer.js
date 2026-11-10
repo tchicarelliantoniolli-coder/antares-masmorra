@@ -1,13 +1,16 @@
 import { TILE, T, REVIVE_TIME } from '/shared/sim/constants.js';
 import { trapState } from '/shared/sim/salas/Props.js';
 import { BLESSINGS } from '/shared/sim/salas/Pickups.js';
-import { TILESET_COLS, TILE_KIND } from './tileArt.js';
-import { hexToInt } from './pixel.js';
+import { TILESET_COLS, TILE_KIND, shadowIndexAt } from './tileArt.js';
+import { FloorDecals } from './decals.js';
+import { hexToInt, hash } from './pixel.js';
 import { AFFIXES } from '/shared/sim/inimigos/affixes.js';
 import { textStyle } from '../config.js';
 
 const DEPTH_GROUND_FX = 2;
 const DEPTH_TRAPS = 1;
+const DEPTH_SHADOWS = 0.5;   // sombras no chão: acima do piso (0) e dos decalques (0.4), abaixo dos espinhos e de tudo
+const DEPTH_OBSTACLES = 0.6; // obstáculos (carteiras, estantes...): acima das sombras, abaixo dos espinhos
 const DEPTH_PROJ = 9000;
 const DEPTH_FX = 9500;
 
@@ -45,6 +48,30 @@ export class WorldRenderer {
     const ts = this.tilemap.addTilesetImage('tiles', 'tiles', TILE, TILE, 0, 0);
     this.layer = this.tilemap.createLayer(0, ts, 0, 0).setDepth(0);
     this.mapObjects = [];
+
+    // Decalques de chão (uma textura estática por sala) e sombras (camada própria entre o piso e os objetos)
+    this.decals = new FloorDecals(this.scene, this.world, this.data);
+    this.decals.build();
+    const shadowRows = [];
+    for (let y = 0; y < map.h; y++) {
+      const row = [];
+      for (let x = 0; x < map.w; x++) row.push(shadowIndexAt(map, x, y));
+      shadowRows.push(row);
+    }
+    this.shadowMap = this.scene.make.tilemap({ data: shadowRows, tileWidth: TILE, tileHeight: TILE });
+    const sts = this.shadowMap.addTilesetImage('shadows', 'shadows', TILE, TILE, 0, 0);
+    this.shadowLayer = this.shadowMap.createLayer(0, sts, 0, 0).setDepth(DEPTH_SHADOWS);
+
+    // Obstáculos de tema (tiles de fundo transparente, 2 variantes A/B por hash da posição)
+    const obsRows = [];
+    for (let y = 0; y < map.h; y++) {
+      const row = [];
+      for (let x = 0; x < map.w; x++) row.push(this.obstacleIndex(map, x, y));
+      obsRows.push(row);
+    }
+    this.obstacleMap = this.scene.make.tilemap({ data: obsRows, tileWidth: TILE, tileHeight: TILE });
+    const ots = this.obstacleMap.addTilesetImage('tiles', 'tiles', TILE, TILE, 0, 0);
+    this.obstacleLayer = this.obstacleMap.createLayer(0, ots, 0, 0).setDepth(DEPTH_OBSTACLES);
 
     // Portas (grades que sobem quando a sala tranca)
     this.doors = [];
@@ -86,6 +113,9 @@ export class WorldRenderer {
 
   clearMapObjects() {
     this.tilemap?.destroy();
+    this.shadowMap?.destroy();
+    this.obstacleMap?.destroy();
+    this.decals?.destroy();
     this.doors?.forEach((d) => d.sprite.destroy());
     this.props?.forEach((p) => p.destroy());
     this.traps?.forEach((t) => t.img.destroy());
@@ -101,11 +131,22 @@ export class WorldRenderer {
       const below = map.get(x, y + 1);
       return base + (below === T.FLOOR || below === T.DOOR || below === T.OBSTACLE || below === T.PROP ? TILE_KIND.WALL_FACE : TILE_KIND.WALL_TOP);
     }
-    if (t === T.OBSTACLE) return base + TILE_KIND.OBSTACLE;
-    const h = ((x * 73856093) ^ (y * 19349663)) >>> 0;
-    if (h % 11 === 0) return base + TILE_KIND.FLOOR_B;
-    if (h % 17 === 0) return base + TILE_KIND.FLOOR_C;
+    // Variantes do piso por hash da posição (igual em todos os clientes); cada sala tem seu próprio nível de desgaste.
+    // Embaixo de obstáculos e caixas também vai piso (o obstáculo é desenhado na camada de cima).
+    const r = hash(x, y, 3 + theme);
+    const wear = 0.03 + 0.11 * hash(map.owner[map.idx(x, y)], theme, 9);
+    if (r < wear) return base + TILE_KIND.FLOOR_D;
+    if (r < wear + 0.08) return base + TILE_KIND.FLOOR_B;
+    if (r < wear + 0.14) return base + TILE_KIND.FLOOR_C;
     return base + TILE_KIND.FLOOR_A;
+  }
+
+  /** Tile da camada de obstáculos: A/B alternados em xadrez com sorteio (fileiras de carteiras/estantes ficam variadas e organizadas). */
+  obstacleIndex(map, x, y) {
+    if (map.get(x, y) !== T.OBSTACLE) return -1;
+    const theme = map.theme[map.idx(x, y)] ?? 0;
+    const flip = hash(x, y, 5 + theme) < 0.28 ? 1 : 0;
+    return theme * TILESET_COLS + (((x + y + flip) & 1) ? TILE_KIND.OBSTACLE_B : TILE_KIND.OBSTACLE);
   }
 
   /** Caixa/barril quebrou: some o sprite e o tile vira chão. */
@@ -115,6 +156,10 @@ export class WorldRenderer {
     const map = this.world.map;
     const tx = ev.idx % map.w, ty = Math.floor(ev.idx / map.w);
     this.layer.putTileAt(this.tileIndex(map, tx, ty), tx, ty);
+    // a sombra de contato do objeto some; sobra só a sombra de parede que o tile já tinha
+    const si = shadowIndexAt(map, tx, ty);
+    if (si < 0) this.shadowLayer.removeTileAt(tx, ty);
+    else this.shadowLayer.putTileAt(si, tx, ty);
   }
 
   onPropHit(ev) {
