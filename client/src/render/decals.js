@@ -151,7 +151,7 @@ function drawPapeis(g, w, h, r) {
 }
 
 function drawManchas(g, w, h, r, theme) {
-  const col = { laboratorio: '#26343c', quadra: '#4a2a1c', patio: '#3a3428', cantina: '#6a4a28' }[theme] || '#2a1a24';
+  const col = { laboratorio: '#26343c', quadra: '#4a2a1c', patio: '#3a3428', cantina: '#6a4a28' }[theme] || '#2a201a';
   const n = ri(r, 2, 4);
   for (let i = 0; i < n; i++) blob(g, w * (0.3 + r() * 0.4), h * (0.3 + r() * 0.4), 6 + r() * Math.min(w, h) * 0.22, col, r, 0.45);
   for (let i = 0; i < 6; i++) dot(g, ri(r, 3, w - 4), ri(r, 3, h - 4), ri(r, 1, 2), 1, col);
@@ -180,9 +180,10 @@ function drawPegadas(g, w, h, r) {
 }
 
 const LIQUIDS = {
-  laboratorio: ['#5a6ad0', '#9a5ac8', '#3a9ab0', '#c8a838'],
-  cantina: ['#e8d8b0', '#6a3a22', '#b83a58', '#5a6ad0'],
-  default: ['#5a6ad0', '#9a5ac8', '#b83a58']
+  // tons foscos de propósito: nada de verde ácido, laranja-fogo, ciano-gelo ou magenta vivo (cores dos perigos de verdade)
+  laboratorio: ['#6a74b8', '#8a68a8', '#4a8a98', '#b8a050'],
+  cantina: ['#e8d8b0', '#6a3a22', '#a8485e', '#6a74b8'],
+  default: ['#6a74b8', '#8a68a8', '#a8485e']
 };
 function drawDerramado(g, w, h, r, theme) {
   const col = pick(r, LIQUIDS[theme] || LIQUIDS.default);
@@ -288,10 +289,10 @@ function drawQuadra(g, w, h, r) {
 export const DECAL_DEFS = {
   tapete:       { alpha: 0.72, size: (r) => [ri(r, 4, 6), ri(r, 3, 4)], fallback: [[3, 2]], draw: drawTapete, unique: true },
   giz:          { alpha: 0.4, size: () => [2, 1], draw: drawGiz },
-  papeis:       { alpha: 0.8, size: () => [2, 2], draw: drawPapeis, overlay: true },
+  papeis:       { alpha: 0.7, size: () => [2, 2], draw: drawPapeis, overlay: true },
   manchas:      { alpha: 0.26, size: (r) => (r() < 0.5 ? [1, 1] : [2, 2]), draw: drawManchas },
   pegadas:      { alpha: 0.3, size: (r) => (r() < 0.5 ? [4, 1] : [1, 4]), draw: drawPegadas },
-  derramado:    { alpha: 0.5, size: () => [2, 2], draw: drawDerramado },
+  derramado:    { alpha: 0.38, size: () => [2, 2], draw: drawDerramado },
   poca:         { alpha: 0.42, size: (r) => (r() < 0.5 ? [2, 1] : [2, 2]), draw: drawPoca },
   rachaduras:   { alpha: 0.4, size: () => [2, 2], draw: drawRachaduras },
   marcas_quadra: { alpha: 0.46, room: true, draw: drawQuadra, unique: true },
