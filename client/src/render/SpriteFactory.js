@@ -4,13 +4,14 @@ import {
   drawWeapon, drawChest, drawHealStation, drawPortalFrames, drawEnergyOrb, drawCoin, drawApple, drawShadow,
   drawSpawnCircle, drawCrosshair, drawDoorBar, drawPixel, drawSoftCircle, drawIcon
 } from './itemArt.js';
-import { buildTileset } from './tileArt.js';
+import { buildTileset, buildShadowTileset } from './tileArt.js';
+import { PROP_KINDS, DECOR_KINDS as DECOR_NAMES } from '/shared/sim/salas/kinds.js';
 import {
-  drawCrate, drawBarrel, drawSpikes, drawDecor, drawLousaEnemy, drawSinal, drawMochila, drawDiva, drawCadernoPreto,
+  drawProp, drawSpikes, drawDecor, drawLousaEnemy, drawSinal, drawMochila, drawDiva, drawCadernoPreto,
   drawAlunos, drawCantineira, drawStatue, drawPlant, drawCage, drawExtraBullet, drawLetters, drawTurret, drawMine, drawLegionario, drawCavaleiro, drawBandeirante, drawCapitu, drawMacunaima, drawPolicarpo
 } from './propArt.js';
 
-export const DECOR_KINDS = ['lousa', 'placar', 'estante_parede', 'cartaz', 'relogio', 'tabela_periodica', 'cartaz_dna', 'cesta', 'quadro', 'janela', 'mural', 'cardapio'];
+export const DECOR_KINDS = DECOR_NAMES; // lista oficial em shared/sim/salas/kinds.js
 
 /**
  * Gera todas as texturas provisórias por código e registra no Phaser.
@@ -71,8 +72,7 @@ export function generateTextures(scene, data, overrideKeys = new Set()) {
   for (const st of ['chalk', 'wave', 'paper_red']) add('ebullet_' + st, drawExtraBullet(st));
 
   // Cenário: caixas, barris, espinhos, decoração, estátua, cela, planta, bolha de letras
-  add('prop_caixa', drawCrate());
-  add('prop_barril', drawBarrel());
+  for (const k of PROP_KINDS) add('prop_' + k, drawProp(k));
   for (let i = 0; i < 3; i++) add('spikes_' + i, drawSpikes(i));
   for (const k of DECOR_KINDS) add('decor_' + k, drawDecor(k));
   add('statue', drawStatue());
@@ -101,6 +101,7 @@ export function generateTextures(scene, data, overrideKeys = new Set()) {
   add('soft', drawSoftCircle(32));
   for (const k of ['heart', 'shield', 'energy', 'coin', 'lock']) add('icon_' + k, drawIcon(k));
   add('tiles', buildTileset());
+  add('shadows', buildShadowTileset());
 
   createAnimations(scene, data);
 }
