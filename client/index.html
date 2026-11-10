@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Antares: A Masmorra Escolar</title>
 <link rel="stylesheet" href="/fonts.css">
 <style>
@@ -11,6 +11,17 @@
   #game canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
   #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
              color: #ffd23f; font: 14px 'Press Start 2P', monospace; }
+  #game canvas { touch-action: none; }
+  .touch-controls { position: fixed; inset: 0; z-index: 20; pointer-events: none; user-select: none; -webkit-user-select: none; }
+  .touch-controls[hidden] { display: none; }
+  .touch-stick { position: absolute; bottom: max(20px, env(safe-area-inset-bottom)); width: clamp(88px, 23vmin, 140px); aspect-ratio: 1; border: 2px solid #d8d0ff80; border-radius: 50%; background: #17112588; pointer-events: auto; touch-action: none; display: grid; place-items: center; }
+  .touch-move { left: max(20px, env(safe-area-inset-left)); }
+  .touch-aim { right: max(20px, env(safe-area-inset-right)); border-color: #ffd23f99; }
+  .touch-knob { width: 42%; height: 42%; border-radius: 50%; background: #bcb0ee88; border: 2px solid #eee8ff99; pointer-events: none; }
+  .touch-aim .touch-knob { background: #ffd23f88; }
+  .touch-caption { position: absolute; top: -21px; color: #fff; font: 14px 'VT323', monospace; white-space: nowrap; text-shadow: 1px 1px #000; }
+  .touch-actions { position: absolute; right: max(16px, env(safe-area-inset-right)); bottom: calc(clamp(88px, 23vmin, 140px) + 55px + env(safe-area-inset-bottom)); display: flex; gap: 7px; }
+  .touch-actions button { min-width: 48px; min-height: 44px; padding: 6px; color: #fff; background: #211931cc; border: 1px solid #c3b4e8; border-radius: 10px; font: 16px 'VT323', monospace; pointer-events: auto; touch-action: none; }
 </style>
 </head>
 <body>
