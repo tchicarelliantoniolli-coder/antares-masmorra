@@ -54,7 +54,7 @@
       "combatLayouts": { "mesas_longas": 3, "centro": 1, "aberto": 1 },
       "props": { "pilha_papeis": 3, "caixa": 1 },
       "wallDecor": ["mural", "relogio", "lampada", "quadro_avisos", "extintor"],
-      "ambient": { "color": "#201c2e", "alpha": 0.26 },
+      "ambient": { "color": "#2c2416", "alpha": 0.24 },
       "particles": "papeis",
       "decals": ["tapete", "papeis", "manchas"]
     },

@@ -6,6 +6,7 @@ import { FloorDecals } from './decals.js';
 import { hexToInt, hash } from './pixel.js';
 import { AFFIXES } from '/shared/sim/inimigos/affixes.js';
 import { textStyle } from '../config.js';
+import { Atmosphere } from './Atmosphere.js';
 
 const DEPTH_GROUND_FX = 2;
 const DEPTH_TRAPS = 1;
@@ -31,6 +32,7 @@ export class WorldRenderer {
     this.groundFx = scene.add.graphics().setDepth(DEPTH_GROUND_FX);
     this.fx = scene.add.graphics().setDepth(DEPTH_FX);
     this.buildMap();
+    this.atmosphere = new Atmosphere(scene, world, data, this); // luz, feixes de sol, partículas e vinheta (refaz sozinha quando o andar muda)
   }
 
   buildMap() {
@@ -175,6 +177,7 @@ export class WorldRenderer {
     const seen = new Set();
     this.groundFx.clear();
     this.fx.clear();
+    this.atmosphere?.sync(dt, time);
 
     for (const a of w.areas) this.drawArea(a, time);
     for (const p of w.players) { seen.add(p.id); this.syncPlayer(p, time); }
