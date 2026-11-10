@@ -1,5 +1,7 @@
 // Registro dos dados do jogo (armas, personagens, inimigos) carregados dos arquivos JSON.
 // O navegador busca os JSON com fetch; o Node lê do disco (veja loadDataNode.js).
+import { THEMES } from './constants.js';
+import { LAYOUT_NAMES, SHAPE_NAMES, PROP_KINDS, DECOR_KINDS, DECAL_KINDS, PARTICLE_KINDS } from './salas/kinds.js';
 
 const PROJECTILE_DEFAULTS = {
   speed: 450, radius: 5, range: 500, count: 1, spread: 0, pierce: 0, bounce: 0,
@@ -136,6 +138,27 @@ export function normalizeWeapon(w) {
   return out;
 }
 
+/** Confere o themes.json: nomes que o gerador e o cliente conhecem (salas/kinds.js) e valores no intervalo. */
+export function validateThemes(themes) {
+  const erros = [];
+  const nomes = (obj) => Object.keys(obj || {});
+  for (const f of nomes(themes.shapes?.combat)) if (!SHAPE_NAMES.includes(f)) erros.push(`shapes.combat: forma desconhecida "${f}" (válidas: ${SHAPE_NAMES.join(', ')})`);
+  for (const [t, c] of Object.entries(themes.themes || {})) {
+    if (!THEMES.includes(t)) erros.push(`themes.${t}: tema desconhecido (válidos: ${THEMES.join(', ')})`);
+    for (const n of nomes(c.combatLayouts)) if (!LAYOUT_NAMES.includes(n)) erros.push(`${t}: layout desconhecido "${n}" (válidos: ${LAYOUT_NAMES.join(', ')})`);
+    for (const n of nomes(c.props)) if (!PROP_KINDS.includes(n)) erros.push(`${t}: objeto desconhecido "${n}" (válidos: ${PROP_KINDS.join(', ')})`);
+    for (const n of c.wallDecor || []) if (!DECOR_KINDS.includes(n)) erros.push(`${t}: decoração de parede desconhecida "${n}" (válidas: ${DECOR_KINDS.join(', ')})`);
+    for (const n of c.decals || []) if (!DECAL_KINDS.includes(n)) erros.push(`${t}: decalque desconhecido "${n}" (válidos: ${DECAL_KINDS.join(', ')})`);
+    if (c.particles != null && !PARTICLE_KINDS.includes(c.particles)) erros.push(`${t}: partícula desconhecida "${c.particles}" (válidas: ${PARTICLE_KINDS.join(', ')} ou null)`);
+    const a = c.ambient;
+    if (a && (typeof a.color !== 'string' || !/^#[0-9a-f]{6}$/i.test(a.color) || !(a.alpha >= 0 && a.alpha <= 0.4))) erros.push(`${t}: ambient precisa de color "#rrggbb" e alpha entre 0 e 0,4`);
+    for (const [grupo, pesos] of [['combatLayouts', c.combatLayouts], ['props', c.props]]) {
+      for (const [n, w] of Object.entries(pesos || {})) if (!(w > 0)) erros.push(`${t}: peso de ${grupo}.${n} precisa ser maior que 0`);
+    }
+  }
+  return erros;
+}
+
 export class GameData {
   constructor({ weapons, characters, enemies, themes = null }) {
     const errors = validateWeapons(weapons);
@@ -150,6 +173,10 @@ export class GameData {
     this.enemies = enemies.enemies;
     this.floors = enemies.floors;
     this.difficulty = enemies.difficulty || {};
+    if (themes) {
+      const erros = validateThemes(themes);
+      if (erros.length) throw new Error('Erros em themes.json:\n' + erros.join('\n'));
+    }
     this.themes = themes?.themes || {};   // cenários: layouts, objetos, decoração, luz (themes.json)
     this.roomShapes = themes?.shapes || {};
   }

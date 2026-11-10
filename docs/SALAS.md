@@ -126,3 +126,9 @@ O gerador usa o primeiro que passa na verificação de conectividade; `aberto` �
 - `RoomDirector.freeCells` só devolve `T.FLOOR` **alcançável a pé a partir das portas** (caixas e móveis bloqueiam: ninguém
   nasce num bolsão fechado) e, em salas com forma, tira os tiles colados nas paredes dos cortes.
   `isInsideRoom` continua valendo o retângulo envolvente: os cortes são parede e as portas ficam dentro dele.
+
+## Notas de equilíbrio (v0.4)
+
+- `connected()` aceita até 10% do chão inalcançável dentro da sala; os inimigos só nascem em chão alcançável, mas objetos e espinhos podem cair em bolsões inúteis.
+- Partículas não aparecem em sala de chefe (papéis e brasas se confundiriam com as balas do Xerox e da Samara).
+- Resultado dos bots depois das salas novas (30 partidas cada): dupla 2 jogadores 10% e 0% (sementes 1-30 e 31-60), experiente 1 jogador 13% e 2 jogadores 37%. Parte das partidas do robô termina "preso" (7 em 30 no experiente): o robô não persegue atiradores escondidos em braços das formas T/cruz nem o Caderno Preto invulnerável como um jogador faria. Se jogando ficar difícil demais, alivie os pesos dos layouts densos (carteiras, estantes, mesas_longas, bancadas) em `themes.json`.

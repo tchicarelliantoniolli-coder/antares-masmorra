@@ -664,7 +664,8 @@ export class Atmosphere {
   atualizarParticulas(dt) {
     const room = this.roomId >= 0 ? this.world.rooms[this.roomId] : null;
     const tema = room && this.temas ? this.temas[room.theme] : null;
-    const kind = tema && PARTICLE_KINDS.includes(tema.particles) ? tema.particles : null;
+    // sala de chefe fica sem partículas: papéis e brasas se confundem com as balas do Xerox e da Samara
+    const kind = tema && room.type !== 'boss' && PARTICLE_KINDS.includes(tema.particles) ? tema.particles : null;
 
     // sala trocou: as partículas antigas somem rápido
     if (kind !== this.particleKind) {

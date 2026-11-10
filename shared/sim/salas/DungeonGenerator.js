@@ -241,7 +241,7 @@ function furnishCombat(rng, map, r, floorDef, themeCfg) {
     applyLayout(name, r, put, rng);
     scatterProps(rng, r, put, ok, floorDef, themeCfg?.props);
     placeTraps(rng, map, r, ok, floorDef);
-    if (connected(map, r) && floorCount(map, r) >= Math.max(70, chaoInicial * 0.6)) {
+    if (connected(map, r) && floorCount(map, r) >= Math.max(70, chaoInicial * MIN_CHAO)) {
       r.layout = name;
       return;
     }
@@ -249,6 +249,9 @@ function furnishCombat(rng, map, r, floorDef, themeCfg) {
   }
   r.layout = 'aberto';
 }
+
+/** Parte mínima do chão da sala que precisa sobrar livre depois da mobília (mais alto = salas mais abertas, mais fácil de navegar). */
+const MIN_CHAO = 0.72;
 
 function floorCount(map, r) {
   let n = 0;

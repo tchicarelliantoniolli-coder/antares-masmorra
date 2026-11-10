@@ -321,7 +321,7 @@ export function furnishSpecial(rng, map, r, floorDef) {
       });
       break;
     case 'statue':
-      // pedestais em anel em volta da estátua; o centro e os eixos das portas ficam livres
+      // pedestais em anel em volta da estátua; o centro fica livre (os pedestais ficam a 3 tiles dele)
       for (const [dx, dy] of [[3, 0], [-3, 0], [0, 3], [0, -3], [2, 2], [-2, 2], [2, -2], [-2, -2]]) put(dx, dy);
       break;
     case 'shop':

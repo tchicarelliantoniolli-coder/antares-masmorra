@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateWeapons } from '../shared/sim/data.js';
+import { validateWeapons, validateThemes } from '../shared/sim/data.js';
 import { readJson } from '../shared/sim/loadDataNode.js';
 import { data } from './helpers.js';
 import { RNG } from '../shared/sim/rng.js';
@@ -130,4 +130,15 @@ test('themes.json só usa nomes que existem em salas/kinds.js', () => {
     for (const n of c.decals) assert.ok(DECAL_KINDS.includes(n), `${t}: decalque desconhecido ${n}`);
     assert.ok(c.particles === null || PARTICLE_KINDS.includes(c.particles), `${t}: partícula desconhecida ${c.particles}`);
   }
+});
+
+test('themes.json com nome inválido é recusado ao carregar, com mensagem em português', () => {
+  const ruim = JSON.parse(JSON.stringify(readJson('themes.json')));
+  ruim.themes.sala_aula.combatLayouts.layout_que_nao_existe = 1;
+  ruim.themes.patio.props.tijolo_voador = 2;
+  ruim.themes.quadra.ambient.alpha = 0.9;
+  const erros = validateThemes(ruim);
+  assert.equal(erros.length, 3, erros.join('\n'));
+  assert.match(erros[0], /layout desconhecido "layout_que_nao_existe"/);
+  assert.deepEqual(validateThemes(readJson('themes.json')), []);
 });
