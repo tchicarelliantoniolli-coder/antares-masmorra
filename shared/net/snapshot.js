@@ -14,7 +14,7 @@ export function serializeMap(world) {
     map: world.map.serialize(),
     rooms: world.rooms.map((r) => ({
       id: r.id, gx: r.gx, gy: r.gy, type: r.type, theme: r.theme, w: r.w, h: r.h, x0: r.x0, y0: r.y0,
-      cx: r.cx, cy: r.cy, links: r.links, doors: r.doors, layout: r.layout
+      cx: r.cx, cy: r.cy, links: r.links, doors: r.doors, layout: r.layout, shape: r.shape
     })),
     startRoomId: world.startRoomId,
     bossRoomId: world.bossRoomId

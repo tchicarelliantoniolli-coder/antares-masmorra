@@ -38,7 +38,11 @@ function setupShop(world, r) {
   });
 }
 
-/** Ponto está completamente dentro da sala (além da linha das portas)? */
+/**
+ * Ponto está completamente dentro da sala (além da linha das portas)?
+ * Vale o retângulo envolvente também nas salas com forma: os cortes (L, cruz, T) são parede, onde ninguém
+ * anda, e as portas ficam sempre no meio de cada lado, dentro do retângulo.
+ */
 export function isInsideRoom(r, x, y, margin = 14) {
   return x > (r.x0 + 1) * TILE + margin && x < (r.x0 + r.w - 1) * TILE - margin &&
          y > (r.y0 + 1) * TILE + margin && y < (r.y0 + r.h - 1) * TILE - margin;
@@ -161,14 +165,29 @@ export function spawnWave(world, room, index) {
   world.emit('wave_start', { roomId: room.id, wave: index + 1, total: room.waves.length });
 }
 
+/**
+ * Chão livre da sala (só T.FLOOR), a `margin` tiles da borda do retângulo. Em salas com forma (L, cruz, T, cantos
+ * cortados) ainda tira os tiles colados nas paredes dos cortes, para ninguém nascer entalado num canto da forma.
+ */
 export function freeCells(world, room, margin = 1) {
+  const map = world.map;
+  const recortada = !!room.shape && room.shape !== 'retangulo';
   const out = [];
+  const todos = [];
   for (let y = room.y0 + 1 + margin; y < room.y0 + room.h - 1 - margin; y++) {
     for (let x = room.x0 + 1 + margin; x < room.x0 + room.w - 1 - margin; x++) {
-      if (world.map.get(x, y) === T.FLOOR) out.push([x, y]);
+      if (map.get(x, y) !== T.FLOOR) continue;
+      todos.push([x, y]);
+      if (recortada && tocaParede(map, x, y)) continue;
+      out.push([x, y]);
     }
   }
-  return out;
+  return out.length ? out : todos;
+}
+
+function tocaParede(map, x, y) {
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (map.get(x + dx, y + dy) === T.WALL) return true;
+  return false;
 }
 
 function clearRoom(world, room) {

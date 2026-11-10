@@ -3,8 +3,10 @@ import { dropEnergy, dropCoins } from './Pickups.js';
 import { explode, hurtPlayer, damageEnemy } from '../combat.js';
 
 /**
- * Caixas destrutíveis e barris explosivos (tiles T.PROP) + espinhos no chão.
- * Projéteis (dos dois times), golpes corpo a corpo e explosões danificam as caixas.
+ * Objetos destrutíveis e barris explosivos (tiles T.PROP) + espinhos no chão.
+ * Os objetos vêm do tema da sala (themes.json -> props: mochila, pilha_livros, vaso...): todos agem como a caixa
+ * (4 de vida, podem soltar energia/moedas); só o 'barril' explode. Quem desenha cada um é o cliente (prop_<kind>).
+ * Projéteis (dos dois times), golpes corpo a corpo e explosões danificam os objetos.
  */
 
 export function propAt(world, px, py) {

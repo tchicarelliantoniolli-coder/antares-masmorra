@@ -60,7 +60,7 @@ export class World {
   setupFloor(n) {
     this.floorNum = n;
     this.floorDef = this.data.floor(n);
-    const { map, rooms, startRoomId, bossRoomId } = generateFloor({ rng: this.rng, floorDef: this.floorDef, roomCount: this.roomCountOverride });
+    const { map, rooms, startRoomId, bossRoomId } = generateFloor({ rng: this.rng, floorDef: this.floorDef, roomCount: this.roomCountOverride, data: this.data });
     this.map = map;
     this.rooms = rooms;
     this.startRoomId = startRoomId;
