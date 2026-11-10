@@ -67,6 +67,7 @@ export class HudScene extends Phaser.Scene {
     if (gs.mode === 'online') {
       this.netText = this.add.text(8, GAME_H - 20, '', textStyle(16, '#8a83ad'));
     }
+    this.autoFireText = this.add.text(8, GAME_H - 42, '', textStyle(16, '#ffd23f', { stroke: '#000', strokeThickness: 3 }));
     this.ready = true;
   }
 
@@ -192,6 +193,7 @@ export class HudScene extends Phaser.Scene {
 
   update(time, delta) {
     if (!this.ready) return;
+    this.autoFireText.setText(this.gameScene.controllers.some(({ ctrl }) => ctrl.autoFire) ? 'TIRO AUTOMÁTICO: LIGADO • Enter para desligar' : '');
     const gs = this.gameScene;
     const world = gs.world;
     const data = this.data_;

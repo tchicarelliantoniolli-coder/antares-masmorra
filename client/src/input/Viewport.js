@@ -39,6 +39,12 @@ export function setupViewport(doc = document, win = window) {
   });
   for (const name of ['fullscreenchange', 'webkitfullscreenchange']) doc.addEventListener(name, sync);
   const prevent = e => { if (e.cancelable) e.preventDefault(); };
+  // Bloqueia seleção e menu de toque prolongado sem cancelar cliques/toques.
+  // Campos de texto continuam editáveis e selecionáveis.
+  const editable = target => !!target?.closest?.('input, textarea, [contenteditable]:not([contenteditable="false"])');
+  for (const name of ['selectstart', 'contextmenu', 'dragstart']) {
+    doc.addEventListener(name, e => { if (!editable(e.target)) prevent(e); });
+  }
   // Safari envia eventos próprios para a pinça, mesmo quando ignora a meta viewport.
   for (const name of ['gesturestart', 'gesturechange', 'gestureend']) {
     doc.addEventListener(name, prevent, { passive: false });

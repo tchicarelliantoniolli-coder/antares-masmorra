@@ -1,4 +1,4 @@
-import { DEFAULT_AIM_DIST } from '/shared/sim/constants.js';
+import { DEFAULT_AIM_DIST } from '../../../shared/sim/constants.js';
 import { autoAim } from './aim.js';
 
 /**
@@ -30,10 +30,10 @@ export class KeyTracker {
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
       if (!this.down.has(e.code)) this.pressed.add(e.code);
       this.down.add(e.code);
-      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault();
+      if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', 'NumpadEnter'].includes(e.code)) e.preventDefault();
     };
     this.onUp = (e) => this.down.delete(e.code);
-    this.onBlur = () => this.down.clear();
+    this.onBlur = () => { this.down.clear(); this.pressed.clear(); };
     window.addEventListener('keydown', this.onDown);
     window.addEventListener('keyup', this.onUp);
     window.addEventListener('blur', this.onBlur);
@@ -64,6 +64,7 @@ export class Controller {
     this.prevPad = {};
     this.mode = device.startsWith('pad') ? 'pad' : device === 'kb2' ? 'keys' : 'mouse';
     this.rightWas = false;
+    this.autoFire = false;
     if (device === 'auto' || device === 'kbm') {
       scene.input.on('pointermove', () => { this.mode = 'mouse'; });
       scene.input.on('pointerdown', () => { this.mode = 'mouse'; });
@@ -169,6 +170,10 @@ export class Controller {
       interact = t.consume('interact');
       swap = t.consume('swap');
     }
+    // Enter alterna o disparo contínuo do jogador principal sem alterar sua mira.
+    // No segundo teclado, Enter continua sendo o botão de tiro enquanto pressionado.
+    if (usesLeft && (k.wasPressed('Enter') || k.wasPressed('NumpadEnter'))) this.autoFire = !this.autoFire;
+    fire = fire || this.autoFire;
     this.lastAim = aim;
     if (aimDist === null) aimDist = autoDist ?? DEFAULT_AIM_DIST;
     return { moveX: mx, moveY: my, aim, aimDist, fire, skill, interact, swap };

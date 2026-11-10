@@ -61,7 +61,7 @@ sem acesso: a primeira visita demora cerca de 1 minuto e as salas abertas se per
 |---|---|---|---|
 | Mover | W A S D | Setas | Analógico esquerdo |
 | Mirar | Mouse | Automática | Analógico direito (ou automática) |
-| Atirar | Botão esquerdo | Enter | RT / RB |
+| Atirar | Botão esquerdo; Enter liga/desliga tiro automático | Enter | RT / RB |
 | Habilidade | Espaço (ou botão direito) | Shift direito | LT / LB |
 | Interagir / pegar / comprar | E | `.` (ponto) | A |
 | Trocar arma | Q | `,` (vírgula) | Y |

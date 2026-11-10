@@ -66,3 +66,17 @@ test('bloqueia pinça e toque duplo sem bloquear movimento de um dedo', () => {
   assert.equal(send('touchend', tap), false);
   assert.equal(send('touchend', tap), true);
 });
+
+test('texto do jogo não seleciona nem abre menu; cliques e campos de texto continuam livres', () => {
+  const { doc, button } = fixture();
+  const selection = new Event('selectstart', { cancelable: true });
+  doc.dispatchEvent(selection);
+  assert.equal(selection.defaultPrevented, true);
+  const menu = new Event('contextmenu', { cancelable: true });
+  doc.dispatchEvent(menu); assert.equal(menu.defaultPrevented, true);
+  const click = new Event('click', { cancelable: true });
+  doc.dispatchEvent(click); assert.equal(click.defaultPrevented, false);
+  doc.closest = () => ({});
+  const editableSelection = new Event('selectstart', { cancelable: true });
+  doc.dispatchEvent(editableSelection); assert.equal(editableSelection.defaultPrevented, false);
+});

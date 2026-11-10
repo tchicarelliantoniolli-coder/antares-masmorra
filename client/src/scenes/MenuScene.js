@@ -89,7 +89,7 @@ export class MenuScene extends Phaser.Scene {
     const lines = [
       ['Mover', 'W A S D  (ou setas)', 'Analógico esquerdo'],
       ['Mirar', 'Mouse', 'Analógico direito (ou auto)'],
-      ['Atirar', 'Botão esquerdo do mouse', 'RT / RB'],
+      ['Atirar', 'Mouse / Enter: auto liga/desliga', 'RT / RB'],
       ['Habilidade', 'Espaço (ou botão direito)', 'LT / LB'],
       ['Interagir / pegar', 'E', 'A'],
       ['Trocar arma', 'Q', 'Y'],
