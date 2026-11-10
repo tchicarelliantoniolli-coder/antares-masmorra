@@ -27,10 +27,10 @@ function arena(seed) {
   const p = w.players[0];
   p.mods.critBonus = 0; // sem o passivo da Ana Cláudia: crítico só da arma
   const room = w.rooms.find((r) => r.type === 'combat');
-  for (let ty = room.y0; ty < room.y0 + room.h; ty++) {
-    for (let tx = room.x0; tx < room.x0 + room.w; tx++) {
-      const t = w.map.get(tx, ty);
-      if (t === T.OBSTACLE || t === T.PROP) { w.map.set(tx, ty, T.FLOOR); w.map.props.delete(w.map.idx(tx, ty)); }
+  // sala de teste vazia: tira obstáculos, objetos e as paredes internas da forma/layout sorteados (só a borda fica)
+  for (let ty = room.y0 + 1; ty < room.y0 + room.h - 1; ty++) {
+    for (let tx = room.x0 + 1; tx < room.x0 + room.w - 1; tx++) {
+      if (w.map.get(tx, ty) !== T.FLOOR) { w.map.set(tx, ty, T.FLOOR); w.map.props.delete(w.map.idx(tx, ty)); }
     }
   }
   w.map.traps = [];
