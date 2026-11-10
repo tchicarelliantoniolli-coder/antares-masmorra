@@ -1,3 +1,5 @@
+import { DEFAULT_AIM_DIST } from '/shared/sim/constants.js';
+import { TouchControls } from '../input/TouchControls.js';
 import { GAME_W, GAME_H } from '../config.js';
 import { LocalSession } from '../net/LocalSession.js';
 import { WorldRenderer } from '../render/WorldRenderer.js';
@@ -35,8 +37,9 @@ export class GameScene extends Phaser.Scene {
     this.world = this.session.world;
     this.localIds = this.localDevices.map((d) => d.id);
     this.localId = this.localIds[0];
+    this.touch = navigator.maxTouchPoints > 0 ? new TouchControls(() => this.openMenu()) : null;
     this.keys = new KeyTracker();
-    this.controllers = this.localDevices.map((d) => ({ id: d.id, ctrl: new Controller(this, this.keys, d.device) }));
+    this.controllers = this.localDevices.map((d, i) => ({ id: d.id, ctrl: new Controller(this, this.keys, d.device, i === 0 ? this.touch : null) }));
 
     this.renderer = new WorldRenderer(this, this.world, data, this.localIds);
     this.renderer.builtFloor = this.world.floorNum;
@@ -66,14 +69,16 @@ export class GameScene extends Phaser.Scene {
       this.scene.stop('Hud');
       this.renderer.destroy();
       this.keys.destroy();
+      this.touch?.destroy();
       if (this.mode === 'online') this.session.destroy();
     });
-    this.events.on('resume', () => { this.input.setDefaultCursor('none'); this.menuOpen = false; this.keys.endFrame(); });
+    this.events.on('resume', () => { this.input.setDefaultCursor('none'); this.menuOpen = false; this.touch?.setEnabled(true); this.keys.endFrame(); });
   }
 
   openMenu() {
     if (this.ended || this.menuOpen) return;
     this.menuOpen = true;
+    this.touch?.setEnabled(false);
     this.input.setDefaultCursor('default');
     if (this.mode === 'online') {
       // no online a partida não para: o menu abre por cima
@@ -86,6 +91,7 @@ export class GameScene extends Phaser.Scene {
 
   update(time, delta) {
     const w = this.world;
+    this.touch?.setEnabled(!this.menuOpen && !this.ended);
     for (const { ctrl } of this.controllers) if (ctrl.pausePressed()) { this.keys.endFrame(); return this.openMenu(); }
 
     for (const { id, ctrl } of this.controllers) {
@@ -112,6 +118,13 @@ export class GameScene extends Phaser.Scene {
       const wp = this.cameras.main.getWorldPoint(ptr.x, ptr.y);
       this.crosshair.setVisible(true).setPosition(wp.x, wp.y);
       this.drawAimMarker(w.getPlayer(mouseCtrl.id), wp);
+    } else if (this.touch?.enabled) {
+      const p = w.getPlayer(this.localId);
+      if (p && !p.dead && !p.downed) {
+        const wp = { x: p.x + Math.cos(p.aim) * DEFAULT_AIM_DIST, y: p.y - 4 + Math.sin(p.aim) * DEFAULT_AIM_DIST };
+        this.crosshair.setVisible(true).setPosition(wp.x, wp.y);
+        this.drawAimMarker(p, wp);
+      } else { this.crosshair.setVisible(false); this.aimMarker.clear(); }
     } else { this.crosshair.setVisible(false); this.aimMarker.clear(); }
 
     this.checkEnd();
@@ -174,6 +187,7 @@ export class GameScene extends Phaser.Scene {
     }
     if (!result) return;
     this.ended = true;
+    this.touch?.setEnabled(false);
     this.scene.stop('Pause');
     const cam = this.cameras.main;
     cam.fadeOut(500);

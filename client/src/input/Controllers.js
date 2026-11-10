@@ -55,7 +55,8 @@ function getPads(scene) {
 }
 
 export class Controller {
-  constructor(scene, keys, device) {
+  constructor(scene, keys, device, touch = null) {
+    this.touch = touch;
     this.scene = scene;
     this.keys = keys;
     this.device = device;
@@ -157,6 +158,17 @@ export class Controller {
     }
     if (this.mode === 'keys') this.autoAimFor(world, player, mx, my, (a, dist) => { aim = a; if (dist !== undefined) autoDist = dist; });
 
+    if (this.touch?.enabled) {
+      const t = this.touch;
+      mx = t.move.x; my = t.move.y;
+      this.mode = 'touch';
+      fire = Math.hypot(t.aim.x, t.aim.y) > 0;
+      aim = fire ? Math.atan2(t.aim.y, t.aim.x) : this.lastAim;
+      aimDist = DEFAULT_AIM_DIST;
+      skill = t.consume('skill');
+      interact = t.consume('interact');
+      swap = t.consume('swap');
+    }
     this.lastAim = aim;
     if (aimDist === null) aimDist = autoDist ?? DEFAULT_AIM_DIST;
     return { moveX: mx, moveY: my, aim, aimDist, fire, skill, interact, swap };
