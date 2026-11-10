@@ -27,7 +27,7 @@ function floodFrom(map, sx, sy) {
 test('andares têm 5 a 8 salas além da entrada e do chefe, com baú, loja e tudo alcançável', () => {
   for (let seed = 1; seed <= 300; seed++) {
     const floorDef = data.floor((seed % 3) + 1);
-    const { map, rooms, startRoomId, bossRoomId } = generateFloor({ rng: new RNG(seed), floorDef });
+    const { map, rooms, startRoomId, bossRoomId } = generateFloor({ rng: new RNG(seed), floorDef, data });
     assert.ok(rooms.length >= 7 && rooms.length <= 10, `seed ${seed}: ${rooms.length} salas`);
     assert.equal(rooms.filter((r) => r.type === 'start').length, 1);
     assert.equal(rooms.filter((r) => r.type === 'boss').length, 1);
@@ -49,7 +49,7 @@ test('andares têm 5 a 8 salas além da entrada e do chefe, com baú, loja e tud
 });
 
 test('salas de combate têm ondas de inimigos válidos', () => {
-  const { rooms } = generateFloor({ rng: new RNG(7), floorDef: data.floor(1) });
+  const { rooms } = generateFloor({ rng: new RNG(7), floorDef: data.floor(1), data });
   for (const r of rooms.filter((x) => x.type === 'combat')) {
     assert.ok(r.waves.length >= 1);
     for (const wave of r.waves) for (const type of wave) assert.ok(data.enemies[type], type);
@@ -57,8 +57,8 @@ test('salas de combate têm ondas de inimigos válidos', () => {
 });
 
 test('mesma semente gera o mesmo andar', () => {
-  const a = generateFloor({ rng: new RNG(99), floorDef: data.floor(1) });
-  const b = generateFloor({ rng: new RNG(99), floorDef: data.floor(1) });
+  const a = generateFloor({ rng: new RNG(99), floorDef: data.floor(1), data });
+  const b = generateFloor({ rng: new RNG(99), floorDef: data.floor(1), data });
   assert.deepEqual([...a.map.tiles], [...b.map.tiles]);
 });
 
@@ -66,7 +66,7 @@ test('salas de combate têm obstáculos variados (paredes, caixas, barris) sem b
   const layouts = new Set();
   let props = 0, barrels = 0, traps = 0, walls = 0;
   for (let seed = 1; seed <= 60; seed++) {
-    const { map, rooms } = generateFloor({ rng: new RNG(seed), floorDef: data.floor(3) });
+    const { map, rooms } = generateFloor({ rng: new RNG(seed), floorDef: data.floor(3), data });
     traps += map.traps.length;
     for (const p of map.props.values()) { props++; if (p.kind === 'barril') barrels++; }
     for (const r of rooms.filter((x) => x.type === 'combat')) {
