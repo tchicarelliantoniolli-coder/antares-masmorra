@@ -174,6 +174,9 @@ client/src/
   net/                  LocalSession (solo/co-op), OnlineClient e OnlineSession (interpolação + previsão)
 test/                   testes (node --test)
 docs/ARMAS.md           como criar armas novas pelo JSON
+docs/SALAS.md           formas, layouts e cenários (themes.json)
+docs/BALANCO.md         calibração de dificuldade por robô
+HANDOFF.md              estado do projeto, o que foi feito e o que falta (para quem continuar)
 ```
 
 ## Personalizando
