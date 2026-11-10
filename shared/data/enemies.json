@@ -117,6 +117,7 @@
     {
       "floor": 1,
       "name": "Salas de Aula",
+      "ambient": { "_doc": "Luz do andar, combinada por cima do ambient do tema da sala (themes.json). color escuro e alpha pequeno; o total (tema + andar) nunca passa de 0,35. themeMul (opcional) multiplica o alpha do tema neste andar.", "color": "#5a3410", "alpha": 0.07, "themeMul": 0.9 },
       "rooms": [5, 7],
       "themes": ["sala_aula", "patio", "quadra", "biblioteca"],
       "enemyPool": { "caderno_zumbi": 3, "prova_voadora": 3, "estojo": 2, "lousa": 1, "mochila": 1, "borracha": 2, "grampeador": 2 },
@@ -135,6 +136,7 @@
     {
       "floor": 2,
       "name": "Laboratórios e Biblioteca",
+      "ambient": { "color": "#0e3a30", "alpha": 0.1, "themeMul": 1 },
       "rooms": [6, 8],
       "themes": ["laboratorio", "biblioteca", "quadra", "sala_aula"],
       "enemyPool": { "caderno_zumbi": 2, "prova_voadora": 3, "estojo": 2, "lousa": 2, "sinal_recreio": 2, "mochila": 2, "borracha": 2, "grampeador": 2, "regua_mira": 2, "apontador": 2, "monitor": 1 },
@@ -153,6 +155,7 @@
     {
       "floor": 3,
       "name": "Corredores da Coordenação",
+      "ambient": { "color": "#4a0c18", "alpha": 0.14, "themeMul": 1.05 },
       "rooms": [6, 8],
       "themes": ["sala_aula", "laboratorio", "quadra", "biblioteca", "patio"],
       "enemyPool": { "caderno_zumbi": 2, "prova_voadora": 3, "estojo": 3, "lousa": 2, "sinal_recreio": 3, "mochila": 2, "borracha": 2, "grampeador": 2, "regua_mira": 2, "apontador": 2, "monitor": 1, "gremio": 1, "chamada": 2 },
