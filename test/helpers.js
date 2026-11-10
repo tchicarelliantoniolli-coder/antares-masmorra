@@ -49,19 +49,28 @@ export function withWeapon(w, def, p = w.players[0]) {
   return data.weapon(full.id);
 }
 
-/** Mundo de teste com o jogador no centro de uma sala de combate vazia (sem ondas, sem obstáculos). */
-export function arena() {
-  const w = makeWorld();
-  const p = w.players[0];
-  const room = w.rooms.find((r) => r.type === 'combat');
+/** Deixa a sala só com chão livre: tira obstáculos, caixas, espinhos e as paredes internas (cortes da forma e paredes dos layouts). */
+export function limparSala(w, room) {
   const map = w.map;
   for (let ty = room.y0; ty < room.y0 + room.h; ty++) {
     for (let tx = room.x0; tx < room.x0 + room.w; tx++) {
       const t = map.get(tx, ty);
-      if (t === T.OBSTACLE || t === T.PROP) { map.set(tx, ty, T.FLOOR); map.props.delete(map.idx(tx, ty)); }
+      const interna = tx > room.x0 && ty > room.y0 && tx < room.x0 + room.w - 1 && ty < room.y0 + room.h - 1;
+      if (t === T.OBSTACLE || t === T.PROP || (t === T.WALL && interna)) { map.set(tx, ty, T.FLOOR); map.props.delete(map.idx(tx, ty)); }
     }
   }
   map.traps = map.traps.filter((tr) => !(tr.tx >= room.x0 && tr.tx < room.x0 + room.w && tr.ty >= room.y0 && tr.ty < room.y0 + room.h));
+}
+
+/**
+ * Mundo de teste com o jogador no centro de uma sala de combate vazia (sem ondas, sem obstáculos).
+ * A planta e a forma da sala são sorteadas pela semente, então a sala é limpa por inteiro (limparSala).
+ */
+export function arena() {
+  const w = makeWorld();
+  const p = w.players[0];
+  const room = w.rooms.find((r) => r.type === 'combat');
+  limparSala(w, room);
   p.x = (room.cx + 0.5) * TILE;
   p.y = (room.cy + 0.5) * TILE;
   room.state = 'cleared';

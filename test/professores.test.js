@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { arena, dummy, run, makeWorld, putInRoom } from './helpers.js';
+import { arena, dummy, run, makeWorld, putInRoom, limparSala } from './helpers.js';
 import { SKILLS } from '../shared/sim/personagens/skills.js';
 import { createEnemy, nearestTarget } from '../shared/sim/inimigos/Enemy.js';
 import { createAlly } from '../shared/sim/personagens/Allies.js';
@@ -87,6 +87,7 @@ function arenaCom(characterId) {
   const w = makeWorld({ players: [{ id: 'p1', characterId }] });
   const p = w.players[0];
   const room = w.rooms.find((r) => r.type === 'combat');
+  limparSala(w, room);   // aliados andam em linha reta: a sala tem que estar livre de paredes e móveis
   putInRoom(w, p, room);
   room.state = 'cleared';
   p.energy = p.maxEnergy = 9999;

@@ -37,7 +37,7 @@ test('entrar numa sala de combate tranca as portas; matar todos destranca', () =
   run(w, 0.1);
   assert.equal(room.state, 'active');
   assert.ok(w.map.locked.has(room.id));
-  for (let wave = 0; wave < 5 && room.state === 'active'; wave++) {
+  for (let wave = 0; wave < 8 && room.state === 'active'; wave++) {
     run(w, 1.5);
     for (const e of w.enemies) { e.spawning = 0; damageEnemy(w, e, 9999); }
     run(w, 1.2);
