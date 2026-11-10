@@ -108,6 +108,7 @@ test('validador exige deploy.max inteiro >= 1', () => {
 
 // ---------------------------------------------------------------- cenários (themes.json)
 import { THEMES } from '../shared/sim/constants.js';
+import { LAYOUT_NAMES, SHAPE_NAMES, PROP_KINDS, DECOR_KINDS, PARTICLE_KINDS, DECAL_KINDS } from '../shared/sim/salas/kinds.js';
 
 test('themes.json tem um cenário para cada tema do jogo, com os campos que o gerador e o cliente usam', () => {
   for (const t of THEMES) {
@@ -118,4 +119,15 @@ test('themes.json tem um cenário para cada tema do jogo, com os campos que o ge
     assert.ok(c.ambient.alpha >= 0 && c.ambient.alpha <= 0.4, `${t}: ambient.alpha fora de 0–0,4`);
   }
   assert.ok(Object.keys(data.roomShapes.combat).length >= 4, 'formas de sala de combate');
+});
+
+test('themes.json só usa nomes que existem em salas/kinds.js', () => {
+  for (const f of Object.keys(data.roomShapes.combat)) assert.ok(SHAPE_NAMES.includes(f), `forma desconhecida: ${f}`);
+  for (const [t, c] of Object.entries(data.themes)) {
+    for (const n of Object.keys(c.combatLayouts)) assert.ok(LAYOUT_NAMES.includes(n), `${t}: layout desconhecido ${n}`);
+    for (const n of Object.keys(c.props)) assert.ok(PROP_KINDS.includes(n), `${t}: objeto desconhecido ${n}`);
+    for (const n of c.wallDecor) assert.ok(DECOR_KINDS.includes(n), `${t}: decoração desconhecida ${n}`);
+    for (const n of c.decals) assert.ok(DECAL_KINDS.includes(n), `${t}: decalque desconhecido ${n}`);
+    assert.ok(c.particles === null || PARTICLE_KINDS.includes(c.particles), `${t}: partícula desconhecida ${c.particles}`);
+  }
 });
