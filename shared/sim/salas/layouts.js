@@ -59,6 +59,25 @@ export function layoutOrder(rng, pesos) {
   return [...ordem, ...geometricos, ...outros];
 }
 
+/**
+ * Pôr um bloco sólido em (x, y) criaria uma "pinça": dois blocos que só se tocam pela quina, com chão nos outros
+ * dois cantos de um quadrado 2x2? Inimigos andam em linha reta e travam eixo por eixo, então ficam presos nessas
+ * quinas olhando para um alvo que está na diagonal (e o jogador não passa pela fresta). Os layouts evitam.
+ */
+export function formariaPinca(map, x, y) {
+  const solido = (a, b) => {
+    if (a === x && b === y) return true;
+    const t = map.get(a, b);
+    return t !== T.FLOOR && t !== T.DOOR;
+  };
+  for (const [ox, oy] of [[0, 0], [-1, 0], [0, -1], [-1, -1]]) {
+    const ax = x + ox, ay = y + oy;
+    const A = solido(ax, ay), B = solido(ax + 1, ay), C = solido(ax, ay + 1), D = solido(ax + 1, ay + 1);
+    if ((A && D && !B && !C) || (B && C && !A && !D)) return true;
+  }
+  return false;
+}
+
 // ------------------------------------------------------------------ contexto de desenho
 
 function makeCtx(r, put, rng) {
@@ -269,7 +288,7 @@ export function furnishSpecial(rng, map, r, floorDef) {
   const put = (dx, dy, tipo = T.OBSTACLE) => {
     const x = r.cx + dx, y = r.cy + dy;
     if (x <= r.x0 || x >= r.x0 + r.w - 1 || y <= r.y0 || y >= r.y0 + r.h - 1) return false;
-    if (map.get(x, y) !== T.FLOOR || reservado.has(x + ',' + y)) return false;
+    if (map.get(x, y) !== T.FLOOR || reservado.has(x + ',' + y) || formariaPinca(map, x, y)) return false;
     map.set(x, y, tipo);
     return true;
   };
@@ -311,14 +330,14 @@ export function furnishSpecial(rng, map, r, floorDef) {
       cantos((sx, sy) => box(sx * hw, sy * (hh - 1), sx * hw, sy * hh));
       break;
     case 'boss':
-      // arena: bancos/arquibancadas só junto às paredes laterais; o centro (e o portal) ficam livres
+      // arena livre: só os pilares do andar (floors[n].bossPillars). Bancos junto às paredes foram testados e
+      // encurralam o jogador nos cantos (a taxa de vitória contra a Samara caiu de 75% para 12-40% com o bot).
       if (floorDef?.bossPillars) {
         const a = 7, b = 5;
         cantos((sx, sy) => {
           for (const [dx, dy] of [[a, b], [a + 1, b], [a, b + 1], [a + 1, b + 1]]) put(sx * dx, sy * dy, T.WALL);
         });
       }
-      cantos((sx, sy) => box(sx * hw, sy * 5, sx * hw, sy * 8));
       break;
     default:
       break;

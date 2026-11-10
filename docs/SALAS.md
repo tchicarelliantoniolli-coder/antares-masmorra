@@ -89,7 +89,7 @@ O gerador usa o primeiro que passa na verificação de conectividade; `aberto` �
 | Enfermaria | Macas encostadas nas paredes, nos 4 cantos. | A estação de cura no centro e as portas. |
 | Estátua | Anel de pedestais em volta da estátua (raio 3). | O centro e as aberturas do anel. |
 | Cantina | Estantes de mercadorias nas laterais (o balcão e a tia da cantina vêm do `RoomDirector`). | A faixa onde ficam os 4 itens à venda. |
-| Chefe | Arquibancadas só junto às paredes laterais (+ os pilares do andar, se `bossPillars`). | O centro e o portal (`cy + 2`). |
+| Chefe | Arena livre: só os pilares do andar (`bossPillars`). Bancos junto às paredes foram testados e encurralam o jogador nos cantos (contra a Samara a taxa de vitória do bot caiu de ~75% para 12-40%). | Tudo, inclusive o portal (`cy + 2`). |
 
 ## Como criar uma sala nova (um layout novo)
 

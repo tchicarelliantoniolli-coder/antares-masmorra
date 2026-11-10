@@ -2,7 +2,7 @@ import { CELL, GRID_W, GRID_H, T, THEME_INDEX, CORRIDOR_HALF } from '../constant
 import { TileMap } from './TileMap.js';
 import { DECOR_WIDTH } from './kinds.js';
 import { pickShape, applyShape } from './formas.js';
-import { applyLayout, layoutOrder, furnishSpecial, reservedSet, COMBAT_LAYOUTS } from './layouts.js';
+import { applyLayout, layoutOrder, furnishSpecial, reservedSet, formariaPinca, COMBAT_LAYOUTS } from './layouts.js';
 
 /**
  * Gerador de andares no estilo "Soul Knight":
@@ -233,7 +233,7 @@ function furnishCombat(rng, map, r, floorDef, themeCfg) {
   for (const name of order) {
     const ok = (x, y) => x > ix0 && x < ix1 && y > iy0 && y < iy1 && map.get(x, y) === T.FLOOR && !reserved.has(x + ',' + y);
     const put = (x, y, type, extra) => {
-      if (!ok(x, y)) return false;
+      if (!ok(x, y) || formariaPinca(map, x, y)) return false;   // sem pinças: inimigo não trava na quina
       map.set(x, y, type);
       if (type === T.PROP) map.props.set(map.idx(x, y), { ...extra });
       return true;

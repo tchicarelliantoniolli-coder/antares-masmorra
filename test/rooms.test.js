@@ -39,6 +39,17 @@ function reach(map, r, sx, sy) {
   return seen;
 }
 
+/** Quantas "pinças" (dois blocos que só se tocam pela quina, com chão nos outros dois cantos) existem na sala. */
+function pincas(map, r) {
+  const solido = (x, y) => { const t = map.get(x, y); return t !== T.FLOOR && t !== T.DOOR; };
+  let n = 0;
+  for (let y = r.y0; y < r.y0 + r.h - 1; y++) for (let x = r.x0; x < r.x0 + r.w - 1; x++) {
+    const A = solido(x, y), B = solido(x + 1, y), C = solido(x, y + 1), D = solido(x + 1, y + 1);
+    if ((A && D && !B && !C) || (B && C && !A && !D)) n++;
+  }
+  return n;
+}
+
 function checkRoom(map, r, ctx) {
   const where = `${ctx} sala ${r.id} (${r.type}/${r.theme}/${r.shape}/${r.layout})`;
   assert.ok(SHAPE_NAMES.includes(r.shape), `${where}: forma desconhecida`);
@@ -70,6 +81,8 @@ function checkRoom(map, r, ctx) {
   }
   assert.ok(alcancado >= chao * 0.9, `${where}: só ${alcancado}/${chao} de chão alcançável`);
   if (r.type === 'combat') assert.ok(chao >= 70, `${where}: pouco chão (${chao})`);
+
+  assert.equal(pincas(map, r), 0, `${where}: tem pinças (blocos que se tocam só pela quina)`);
 
   // centro livre (menos no layout 'centro'), paredes de forma só dentro da sala
   if (r.layout !== 'centro') assert.equal(map.get(r.cx, r.cy), T.FLOOR, `${where}: centro bloqueado`);
@@ -271,19 +284,33 @@ test('baú, enfermaria, estátua, itens da loja e portal do chefe são alcançá
   }
 });
 
-test('salas especiais têm composição própria (móveis) e continuam retangulares', () => {
-  const contagem = { start: 0, chest: 0, heal: 0, statue: 0, shop: 0, boss: 0 };
+test('salas especiais têm composição própria (móveis), a arena do chefe fica livre e todas continuam retangulares', () => {
+  const contagem = { start: 0, chest: 0, heal: 0, statue: 0, shop: 0 };
+  let pilaresDoChefe = 0;
   for (let seed = 1; seed <= 40; seed++) {
-    const { map, rooms } = generateFloor({ rng: new RNG(seed), floorDef: data.floor((seed % 3) + 1), data });
+    const floorDef = data.floor((seed % 3) + 1);
+    const { map, rooms } = generateFloor({ rng: new RNG(seed), floorDef, data });
     for (const r of rooms.filter((x) => x.type !== 'combat')) {
       assert.equal(r.shape, 'retangulo');
-      let moveis = 0;
-      for (let y = r.y0 + 1; y < r.y0 + r.h - 1; y++) for (let x = r.x0 + 1; x < r.x0 + r.w - 1; x++) if (map.get(x, y) === T.OBSTACLE) moveis++;
+      let moveis = 0, paredes = 0;
+      for (let y = r.y0 + 1; y < r.y0 + r.h - 1; y++) for (let x = r.x0 + 1; x < r.x0 + r.w - 1; x++) {
+        const t = map.get(x, y);
+        if (t === T.OBSTACLE) moveis++;
+        if (t === T.WALL) paredes++;
+      }
+      if (r.type === 'boss') {
+        // arena livre: nada de móveis junto às paredes (encurralam o jogador); só os pilares do andar
+        assert.equal(moveis, 0, `seed ${seed}: móveis na arena do chefe`);
+        assert.equal(paredes, floorDef.bossPillars ? 16 : 0, `seed ${seed}: pilares do chefe`);
+        if (paredes) pilaresDoChefe++;
+        continue;
+      }
       assert.ok(moveis >= 4 || r.type === 'chest', `seed ${seed}: sala ${r.type} sem móveis`);
       if (moveis) contagem[r.type]++;
     }
   }
   for (const [tipo, n] of Object.entries(contagem)) assert.ok(n > 0, `nenhuma sala ${tipo} mobiliada`);
+  assert.ok(pilaresDoChefe > 0);
 });
 
 test('mesma semente gera o mesmo andar (formas, layouts, objetos e decoração)', () => {
