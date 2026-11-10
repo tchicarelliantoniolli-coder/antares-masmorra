@@ -24,17 +24,10 @@ Regras que valem para qualquer mudança (vêm do dono e do design):
 
 | Branch | O que tem | Situação |
 |---|---|---|
-| `main` | v0.3.1 (commit `6b07b4d`): v0.3 completa + armas rebalanceadas + drops sem repetição | publicada |
-| `claude/v0.4-salas-vivas` | tudo da `main` + v0.4 (salas com vida) + este arquivo | testada, **ainda não foi juntada na `main`** |
+| `main` | v0.4 (salas com vida), que inclui a v0.3 completa e a v0.3.1 (armas rebalanceadas, drops sem repetição) | publicada; o dono mandou juntar a v0.4 em 10/11/2026, antes de jogar |
+| `claude/v0.4-salas-vivas` | o mesmo conteúdo da v0.4, já dentro da `main` | pode ser apagado |
 
-A v0.4 só deve ir para a `main` depois do aval do dono (ele não jogou ainda). Para juntar:
-
-```bash
-git checkout main && git pull origin main
-git merge claude/v0.4-salas-vivas
-npm test                    # esperado: 193 testes, 0 falhas
-git push origin main
-```
+Se o dono achar a v0.4 ruim depois de jogar, o ponto anterior é o commit `6b07b4d` (v0.3.1): dá para voltar com `git revert -m 1 <commit do merge da v0.4>` em vez de reescrever a história.
 
 ## 3. O que foi feito
 
@@ -61,7 +54,7 @@ Pedido do dono: armas roubadas (sino roxo = Sinal do Recreio matava o chefe ráp
 - `weapon-dps.mjs` agora mede também a arma **encostada** num alvo do tamanho de um chefe e falha acima de 1,5× o teto da faixa. Ajustados: Escopeta, Canhão de Confete, Bico de Bunsen, Extintor, Arco de Régua.
 - Drops: as armas não se repetem na partida (baú, loja, chefe, inimigo, sala; também pula as que estão na mão). Nova alavanca `difficulty.roomWeaponChance` (0,35): chance de arma ao limpar sala de combate.
 
-### v0.4 (branch `claude/v0.4-salas-vivas`, **não juntada**)
+### v0.4 (branch `claude/v0.4-salas-vivas`, já na `main`)
 Pedido do dono: "as salas estão muito sem vida e todas iguais".
 
 - **Formas de sala** (só combate): retângulo, cantos cortados, L, cruz, T (`shared/sim/salas/formas.js`, `r.shape` no snapshot).
@@ -94,7 +87,7 @@ Armadilhas que já me custaram tempo:
 ## 5. O que ainda precisa ser feito
 
 ### A. Decisões do dono
-1. **Juntar a v0.4 na `main`** (comandos na seção 2). Ele ainda não jogou as salas novas. Recomendo ele jogar o branch antes.
+1. **Jogar a v0.4**: o dono mandou juntar na `main` antes de jogar as salas novas. Peça a opinião dele sobre formas, mobília, luz e partículas; se algo incomodar (escuro demais, salas apertadas, partículas atrapalhando), ajuste `themes.json` (luz, partículas, pesos dos layouts) antes de mexer em código.
 2. Dificuldade do "experiente": na v0.4 ele vence 13% jogando sozinho (meta 25–40%; era ~26% na v0.3) e 37% em dupla. Parte vem de partidas em que o robô fica "preso" (7 em 30), porque ele não persegue atiradores escondidos em braços das formas T/cruz nem o Caderno Preto invulnerável como um jogador faria. Só vale recalibrar depois que o dono (e o amigo) jogarem de verdade. Se ficar difícil demais, alivie os pesos dos layouts densos em `themes.json` (carteiras, estantes, mesas_longas, bancadas).
 3. A "dupla" solo vence 0% (na v0.2 já era 3%): aceito, porque o dono joga em dupla.
 
@@ -234,4 +227,5 @@ Cada linha: a decisão, o motivo e o custo se estiver errada. O dono ainda não 
 - Salas: só as de combate ganham forma; início, baú, enfermaria, estátua, loja e chefe continuam retangulares (chefes têm ataques que usam a sala inteira). Custo: salas especiais menos variadas.
 - Salas: partículas desligadas em sala de chefe (papéis e brasas imitavam as balas do Xerox e da Samara). Custo: arenas de chefe com menos clima.
 - Salas: luz feita por cor de vértice só no chão, em vez de uma camada escura por cima de tudo (a camada custou +17 ms por quadro). Custo: no fallback Canvas o chão não escurece.
+- Juntei a v0.4 na `main` quando o dono pediu, sem ele ter jogado: o risco é ele achar as salas escuras ou apertadas; tudo é ajustável em `themes.json`.
 - Dificuldade: depois das salas novas não recalibrei os bots (dupla 2 jogadores ~5%, experiente 13% solo e 37% em dupla); decidi esperar o dono jogar. Custo: o "experiente" solo está abaixo da meta de 25–40%.
