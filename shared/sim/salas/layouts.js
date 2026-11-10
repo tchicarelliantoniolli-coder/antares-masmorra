@@ -148,7 +148,7 @@ const LAYOUTS = {
     c.each4((sx, sy) => {
       for (const dy of [3, 6]) {
         if (dy > hh - 1) continue;
-        for (const dx of [3, 6, 9]) {
+        for (const dx of [3, 6]) {
           if (dx + 1 > hw - 1) continue;
           if (!rng.chance(0.93)) continue;                // uma carteira vazia de vez em quando
           c.box(sx * dx, sy * dy, sx * (dx + 1), sy * dy);
@@ -184,8 +184,7 @@ const LAYOUTS = {
       [[0, 0], [1, 0], [2, 0], [0, 1]]    // L
     ];
     const ancoras = [[3, 3]];
-    if (hh >= 7) ancoras.push([3, 6]);
-    if (hw >= 9) ancoras.push([hw - 3, 3]);
+    if (hh >= 8) ancoras.push([3, 6]);
     c.each4((sx, sy) => {
       for (const [ax, ay] of ancoras) {
         const forma = rng.pick(formas);
@@ -207,8 +206,8 @@ const LAYOUTS = {
     c.each4((sx, sy) => {
       for (const x0 of [3, 7]) {
         if (x0 > hw - 1) continue;
-        const fim = hh - 1;
-        const falha = fim - 2 + 1 >= 5 ? rng.int(3, fim - 1) : -1;   // segmentos longos ganham uma passagem
+        const fim = hh - 2;                                            // deixa uma faixa livre junto às paredes de cima e de baixo
+        const falha = fim - 2 + 1 >= 4 ? rng.int(3, fim - 1) : -1;   // segmentos longos ganham uma passagem
         for (let y = 2; y <= fim; y++) {
           if (y === falha || y === falha + 1) continue;
           c.at(sx * x0, sy * y);
@@ -245,10 +244,10 @@ const LAYOUTS = {
     const grossura = rng.int(1, 2);
     const variante = rng.pick(['h2', 'h2', 'h3', 'v2']);
     if (variante === 'v2') {
-      const L = hh - 3 - rng.int(0, 1);
+      const L = hh - 4 - rng.int(0, 1);
       for (const sx of [1, -1]) c.box(sx * 4, -L, sx * (4 + grossura - 1), L);
     } else {
-      const L = hw - 3 - rng.int(0, 1);
+      const L = hw - 4 - rng.int(0, 1);
       if (variante === 'h2') {
         for (const sy of [1, -1]) c.box(-L, sy * 3, L, sy * (3 + grossura - 1));
       } else {

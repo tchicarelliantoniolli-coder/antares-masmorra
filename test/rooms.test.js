@@ -259,6 +259,19 @@ test('inimigos só nascem em chão da sala (T.FLOOR), também nas salas com form
   }
 });
 
+test('freeCells não devolve bolsões fechados por obstáculos (ninguém nasce onde não dá para sair)', () => {
+  const w = new World({ data, seed: 8, players: [{ id: 'a', characterId: 'harilson' }] });
+  const r = w.rooms.find((x) => x.type === 'combat');
+  const antes = freeCells(w, r, 2);
+  // fecha um tile livre longe do centro com 4 obstáculos em volta: vira um bolsão de 1 tile
+  const alvo = antes.find(([x, y]) => Math.abs(x - r.cx) > 4 && Math.abs(y - r.cy) > 3 && [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx, dy]) => w.map.get(x + dx, y + dy) === T.FLOOR));
+  assert.ok(alvo, 'sem tile livre para o teste');
+  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) w.map.set(alvo[0] + dx, alvo[1] + dy, T.OBSTACLE);
+  const depois = freeCells(w, r, 2);
+  assert.ok(!depois.some(([x, y]) => x === alvo[0] && y === alvo[1]), 'bolsão fechado não pode receber inimigo');
+  assert.ok(depois.length >= antes.length - 5 && depois.length > 40);
+});
+
 test('baú, enfermaria, estátua, itens da loja e portal do chefe são alcançáveis a partir de qualquer porta', () => {
   for (let seed = 1; seed <= 60; seed++) {
     const floor = (seed % 3) + 1;

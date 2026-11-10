@@ -166,18 +166,22 @@ export function spawnWave(world, room, index) {
 }
 
 /**
- * Chão livre da sala (só T.FLOOR), a `margin` tiles da borda do retângulo. Em salas com forma (L, cruz, T, cantos
- * cortados) ainda tira os tiles colados nas paredes dos cortes, para ninguém nascer entalado num canto da forma.
+ * Chão livre da sala onde dá para spawnar inimigo: só T.FLOOR, a `margin` tiles da borda do retângulo e ALCANÇÁVEL
+ * a partir das portas (caixas, móveis e paredes bloqueiam). Assim ninguém nasce num bolsão fechado por caixas e
+ * estantes, de onde não sairia nem seria atingido. Em salas com forma (L, cruz, T, cantos cortados) ainda tira os
+ * tiles colados nas paredes dos cortes, para ninguém nascer entalado num canto da forma.
  */
 export function freeCells(world, room, margin = 1) {
   const map = world.map;
   const recortada = !!room.shape && room.shape !== 'retangulo';
+  const alcancavel = floorReachable(map, room);
   const out = [];
   const todos = [];
   for (let y = room.y0 + 1 + margin; y < room.y0 + room.h - 1 - margin; y++) {
     for (let x = room.x0 + 1 + margin; x < room.x0 + room.w - 1 - margin; x++) {
       if (map.get(x, y) !== T.FLOOR) continue;
       todos.push([x, y]);
+      if (!alcancavel.has(x + ',' + y)) continue;
       if (recortada && tocaParede(map, x, y)) continue;
       out.push([x, y]);
     }
@@ -188,6 +192,26 @@ export function freeCells(world, room, margin = 1) {
 function tocaParede(map, x, y) {
   for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (map.get(x + dx, y + dy) === T.WALL) return true;
   return false;
+}
+
+/** Tiles da sala alcançáveis a pé a partir das portas (ou do centro, se não houver porta), como "x,y". */
+function floorReachable(map, room) {
+  const dentro = (x, y) => x >= room.x0 && y >= room.y0 && x < room.x0 + room.w && y < room.y0 + room.h;
+  const starts = room.doors?.length ? room.doors.map((d) => [d.tx, d.ty]) : [[room.cx, room.cy]];
+  const seen = new Set(starts.map(([x, y]) => x + ',' + y));
+  const stack = [...starts];
+  while (stack.length) {
+    const [x, y] = stack.pop();
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy, k = nx + ',' + ny;
+      if (seen.has(k) || !dentro(nx, ny)) continue;
+      const t = map.get(nx, ny);
+      if (t !== T.FLOOR && t !== T.DOOR) continue;
+      seen.add(k);
+      stack.push([nx, ny]);
+    }
+  }
+  return seen;
 }
 
 function clearRoom(world, room) {
